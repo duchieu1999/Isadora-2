@@ -186,6 +186,13 @@ setInterval(() => {
   }
 }, 300000); // Chạy mỗi 5 phút
 
+
+// Xử lý lệnh /xinchao
+bot.onText(/\/xinchao/, (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, "Xin chào! Chúc bạn một ngày tốt lành!");
+});
+
 // Xử lý khi bot khởi động
 bot.on('polling_error', (error) => {
   console.error(error);
