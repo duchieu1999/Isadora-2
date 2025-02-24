@@ -57,11 +57,25 @@ async function checkSpamMessage(msg, messageContent) {
   });
   if (containsSpam) return true;
 
-  // Kiểm tra tin nhắn chứa đường link
-  const urlRegex = /https?:\/\/\S+/i;
-  if (urlRegex.test(messageContent)) {
-    return true;
-  }
+ // Kiểm tra tin nhắn chứa đường link hoặc các cách né tránh bộ lọc link
+const urlRegex = /(https?:\/\/|www\.)\S+/i;
+const domainRegex = /\b([a-zA-Z0-9-]+\.(com|net|org|gov|edu|vn|xyz|info|biz|top|store|online|tech|pro|me|club|site|io|co|us|uk|jp|kr|cn|in|au|eu))\b/i;
+const disguisedLinkRegex = /(\S+)\s*(\.\s*[a-z]{2,6})/i; // Phát hiện "google . com"
+
+// Kiểm tra link Telegram (nhóm, kênh, bot, user)
+const telegramLinkRegex = /(t\.me\/|telegram\.me\/|telegram\.dog\/|telegram\.org\/)\S+/i;
+
+// Nếu phát hiện bất kỳ link nào
+if (
+  urlRegex.test(messageContent) || 
+  domainRegex.test(messageContent) || 
+  disguisedLinkRegex.test(messageContent) || 
+  telegramLinkRegex.test(messageContent)
+) {
+  console.log(`Phát hiện link từ user ${userId}`);
+  return true;
+}
+
   
   // Kiểm tra tag @ không phải admin
   // Lấy danh sách admin của nhóm
