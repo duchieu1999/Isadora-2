@@ -40,19 +40,13 @@ async function checkSpamMessage(msg, messageContent) {
   const userId = msg.from.id;
   
   // Kiểm tra quyền admin của người gửi, nếu là admin thì bỏ qua kiểm tra spam
-  try {
-    const chatMember = await bot.getChatMember(msg.chat.id, userId);
-    if (chatMember.status === 'administrator' || chatMember.status === 'creator') {
-      return false;
-    }
-  } catch (error) {
-    console.error("Lỗi khi kiểm tra quyền admin:", error);
-    return false; // Nếu không thể kiểm tra quyền, bỏ qua kiểm tra spam
+  const chatMember = await bot.getChatMember(msg.chat.id, userId);
+  if (chatMember.status === 'administrator' || chatMember.status === 'creator') {
+    return false;
   }
 
   // Kiểm tra độ dài tin nhắn (trên 100 từ)
   if (messageContent.split(' ').length > 100) {
-    console.log(`Phát hiện tin nhắn quá dài từ user ${userId}`);
     return true;
   }
 
@@ -61,15 +55,11 @@ async function checkSpamMessage(msg, messageContent) {
     const regex = new RegExp(`\\b${keyword}\\b`, 'i');
     return regex.test(lowerCaseMessage);
   });
-  if (containsSpam) {
-    console.log(`Phát hiện từ khóa spam từ user ${userId}`);
-    return true;
-  }
+  if (containsSpam) return true;
 
   // Kiểm tra tin nhắn chứa đường link
   const urlRegex = /https?:\/\/\S+/i;
   if (urlRegex.test(messageContent)) {
-    console.log(`Phát hiện link từ user ${userId}`);
     return true;
   }
   
@@ -80,9 +70,7 @@ async function checkSpamMessage(msg, messageContent) {
     admins = await bot.getChatAdministrators(msg.chat.id);
   } catch (err) {
     console.error("Lỗi khi lấy danh sách admin:", err);
-    return false; // Nếu không thể lấy danh sách admin, bỏ qua kiểm tra tag
   }
-  
   // Tạo một set các username (loại bỏ dấu @ nếu có) của admin
   const adminUsernames = new Set();
   admins.forEach(admin => {
@@ -98,7 +86,6 @@ async function checkSpamMessage(msg, messageContent) {
     const taggedUsername = match[1].toLowerCase();
     // Nếu tag không thuộc danh sách admin, coi là spam
     if (!adminUsernames.has(taggedUsername)) {
-      console.log(`Phát hiện tag đến non-admin từ user ${userId}`);
       return true;
     }
   }
@@ -106,17 +93,16 @@ async function checkSpamMessage(msg, messageContent) {
   return false;
 }
 
-// Xử lý tin nhắn mới
+// Xử lý tin nhắn
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
-  
-  // Kiểm tra nhóm được phép
-  if (!allowedGroupIds.includes(chatId)) {
-    return;
-  }
-  
   const messageContent = msg.text || msg.caption;
   const userId = msg.from.id;
+
+  // Kiểm tra nhóm được phép
+  if (!allowedGroupIdss.includes(chatId)) {
+    return;
+  }
 
   try {
     const isSpam = await checkSpamMessage(msg, messageContent);
@@ -124,9 +110,8 @@ bot.on('message', async (msg) => {
     if (isSpam) {
       // Chỉ xóa tin nhắn spam
       await bot.deleteMessage(chatId, msg.message_id);
-      console.log(`Đã xóa tin nhắn spam từ user ${userId} trong nhóm ${chatId}`);
     } else {
-      // Cập nhật thời gian gửi tin
+      // Nếu cần cập nhật thời gian gửi tin (ở đây đã bỏ kiểm tra gửi quá nhanh)
       const currentTime = new Date().getTime();
       userLastMessageTime.set(userId, currentTime);
     }
@@ -138,23 +123,20 @@ bot.on('message', async (msg) => {
 // Xử lý tin nhắn chỉnh sửa
 bot.on('edited_message', async (msg) => {
   const chatId = msg.chat.id;
-  
-  // Kiểm tra nhóm được phép
-  if (!allowedGroupIds.includes(chatId)) {
-    return;
-  }
-  
   const messageContent = msg.text || msg.caption;
   const userId = msg.from.id;
+
+  if (!allowedGroupIdss.includes(chatId)) {
+    return;
+  }
 
   try {
     const isSpam = await checkSpamMessage(msg, messageContent);
     
     if (isSpam) {
       await bot.deleteMessage(chatId, msg.message_id);
-      console.log(`Đã xóa tin nhắn chỉnh sửa spam từ user ${userId} trong nhóm ${chatId}`);
     } else {
-      // Cập nhật thời gian gửi tin
+      // Cập nhật thời gian gửi tin nếu cần
       const currentTime = new Date().getTime();
       userLastMessageTime.set(userId, currentTime);
     }
@@ -163,26 +145,14 @@ bot.on('edited_message', async (msg) => {
   }
 });
 
-// Xử lý lỗi và log
-bot.on('polling_error', (error) => {
-  console.error('Lỗi polling:', error);
-});
-
-// Định kỳ xóa dữ liệu cũ trong Map để tránh memory leak
+// Định kỳ xóa dữ liệu cũ trong Map để tránh memory leak (nếu sử dụng)
 setInterval(() => {
   const currentTime = new Date().getTime();
-  let count = 0;
-  
   for (const [userId, lastTime] of userLastMessageTime.entries()) {
     // Xóa dữ liệu của các user không hoạt động trong 5 phút
     if (currentTime - lastTime > 300000) { // 300000ms = 5 phút
       userLastMessageTime.delete(userId);
-      count++;
     }
-  }
-  
-  if (count > 0) {
-    console.log(`Đã xóa ${count} bản ghi cũ từ userLastMessageTime`);
   }
 }, 300000); // Chạy mỗi 5 phút
 
@@ -200,13 +170,4 @@ bot.on('polling_error', (error) => {
 
 console.log('Bot đã được khởi động! Đang chờ tin nhắn...');
 
-// Bắt sự kiện khi chương trình kết thúc
-process.on('SIGINT', () => {
-  console.log('Bot đang tắt...');
-  process.exit();
-});
 
-process.on('SIGTERM', () => {
-  console.log('Bot đang tắt...');
-  process.exit();
-});
