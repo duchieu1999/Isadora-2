@@ -16,13 +16,13 @@ const spamKeywords = [
   "lừa đảo", "chó", "dmm", "lồn", "lừa", "địt", "bịp", "campuchia", "bọn điên",
   "súc vật", "vl", "có cl", "cút", "dm", "vkl", "mày", "xạo", "địt cụ", "con căc", "cc", "dốt", "chết", "khốn nạn",
   // Từ viết tắt
-  "đcm", "đmm", "clgt", "vcl", "vloz", "đkm", "cmm", "đậu xanh", "vc", "đcmm", "mẹ",
+  "đcm", "đmm", "clgt", "vcl", "vloz", "đkm", "cmm", "đậu xanh", "vc", "đcmm", "mẹ", "ngu",
   // Thêm các từ khác
   "ngu", "óc chó", "cặc", "lon", "đụ", "mat day", "ku", "như lồn", "chet me", "đb", "bọn", "điên"
 ];
 
 // Danh sách groupId được phép kiểm tra
-const allowedGroupIdss = [-1002208226506, -1002333438294];
+const allowedGroupIdss = [-1002208226506, -1002333438294, -1002117321924];
 
 // Map để lưu thời gian tin nhắn cuối cùng của mỗi user (không dùng nữa nhưng vẫn giữ lại nếu cần mở rộng chức năng)
 const userLastMessageTime = new Map();
