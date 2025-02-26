@@ -13,12 +13,13 @@ const bot = new TelegramBot(token, { polling: true });
 // Danh sách từ khóa spam mở rộng
 const spamKeywords = [
   // Chửi bậy, tục tĩu
-  "lừa đảo", "chó", "dmm", "lồn", "lừa", "địt", "bịp", "campuchia", "bọn điên",
+  "lừa đảo", "chó", "dmm", "lồn", "lừa", "địt", "bịp", "campuchia", "bọn điên", "chúng mày", "mày", "cứt", "buồi", "mrpip", "câm",
   "súc vật", "vl", "có cl", "cút", "dm", "vkl", "mày", "xạo", "địt cụ", "con căc", "cc", "dốt", "chết", "khốn nạn",
   // Từ viết tắt
-  "đcm", "đmm", "clgt", "vcl", "vloz", "đkm", "cmm", "đậu xanh", "vc", "đcmm", "mẹ", "ngu",
+  "đcm", "đmm", "clgt", "vcl", "vloz", "đkm", "cmm", "đậu xanh", "vc", "đcmm", "mẹ", "baccarat", "nhà cái", 
+  "khuyến mãi", "tài xỉu",
   // Thêm các từ khác
-  "ngu", "óc chó", "cặc", "lon", "đụ", "mat day", "ku", "như lồn", "chet me", "đb", "bọn", "điên"
+  "ngu", "óc chó", "cặc", "đụ", "mất dạy", "ku", "như lồn", "chet me", "đb", "bọn", "điên"
 ];
 
 // Danh sách groupId được phép kiểm tra
@@ -32,6 +33,7 @@ const userLastMessageTime = new Map();
  * - Nội dung chứa từ khóa spam
  * - Nội dung chứa đường link
  * - Nội dung có tag @ trỏ đến thành viên không phải admin
+ * - Nội dung chứa liên kết ẩn (text_link)
  */
 async function checkSpamMessage(msg, messageContent) {
   if (!messageContent) return false;
@@ -57,25 +59,36 @@ async function checkSpamMessage(msg, messageContent) {
   });
   if (containsSpam) return true;
 
- // Kiểm tra tin nhắn chứa đường link hoặc các cách né tránh bộ lọc link
-const urlRegex = /(https?:\/\/|www\.)\S+/i;
-const domainRegex = /\b([a-zA-Z0-9-]+\.(com|net|org|gov|edu|vn|xyz|info|biz|top|store|online|tech|pro|me|club|site|io|co|us|uk|jp|kr|cn|in|au|eu))\b/i;
-const disguisedLinkRegex = /(\S+)\s*(\.\s*[a-z]{2,6})/i; // Phát hiện "google . com"
+  // Kiểm tra tin nhắn chứa đường link hoặc các cách né tránh bộ lọc link
+  const urlRegex = /(https?:\/\/|www\.)\S+/i;
+  const domainRegex = /\b([a-zA-Z0-9-]+\.(com|net|org|gov|edu|vn|xyz|info|biz|top|store|online|tech|pro|me|club|site|io|co|us|uk|jp|kr|cn|in|au|eu))\b/i;
+  const disguisedLinkRegex = /(\S+)\s*(\.\s*[a-z]{2,6})/i; // Phát hiện "google . com"
 
-// Kiểm tra link Telegram (nhóm, kênh, bot, user)
-const telegramLinkRegex = /(t\.me\/|telegram\.me\/|telegram\.dog\/|telegram\.org\/)\S+/i;
+  // Kiểm tra link Telegram (nhóm, kênh, bot, user)
+  const telegramLinkRegex = /(t\.me\/|telegram\.me\/|telegram\.dog\/|telegram\.org\/)\S+/i;
 
-// Nếu phát hiện bất kỳ link nào
-if (
-  urlRegex.test(messageContent) || 
-  domainRegex.test(messageContent) || 
-  disguisedLinkRegex.test(messageContent) || 
-  telegramLinkRegex.test(messageContent)
-) {
-  console.log(`Phát hiện link từ user ${userId}`);
-  return true;
-}
+  // Nếu phát hiện bất kỳ link nào
+  if (
+    urlRegex.test(messageContent) || 
+    domainRegex.test(messageContent) || 
+    disguisedLinkRegex.test(messageContent) || 
+    telegramLinkRegex.test(messageContent)
+  ) {
+    console.log(`Phát hiện link từ user ${userId}`);
+    return true;
+  }
 
+  // Kiểm tra các liên kết ẩn (text_link) trong tin nhắn
+  if (msg.entities || msg.caption_entities) {
+    const entities = msg.entities || msg.caption_entities || [];
+    for (const entity of entities) {
+      if (entity.type === 'text_link') {
+        // Đây là liên kết ẩn dạng "Tên người dùng" nhưng ẩn URL khác
+        console.log(`Phát hiện text_link từ user ${userId} với URL: ${entity.url}`);
+        return true;
+      }
+    }
+  }
   
   // Kiểm tra tag @ không phải admin
   // Lấy danh sách admin của nhóm
@@ -124,6 +137,7 @@ bot.on('message', async (msg) => {
     if (isSpam) {
       // Chỉ xóa tin nhắn spam
       await bot.deleteMessage(chatId, msg.message_id);
+      console.log(`Đã xóa tin nhắn spam từ user ${userId} trong nhóm ${chatId}`);
     } else {
       // Nếu cần cập nhật thời gian gửi tin (ở đây đã bỏ kiểm tra gửi quá nhanh)
       const currentTime = new Date().getTime();
@@ -149,6 +163,7 @@ bot.on('edited_message', async (msg) => {
     
     if (isSpam) {
       await bot.deleteMessage(chatId, msg.message_id);
+      console.log(`Đã xóa tin nhắn spam (đã chỉnh sửa) từ user ${userId} trong nhóm ${chatId}`);
     } else {
       // Cập nhật thời gian gửi tin nếu cần
       const currentTime = new Date().getTime();
@@ -183,5 +198,3 @@ bot.on('polling_error', (error) => {
 });
 
 console.log('Bot đã được khởi động! Đang chờ tin nhắn...');
-
-
