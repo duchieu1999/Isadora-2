@@ -9,6 +9,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <!-- Howler.js for sound effects -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <!-- HTML2Canvas for reward card capture -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         :root {
             --primary-color: #d82f2f;
@@ -645,6 +647,7 @@
             overflow: hidden;
             display: none;
             margin: 10px 0;
+            max-width: 400px;
         }
         
         .reward-card::before {
@@ -718,29 +721,35 @@
             margin-bottom: 15px;
         }
         
-        .reward-code {
+        .reward-image {
+            width: 100%;
+            height: 150px;
             background-color: #f1f1f1;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 16px;
             margin: 10px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             border: 1px dashed #999;
-            position: relative;
-            letter-spacing: 1px;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
         
-        .reward-code::before {
-            content: 'MÃ:';
-            position: absolute;
-            top: -10px;
-            left: 10px;
-            background-color: white;
-            padding: 0 5px;
-            font-size: 10px;
-            color: #666;
-            border-radius: 3px;
+        .reward-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .reward-qr-code {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
         
         .reward-footer {
@@ -1120,6 +1129,88 @@
             transform: translateX(0);
         }
         
+        /* Name registration overlay */
+        .name-registration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+        }
+        
+        .name-registration-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 90%;
+            width: 350px;
+            border: 5px solid var(--primary-color);
+            box-shadow: 0 0 30px rgba(216, 47, 47, 0.5);
+        }
+        
+        .name-registration-title {
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .name-registration-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        
+        .name-registration-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        
+        .name-registration-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        .name-registration-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        
+        .name-registration-button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .name-registration-error {
+            color: red;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        
         /* Responsive adjustments */
         @media screen and (max-height: 700px) {
             .wheel-outer-container {
@@ -1179,7 +1270,7 @@
     
     <div class="game-container">
         <div class="event-countdown">
-            <div class="countdown-title">Kết thúc sự kiện</div>
+            <div class="countdown-title">Kết thúc sự kiện sau</div>
             <div class="countdown-timer">
                 <div class="countdown-item">
                     <div class="countdown-value" id="days-value">00</div>
@@ -1232,8 +1323,8 @@
                 <div class="stat-label">Lượt quay còn lại</div>
             </div>
             <div class="stat">
-                <div class="stat-value" id="timer-value">29:59</div>
-                <div class="stat-label">Làm mới lượt</div>
+                <div class="stat-value" id="timer-value">59:59</div>
+                <div class="stat-label">Thêm 50 lượt quay sau</div>
             </div>
         </div>
         
@@ -1286,12 +1377,14 @@
             </div>
             <div class="reward-value" id="reward-value">0 VNĐ</div>
             <div class="reward-info">Chúc mừng! Bạn đã đổi thành công điểm thưởng.</div>
-            <div class="reward-code" id="reward-code">HIEUGA-XXXX-XXXX</div>
+            <div class="reward-image" id="reward-image">
+                <img src="https://thietkehaithanh.com/wp-content/uploads/2018/12/in-voucher-1.jpg" alt="Hình ảnh mẫu" />
+            </div>
             <div class="reward-footer">
                 <div class="reward-date" id="reward-date">30/04/2025</div>
             </div>
             <div class="reward-watermark">HIẾU GÀ OFFICIAL</div>
-            <button class="save-btn" id="save-reward-btn">LƯU THẺ QUÀ TẶNG</button>
+            <button class="save-btn" id="save-reward-btn">TẢI POSTER NHẬN THƯỞNG</button>
         </div>
         
         <div class="leaderboard">
@@ -1323,6 +1416,17 @@
             <div>Bạn đã trúng JACKPOT đặc biệt!</div>
             <div class="jackpot-points" id="jackpot-points">+1000 điểm</div>
             <button class="jackpot-close" id="jackpot-close">TUYỆT VỜI!</button>
+        </div>
+    </div>
+    
+    <!-- Name registration overlay -->
+    <div class="name-registration-overlay" id="name-registration-overlay">
+        <div class="name-registration-content">
+            <div class="name-registration-title">Chào mừng bạn!</div>
+            <div class="name-registration-subtitle">Vui lòng nhập tên của bạn để bắt đầu chơi và xuất hiện trên bảng xếp hạng.</div>
+            <div class="name-registration-error" id="name-registration-error">Vui lòng nhập tên của bạn</div>
+            <input type="text" class="name-registration-input" id="name-registration-input" placeholder="Nhập tên của bạn...">
+            <button class="name-registration-button" id="name-registration-button">BẮT ĐẦU CHƠI</button>
         </div>
     </div>
     
@@ -1390,7 +1494,7 @@
         const redeemConfirmBtn = document.getElementById('redeem-confirm-btn');
         const rewardCard = document.getElementById('reward-card');
         const rewardValue = document.getElementById('reward-value');
-        const rewardCode = document.getElementById('reward-code');
+        const rewardImage = document.getElementById('reward-image');
         const rewardDate = document.getElementById('reward-date');
         const saveRewardBtn = document.getElementById('save-reward-btn');
         const leaderboardList = document.getElementById('leaderboard-list');
@@ -1402,6 +1506,10 @@
         const jackpotPoints = document.getElementById('jackpot-points');
         const jackpotClose = document.getElementById('jackpot-close');
         const notification = document.getElementById('notification');
+        const nameRegistrationOverlay = document.getElementById('name-registration-overlay');
+        const nameRegistrationInput = document.getElementById('name-registration-input');
+        const nameRegistrationButton = document.getElementById('name-registration-button');
+        const nameRegistrationError = document.getElementById('name-registration-error');
         
         // Countdown elements
         const daysValue = document.getElementById('days-value');
@@ -1416,12 +1524,13 @@
         let nextSpinDouble = false;
         let refreshTimer;
         let countdownTimer;
-        let playerName = 'Người chơi ẩn danh';
+        let playerName = '';
         let selectedRedeemOption = null;
         let isEventEnded = false;
         let userId = '';
         let lastWheelRotation = 0;
         let currentSections = [];
+        let customPosterImage = null;
 
         // API endpoints
         const API_BASE_URL = '/api';
@@ -1431,18 +1540,12 @@
             try {
                 createWheel();
                 setupUserId();
+                checkNameRegistration();
                 await loadGameState();
                 startRefreshTimer();
                 startEventCountdown();
                 updateStats();
                 await loadLeaderboard();
-                
-                // Check if player name is saved
-                const savedName = localStorage.getItem('playerName');
-                if (savedName) {
-                    playerName = savedName;
-                    playerNameInput.value = savedName;
-                }
                 
                 // Setup redeem options
                 setupRedeemOptions();
@@ -1457,12 +1560,54 @@
                     sound.load();
                 });
                 
+                // Setup name registration
+                nameRegistrationButton.addEventListener('click', handleNameRegistration);
+                nameRegistrationInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        handleNameRegistration();
+                    }
+                });
+                
                 showNotification("Đã kết nối máy chủ thành công!");
             } catch (error) {
                 console.error("Error initializing game:", error);
                 leaderboardStatus.textContent = "Đang sử dụng dữ liệu offline. Kết nối lại sau...";
                 showNotification("Đang sử dụng dữ liệu offline.");
             }
+        }
+
+        // Check if name is registered
+        function checkNameRegistration() {
+            const savedName = localStorage.getItem('playerName');
+            if (savedName) {
+                playerName = savedName;
+                playerNameInput.value = savedName;
+                nameRegistrationOverlay.style.display = 'none';
+            } else {
+                nameRegistrationOverlay.style.display = 'flex';
+            }
+        }
+
+        // Handle name registration
+        function handleNameRegistration() {
+            const name = nameRegistrationInput.value.trim();
+            if (name.length < 2) {
+                nameRegistrationError.style.display = 'block';
+                nameRegistrationError.textContent = 'Vui lòng nhập tên có ít nhất 2 ký tự';
+                nameRegistrationInput.focus();
+                return;
+            }
+            
+            playerName = name;
+            localStorage.setItem('playerName', name);
+            playerNameInput.value = name;
+            nameRegistrationOverlay.style.display = 'none';
+            
+            // Save to API
+            saveGameState();
+            
+            showNotification(`Chào mừng ${name} đến với Bánh Xe Hiếu Gà!`);
+            SOUNDS.click.play();
         }
 
         // Show notification
@@ -1888,18 +2033,13 @@
 
         // Start the refresh timer for spins
         function startRefreshTimer() {
-            // Get next 30-minute timestamp (changed from 1 hour)
+            // Get next hour's timestamp (changed back to 1 hour from 30 minutes)
             const now = new Date();
-            const minutes = now.getMinutes();
-            const nextRefresh = new Date(now);
+            const nextHour = new Date(now);
+            nextHour.setHours(now.getHours() + 1);
+            nextHour.setMinutes(0, 0, 0);
             
-            if (minutes < 30) {
-                nextRefresh.setMinutes(30, 0, 0);
-            } else {
-                nextRefresh.setHours(now.getHours() + 1, 0, 0, 0);
-            }
-            
-            let timeLeft = nextRefresh - now;
+            let timeLeft = nextHour - now;
             
             // Update timer display
             function updateTimer() {
@@ -2021,12 +2161,11 @@
             points -= requiredPoints;
             updateStats();
             
-            // Generate unique code
-            const uniqueCode = generateUniqueCode();
+            // Create reward poster
+            generateRewardPoster(amount);
             
             // Update reward card
             rewardValue.textContent = `${amount.toLocaleString()} VNĐ`;
-            rewardCode.textContent = uniqueCode;
             rewardDate.textContent = new Date().toLocaleDateString('vi-VN');
             
             // Show reward card with animation
@@ -2057,43 +2196,112 @@
             createConfetti(20);
         }
 
-        // Generate a unique code for rewards
-        function generateUniqueCode() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            const timestamp = Date.now().toString(36).toUpperCase();
-            let code = 'HIEUGA-';
+        // Generate reward poster 
+        function generateRewardPoster(amount) {
+            // Create a canvas element
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
             
-            // Add 4 random characters
-            for (let i = 0; i < 4; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
+            // Set canvas dimensions
+            canvas.width = 600;
+            canvas.height = 800;
             
-            // Add timestamp-based characters
-            code += '-' + timestamp.substring(0, 4);
+            // Draw background
+            ctx.fillStyle = '#fff9e6';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            return code;
+            // Draw border
+            ctx.strokeStyle = '#d82f2f';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
+            
+            // Draw header
+            ctx.fillStyle = '#d82f2f';
+            ctx.fillRect(20, 20, canvas.width - 40, 100);
+            
+            // Draw title
+            ctx.font = 'bold 48px Arial';
+            ctx.fillStyle = '#ffeb3b';
+            ctx.textAlign = 'center';
+            ctx.fillText('PHIẾU NHẬN THƯỞNG', canvas.width / 2, 80);
+            
+            // Draw amount
+            ctx.font = 'bold 72px Arial';
+            ctx.fillStyle = '#d82f2f';
+            ctx.fillText(`${amount.toLocaleString()} VNĐ`, canvas.width / 2, 250);
+            
+            // Draw player name
+            ctx.font = '36px Arial';
+            ctx.fillStyle = '#333';
+            ctx.fillText(`Người nhận: ${playerName}`, canvas.width / 2, 350);
+            
+            // Draw date
+            const date = new Date().toLocaleDateString('vi-VN');
+            ctx.font = '24px Arial';
+            ctx.fillText(`Ngày: ${date}`, canvas.width / 2, 400);
+            
+            // Draw QR code placeholder
+            ctx.fillStyle = '#f1f1f1';
+            ctx.fillRect(canvas.width / 2 - 100, 450, 200, 200);
+            ctx.fillStyle = '#333';
+            ctx.font = '16px Arial';
+            ctx.fillText('Mã QR Hiếu Gà', canvas.width / 2, 550);
+            
+            // Draw footer
+            ctx.fillStyle = '#d82f2f';
+            ctx.fillRect(20, canvas.height - 120, canvas.width - 40, 100);
+            ctx.fillStyle = '#ffeb3b';
+            ctx.font = 'bold 36px Arial';
+            ctx.fillText('HIẾU GÀ OFFICIAL', canvas.width / 2, canvas.height - 60);
+            
+            // Get image URL
+            const imageUrl = canvas.toDataURL('image/png');
+            
+            // Set the reward image
+            const img = rewardImage.querySelector('img');
+            img.src = imageUrl;
+            
+            // Store for download
+            customPosterImage = imageUrl;
         }
 
-        // Save reward card as image
-        function saveRewardCard() {
+        // Save reward poster
+        function saveRewardPoster() {
             SOUNDS.click.play();
             
-            // Create a canvas from the reward card element
-            html2canvas(rewardCard).then(canvas => {
-                // Create a link to download the image
-                const link = document.createElement('a');
-                link.href = canvas.toDataURL('image/png');
-                link.download = 'the-qua-hieu-ga.png';
+            if (customPosterImage) {
+                // Create a download link
+                const downloadLink = document.createElement('a');
+                downloadLink.href = customPosterImage;
+                downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
                 
-                // Trigger the download
-                link.click();
+                // Trigger download
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
                 
-                // Show notification
-                showNotification('Đã lưu thẻ quà tặng thành công!');
-            }).catch(err => {
-                console.error('Error saving reward card:', err);
-                alert('Đã lưu thẻ quà tặng! Hãy gửi mã này cho Hiếu Gà để nhận quà nhé!');
-            });
+                showNotification('Đã tải poster thành công!');
+            } else {
+                // Fallback to HTML2Canvas if the canvas image is not available
+                html2canvas(rewardCard).then(canvas => {
+                    const imageUrl = canvas.toDataURL('image/png');
+                    
+                    // Create a download link
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = imageUrl;
+                    downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
+                    
+                    // Trigger download
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    showNotification('Đã tải poster thành công!');
+                }).catch(err => {
+                    console.error('Error saving reward poster:', err);
+                    alert('Không thể tải poster. Vui lòng thử lại sau!');
+                });
+            }
         }
 
         // Save game state to localStorage and API
@@ -2140,25 +2348,25 @@
             if (savedState) {
                 const gameState = JSON.parse(savedState);
                 
-                // Check if state is from current 30-minute period
+                // Check if state is from current hour
                 const now = new Date();
                 const stateTime = new Date(gameState.lastUpdate);
                 
-                // Calculate if they're in the same 30-minute period
-                const nowPeriod = Math.floor(now.getHours() * 2 + now.getMinutes() / 30);
-                const statePeriod = Math.floor(stateTime.getHours() * 2 + stateTime.getMinutes() / 30);
+                // Calculate if they're in the same hour period
+                const nowHour = now.getHours();
+                const stateHour = stateTime.getHours();
                 
                 const sameDay = now.getDate() === stateTime.getDate() && 
                                 now.getMonth() === stateTime.getMonth() && 
                                 now.getFullYear() === stateTime.getFullYear();
                 
-                if (sameDay && nowPeriod === statePeriod) {
+                if (sameDay && nowHour === stateHour) {
                     points = gameState.points || 0;
                     spinsLeft = gameState.spinsLeft !== undefined ? gameState.spinsLeft : 50;
                     nextSpinDouble = gameState.nextSpinDouble || false;
                     lastWheelRotation = gameState.wheelRotation || 0;
                 } else {
-                    // Reset spins for new period but keep points
+                    // Reset spins for new hour but keep points
                     points = gameState.points || 0;
                     spinsLeft = 50;
                     nextSpinDouble = false;
@@ -2354,51 +2562,8 @@
 
         // Event listeners
         spinBtn.addEventListener('click', spinWheel);
-        saveRewardBtn.addEventListener('click', saveRewardCard);
+        saveRewardBtn.addEventListener('click', saveRewardPoster);
         saveNameBtn.addEventListener('click', savePlayerName);
-
-        // HTML2Canvas library for saving reward card as image
-        // This would normally be included via a CDN, but here's a minimal implementation
-        function html2canvas(element) {
-            return new Promise((resolve, reject) => {
-                try {
-                    // Create canvas element
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    
-                    // Set canvas dimensions to match element
-                    const rect = element.getBoundingClientRect();
-                    canvas.width = rect.width;
-                    canvas.height = rect.height;
-                    
-                    // Draw a white background
-                    context.fillStyle = 'white';
-                    context.fillRect(0, 0, canvas.width, canvas.height);
-                    
-                    // In a real implementation, this would render the HTML element to the canvas
-                    // Here we're just creating a simple placeholder
-                    context.fillStyle = 'red';
-                    context.font = 'bold 20px Arial';
-                    context.textAlign = 'center';
-                    context.fillText('Thẻ quà tặng Hiếu Gà', canvas.width/2, 30);
-                    
-                    context.fillStyle = 'black';
-                    context.font = '16px Arial';
-                    context.fillText(rewardValue.textContent, canvas.width/2, 60);
-                    
-                    context.fillStyle = 'blue';
-                    context.fillText(rewardCode.textContent, canvas.width/2, 90);
-                    
-                    context.fillStyle = 'gray';
-                    context.font = '12px Arial';
-                    context.fillText(rewardDate.textContent, canvas.width/2, 120);
-                    
-                    resolve(canvas);
-                } catch (err) {
-                    reject(err);
-                }
-            });
-        }
 
         // Initialize the game when the page loads
         window.addEventListener('load', initGame);
