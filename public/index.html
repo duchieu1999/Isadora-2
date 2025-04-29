@@ -1536,62 +1536,112 @@
         const API_BASE_URL = '/api';
 
         // Initialize the game
-        async function initGame() {
-            try {
-
-                // Phát hiện nếu đang chạy trong Telegram WebApp
-const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
-if (isTelegramWebApp) {
-    console.log("Running in Telegram WebApp environment");
-    
-    // Cấu hình cụ thể cho Telegram nếu cần
-    document.documentElement.style.setProperty('--primary-color', '#0088cc'); // Telegram blue
-    
-    // Nghe sự kiện từ Telegram WebApp nếu cần
-    window.Telegram.WebApp.onEvent('viewportChanged', function() {
-        // Điều chỉnh giao diện cho phù hợp với kích thước WebApp mới
-    });
-    
-    // Cho Telegram biết app đã sẵn sàng
-    window.Telegram.WebApp.ready();
-}
-                createWheel();
-                setupUserId();
-                checkNameRegistration();
-                await loadGameState();
-                startRefreshTimer();
-                startEventCountdown();
-                updateStats();
-                await loadLeaderboard();
-                
-                // Setup redeem options
-                setupRedeemOptions();
-                
-                // Setup jackpot close
-                jackpotClose.addEventListener('click', () => {
-                    jackpotOverlay.classList.remove('show');
-                });
-                
-                // Setup sound effect preloading
-                Object.values(SOUNDS).forEach(sound => {
-                    sound.load();
-                });
-                
-                // Setup name registration
-                nameRegistrationButton.addEventListener('click', handleNameRegistration);
-                nameRegistrationInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        handleNameRegistration();
-                    }
-                });
-                
-                showNotification("Đã kết nối máy chủ thành công!");
-            } catch (error) {
-    console.error("Error initializing game:", error);
-    leaderboardStatus.textContent = "Đang tải dữ liệu...";
-    showNotification("Đang tải dữ liệu bảng xếp hạng.");
-}
+async function initGame() {
+    try {
+        // Phát hiện nếu đang chạy trong Telegram WebApp
+        const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
+        if (isTelegramWebApp) {
+            console.log("Running in Telegram WebApp environment");
+            
+            // Cấu hình cụ thể cho Telegram nếu cần
+            document.documentElement.style.setProperty('--primary-color', '#0088cc'); // Telegram blue
+            
+            // Nghe sự kiện từ Telegram WebApp nếu cần
+            window.Telegram.WebApp.onEvent('viewportChanged', function() {
+                // Điều chỉnh giao diện cho phù hợp với kích thước WebApp mới
+                adjustWheelSize();
+            });
+            
+            // Thay đổi văn bản nút phiếu quà
+            if (saveRewardBtn) {
+                saveRewardBtn.textContent = 'XEM & LƯU PHIẾU THƯỞNG';
+            }
+            
+            // Cho Telegram biết app đã sẵn sàng
+            window.Telegram.WebApp.ready();
+            
+            // Đặt màu nền chính của thanh main button trong Telegram (nếu cần)
+            window.Telegram.WebApp.setHeaderColor('#d82f2f');
         }
+        
+        // Khởi tạo các thành phần chính của game
+        createWheel();
+        setupUserId();
+        checkNameRegistration();
+        await loadGameState();
+        startRefreshTimer();
+        startEventCountdown();
+        updateStats();
+        await loadLeaderboard();
+        
+        // Setup redeem options
+        setupRedeemOptions();
+        
+        // Setup jackpot close
+        jackpotClose.addEventListener('click', () => {
+            jackpotOverlay.classList.remove('show');
+        });
+        
+        // Setup sound effect preloading
+        Object.values(SOUNDS).forEach(sound => {
+            sound.load();
+        });
+        
+        // Setup name registration
+        nameRegistrationButton.addEventListener('click', handleNameRegistration);
+        nameRegistrationInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleNameRegistration();
+            }
+        });
+        
+        // Thêm sự kiện resize để điều chỉnh kích thước bánh xe trên các thiết bị khác nhau
+        window.addEventListener('resize', adjustWheelSize);
+        adjustWheelSize();
+        
+        // Kiểm tra lại một lần nữa số lượt quay sau khi khởi tạo
+        setTimeout(() => {
+            const savedState = localStorage.getItem('wheelGameState');
+            if (savedState) {
+                const gameState = JSON.parse(savedState);
+                console.log("Current spins: " + spinsLeft + ", Saved spins: " + gameState.spinsLeft);
+                
+                // Đảm bảo UI hiển thị đúng số lượt quay
+                if (spinsLeft !== gameState.spinsLeft) {
+                    spinsLeft = gameState.spinsLeft;
+                    updateStats();
+                }
+            }
+            
+            // Kiểm tra và áp dụng reset lượt quay nếu cần
+            checkSpinReset();
+        }, 500);
+        
+        showNotification("Đã kết nối máy chủ thành công!");
+    } catch (error) {
+        console.error("Error initializing game:", error);
+        leaderboardStatus.textContent = "Đang tải dữ liệu...";
+        showNotification("Đang tải dữ liệu bảng xếp hạng.");
+    }
+}
+
+
+        // Thêm hàm mới này vào mã JavaScript
+function updateButtonText() {
+    const saveRewardBtn = document.getElementById('save-reward-btn');
+    const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
+    
+    if (saveRewardBtn) {
+        if (isTelegramWebApp) {
+            saveRewardBtn.textContent = 'XEM & LƯU PHIẾU THƯỞNG';
+        } else {
+            saveRewardBtn.textContent = 'TẢI POSTER NHẬN THƯỞNG';
+        }
+    }
+}
+
+// Đăng ký sự kiện để chạy sau khi DOM đã tải xong
+document.addEventListener('DOMContentLoaded', updateButtonText);
 
         // Check if name is registered
         function checkNameRegistration() {
@@ -2185,6 +2235,12 @@ if (isTelegramWebApp) {
             // Update reward card
             rewardValue.textContent = `${amount.toLocaleString()} VNĐ`;
             rewardDate.textContent = new Date().toLocaleDateString('vi-VN');
+
+             // Show reward card with animation
+    rewardCard.style.display = 'block';
+    
+    // Cập nhật nội dung nút phù hợp với môi trường (thêm dòng này)
+    updateButtonText();
             
             // Show reward card with animation
             rewardCard.style.display = 'block';
@@ -2212,6 +2268,8 @@ if (isTelegramWebApp) {
             
             // Create mini celebration
             createConfetti(20);
+
+
         }
 
         // Generate reward poster 
