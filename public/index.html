@@ -2034,64 +2034,64 @@
             spinsValue.textContent = spinsLeft;
         }
 
-        // Start the refresh timer for spins
         function startRefreshTimer() {
-            // Get next hour's timestamp (changed back to 1 hour from 30 minutes)
-            const now = new Date();
-            const nextHour = new Date(now);
-            nextHour.setMinutes(now.getMinutes() + 40, 0, 0);
+    // Check if we have a saved next refresh time in localStorage
+    let nextRefreshTime = localStorage.getItem('nextRefreshTime');
+    const now = new Date();
+    
+    // If no saved time or saved time is in the past, calculate next refresh hour
+    if (!nextRefreshTime || new Date(parseInt(nextRefreshTime)) <= now) {
+        // Calculate next whole hour
+        const nextHour = new Date(now);
+        nextHour.setMinutes(now.getMinutes() + 35, 0, 0);
+        
+        // Save to localStorage
+        nextRefreshTime = nextHour.getTime();
+        localStorage.setItem('nextRefreshTime', nextRefreshTime);
+    }
+    
+    // Calculate time left based on saved next refresh time
+    let timeLeft = new Date(parseInt(nextRefreshTime)) - now;
+    
+    // Update timer display
+    function updateTimer() {
+        const minutes = Math.floor((timeLeft / 1000) / 60);
+        const seconds = Math.floor((timeLeft / 1000) % 60);
+        timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
+        timeLeft -= 1000;
+        
+        if (timeLeft <= 0) {
+            // Reset spins when timer reaches zero
+            spinsLeft = 50;
+            updateStats();
+            saveGameState();
             
-            let timeLeft = nextHour - now;
+            // Show reset notification
+            showNotification("Lượt quay đã được làm mới!");
             
-            // Update timer display
-            function updateTimer() {
-                const minutes = Math.floor((timeLeft / 1000) / 60);
-                const seconds = Math.floor((timeLeft / 1000) % 60);
-                timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                
-                timeLeft -= 1000;
-                
-                if (timeLeft <= 0) {
-                    // Reset spins when timer reaches zero
-                    spinsLeft = 50;
-                    updateStats();
-                    saveGameState();
-                    
-                    // Show reset notification
-                    showNotification("Lượt quay đã được làm mới!");
-                    
-                    // Add special reset effect
-                    const resetIcon = document.createElement('span');
-                    resetIcon.className = 'reset-icon';
-                    resetIcon.textContent = '🔄';
-                    spinsValue.prepend(resetIcon);
-                    
-                    anime({
-                        targets: '#spins-value',
-                        backgroundColor: [
-                            { value: 'rgba(255, 235, 59, 0.5)', duration: 500 },
-                            { value: 'transparent', duration: 500 }
-                        ],
-                        scale: [1, 1.2, 1],
-                        duration: 1000
-                    });
-                    
-                    setTimeout(() => {
-                        if (spinsValue.contains(resetIcon)) {
-                            spinsValue.removeChild(resetIcon);
-                        }
-                    }, 3000);
-                    
-                    // Restart timer for next refresh
-                    startRefreshTimer();
-                }
-            }
+            // Calculate and save next refresh time
+            const nextHour = new Date();
+            nextHour.setHours(nextHour.getHours() + 1);
+            nextHour.setMinutes(0, 0, 0);
+            nextHour.setSeconds(0, 0);
             
-            // Update immediately and then every second
+            nextRefreshTime = nextHour.getTime();
+            localStorage.setItem('nextRefreshTime', nextRefreshTime);
+            
+            // Reset timeLeft for next cycle
+            timeLeft = 3600000; // 1 hour in milliseconds
+            
+            // Restart timer display
             updateTimer();
-            clearInterval(refreshTimer); // Clear any existing timer
-            refreshTimer = setInterval(updateTimer, 1000);
         }
+    }
+    
+    // Update immediately and then every second
+    updateTimer();
+    clearInterval(refreshTimer); // Clear any existing timer
+    refreshTimer = setInterval(updateTimer, 1000);
+}
         
         // Start event countdown timer
         function startEventCountdown() {
