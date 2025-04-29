@@ -1764,25 +1764,38 @@
                 });
             }
             
-            // Thiết lập joystick
+            // Thiết lập joystick với cơ chế di chuyển cải tiến
             setupJoystick(base, knob) {
-                const baseBounds = base.getBoundingClientRect();
-                const baseRadius = baseBounds.width / 2;
+                const baseRadius = base.offsetWidth / 2;
                 const knobRadius = knob.offsetWidth / 2;
                 const maxDistance = baseRadius - knobRadius;
                 
                 let isActive = false;
                 let touchId = null;
                 
-                // Reset joystick
+                // Biến debug hiển thị thông tin di chuyển
+                const debugInfo = document.createElement('div');
+                debugInfo.style.position = 'absolute';
+                debugInfo.style.bottom = '10px';
+                debugInfo.style.left = '10px';
+                debugInfo.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                debugInfo.style.color = 'white';
+                debugInfo.style.padding = '5px';
+                debugInfo.style.borderRadius = '5px';
+                debugInfo.style.fontSize = '12px';
+                debugInfo.style.pointerEvents = 'none';
+                document.body.appendChild(debugInfo);
+                
+                // Reset joystick và dừng di chuyển
                 const resetKnob = () => {
                     knob.style.transform = `translate(0px, 0px)`;
                     this.joystickActive = false;
                     this.joystickAngle = 0;
                     this.joystickStrength = 0;
+                    debugInfo.textContent = 'Joystick: inactive';
                 };
                 
-                // Xử lý di chuyển joystick
+                // Xử lý di chuyển joystick và cập nhật dữ liệu di chuyển
                 const moveJoystick = (clientX, clientY) => {
                     const bounds = base.getBoundingClientRect();
                     const centerX = bounds.left + bounds.width / 2;
@@ -1790,7 +1803,7 @@
                     const deltaX = clientX - centerX;
                     const deltaY = clientY - centerY;
                     
-                    const distance = Math.min(Math.hypot(deltaX, deltaY), maxDistance);
+                    const distance = Math.min(Math.sqrt(deltaX * deltaX + deltaY * deltaY), maxDistance);
                     const angle = Math.atan2(deltaY, deltaX);
                     
                     const moveX = distance * Math.cos(angle);
@@ -1801,71 +1814,166 @@
                     this.joystickActive = true;
                     this.joystickAngle = angle;
                     this.joystickStrength = distance / maxDistance;
+                    
+                    // Cập nhật thông tin debug
+                    debugInfo.textContent = `Joystick: active, Angle: ${angle.toFixed(2)}, Strength: ${this.joystickStrength.toFixed(2)}`;
+                    
+                    // Đảm bảo thay đổi này được ghi nhận ngay lập tức
+                    if (this.player) {
+                        const speed = GAME_CONFIG.PLAYER_SPEED * this.joystickStrength;
+                        this.player.speedX = Math.cos(this.joystickAngle) * speed;
+                        this.player.speedY = Math.sin(this.joystickAngle) * speed;
+                        this.player.angle = this.joystickAngle;
+                    }
                 };
                 
-                // Xử lý sự kiện chuột
+                // XỬ LÝ SỰ KIỆN CHUỘT - Đảm bảo bắt mọi event
                 base.addEventListener('mousedown', (e) => {
+                    console.log('Mouse down event triggered');
                     isActive = true;
                     moveJoystick(e.clientX, e.clientY);
-                });
+                    // Ngăn chặn các sự kiện mặc định
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, { passive: false });
                 
-                document.addEventListener('mousemove', (e) => {
+                window.addEventListener('mousemove', (e) => {
                     if (isActive) {
                         moveJoystick(e.clientX, e.clientY);
+                        // Ngăn chặn các sự kiện mặc định
+                        e.preventDefault();
+                        e.stopPropagation();
                     }
-                });
+                }, { passive: false });
                 
-                document.addEventListener('mouseup', () => {
+                window.addEventListener('mouseup', (e) => {
                     if (isActive) {
+                        console.log('Mouse up event triggered');
                         isActive = false;
                         resetKnob();
+                        // Ngăn chặn các sự kiện mặc định
+                        e.preventDefault();
+                        e.stopPropagation();
                     }
-                });
+                }, { passive: false });
                 
-                // Xử lý sự kiện cảm ứng
+                // XỬ LÝ SỰ KIỆN CẢM ỨNG - Đảm bảo bắt mọi event trên điện thoại
                 base.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
+                    console.log('Touch start event triggered');
                     if (!isActive && e.touches.length > 0) {
                         isActive = true;
                         touchId = e.touches[0].identifier;
                         moveJoystick(e.touches[0].clientX, e.touches[0].clientY);
-                    }
-                });
-                
-                document.addEventListener('touchmove', (e) => {
-                    if (isActive) {
+                        // Ngăn chặn các sự kiện mặc định
                         e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }, { passive: false });
+                
+                window.addEventListener('touchmove', (e) => {
+                    if (isActive) {
                         for (let i = 0; i < e.changedTouches.length; i++) {
                             const touch = e.changedTouches[i];
                             if (touch.identifier === touchId) {
                                 moveJoystick(touch.clientX, touch.clientY);
+                                // Ngăn chặn các sự kiện mặc định
+                                e.preventDefault();
+                                e.stopPropagation();
                                 break;
                             }
                         }
                     }
-                });
+                }, { passive: false });
                 
-                document.addEventListener('touchend', (e) => {
+                window.addEventListener('touchend', (e) => {
                     for (let i = 0; i < e.changedTouches.length; i++) {
                         const touch = e.changedTouches[i];
                         if (isActive && touch.identifier === touchId) {
+                            console.log('Touch end event triggered');
                             isActive = false;
                             touchId = null;
                             resetKnob();
+                            // Ngăn chặn các sự kiện mặc định
+                            e.preventDefault();
+                            e.stopPropagation();
                             break;
                         }
                     }
-                });
+                }, { passive: false });
                 
-                document.addEventListener('touchcancel', (e) => {
+                window.addEventListener('touchcancel', (e) => {
                     for (let i = 0; i < e.changedTouches.length; i++) {
                         const touch = e.changedTouches[i];
                         if (isActive && touch.identifier === touchId) {
+                            console.log('Touch cancel event triggered');
                             isActive = false;
                             touchId = null;
                             resetKnob();
+                            // Ngăn chặn các sự kiện mặc định
+                            e.preventDefault();
+                            e.stopPropagation();
                             break;
                         }
+                    }
+                }, { passive: false });
+                
+                // Thêm hỗ trợ phím bàn phím như phương án dự phòng
+                window.addEventListener('keydown', (e) => {
+                    if (!this.player) return;
+                    
+                    const speed = GAME_CONFIG.PLAYER_SPEED;
+                    switch(e.key) {
+                        case 'ArrowUp':
+                        case 'w':
+                            this.player.speedY = -speed;
+                            this.player.angle = -Math.PI / 2;
+                            this.joystickActive = true;
+                            break;
+                        case 'ArrowDown':
+                        case 's':
+                            this.player.speedY = speed;
+                            this.player.angle = Math.PI / 2;
+                            this.joystickActive = true;
+                            break;
+                        case 'ArrowLeft':
+                        case 'a':
+                            this.player.speedX = -speed;
+                            this.player.angle = Math.PI;
+                            this.joystickActive = true;
+                            break;
+                        case 'ArrowRight':
+                        case 'd':
+                            this.player.speedX = speed;
+                            this.player.angle = 0;
+                            this.joystickActive = true;
+                            break;
+                    }
+                    
+                    debugInfo.textContent = `Keyboard: ${e.key}, Speed: ${this.player.speedX.toFixed(2)}, ${this.player.speedY.toFixed(2)}`;
+                });
+                
+                window.addEventListener('keyup', (e) => {
+                    if (!this.player) return;
+                    
+                    switch(e.key) {
+                        case 'ArrowUp':
+                        case 'w':
+                        case 'ArrowDown':
+                        case 's':
+                            this.player.speedY = 0;
+                            break;
+                        case 'ArrowLeft':
+                        case 'a':
+                        case 'ArrowRight':
+                        case 'd':
+                            this.player.speedX = 0;
+                            break;
+                    }
+                    
+                    // Kiểm tra nếu cả hai trục đều dừng thì đánh dấu joystick không hoạt động
+                    if (this.player.speedX === 0 && this.player.speedY === 0) {
+                        this.joystickActive = false;
+                        debugInfo.textContent = 'Keyboard: inactive';
                     }
                 });
             }
@@ -2194,21 +2302,27 @@
             // Vòng lặp game chính
             gameLoop(delta) {
                 if (!this.gameStarted || !this.player) return;
+
+                // Giới hạn delta để tránh nhảy quá xa khi lag
+                const cappedDelta = Math.min(delta, 10);
                 
                 // Tính thời gian game
-                this.gameTime += delta / 60;
+                this.gameTime += cappedDelta / 60;
                 
                 // Cập nhật thời gian hiển thị (mỗi giây)
-                if (Math.floor(this.gameTime) > Math.floor((this.gameTime - delta / 60))) {
+                if (Math.floor(this.gameTime) > Math.floor((this.gameTime - cappedDelta / 60))) {
                     updateTimeUI();
                 }
                 
                 // Di chuyển người chơi theo joystick
-                if (this.joystickActive && this.joystickStrength > 0.1) {
-                    const speed = GAME_CONFIG.PLAYER_SPEED * this.joystickStrength;
-                    this.player.speedX = Math.cos(this.joystickAngle) * speed;
-                    this.player.speedY = Math.sin(this.joystickAngle) * speed;
-                    this.player.angle = this.joystickAngle;
+                if (this.joystickActive) {
+                    // Sử dụng trực tiếp các giá trị đã có từ joystick
+                    if (this.joystickStrength > 0.1) {
+                        const speed = GAME_CONFIG.PLAYER_SPEED * this.joystickStrength;
+                        this.player.speedX = Math.cos(this.joystickAngle) * speed;
+                        this.player.speedY = Math.sin(this.joystickAngle) * speed;
+                        this.player.angle = this.joystickAngle;
+                    }
                 } else {
                     // Giảm tốc độ khi không di chuyển
                     this.player.speedX *= 0.8;
@@ -2219,12 +2333,28 @@
                 }
                 
                 // Cập nhật vị trí người chơi
-                this.player.x += this.player.speedX * delta;
-                this.player.y += this.player.speedY * delta;
+                if (this.player.speedX !== 0 || this.player.speedY !== 0) {
+                    // Chỉ di chuyển khi tốc độ > 0 để tránh lỗi rung
+                    const oldX = this.player.x;
+                    const oldY = this.player.y;
+                    
+                    this.player.x += this.player.speedX * cappedDelta;
+                    this.player.y += this.player.speedY * cappedDelta;
+                    
+                    // Log khi có sự di chuyển để debug
+                    if (oldX !== this.player.x || oldY !== this.player.y) {
+                        console.log(`Player moved: (${oldX.toFixed(1)},${oldY.toFixed(1)}) -> (${this.player.x.toFixed(1)},${this.player.y.toFixed(1)})`);
+                    }
+                    
+                    // Cập nhật sprite và các hiệu ứng liên quan
+                    this.player.update(cappedDelta);
+                    
+                    // Force cập nhật camera khi nhân vật di chuyển
+                    this.centerCamera();
+                }
                 
-                // Cập nhật các chunk hiển thị và center camera
+                // Cập nhật các chunk hiển thị
                 this.gameMap.updateVisibleChunks(this.player.x, this.player.y);
-                this.centerCamera();
                 
                 // Sinh ngẫu nhiên vật phẩm
                 const now = Date.now();
@@ -2241,7 +2371,7 @@
                 }
                 
                 // Cập nhật tất cả đối tượng trên bản đồ
-                this.gameMap.update(delta);
+                this.gameMap.update(cappedDelta);
                 
                 // Lưu trạng thái game định kỳ
                 if (now - this.lastSaveTime > 10000) { // Mỗi 10 giây
