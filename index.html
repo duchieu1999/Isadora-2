@@ -789,23 +789,41 @@
                 // Tạo filter cho hiệu ứng ngày/đêm
                 this.nightFilter = new PIXI.ColorMatrixFilter();
 
-                // Khởi tạo texture cho player (cần load hình trước)
-                const playerTextureLoader = new PIXI.Loader();
-                playerTextureLoader.add('playerTexture', 'https://img.upanh.tv/2025/04/29/ChatGPT-Image-12_31_11-29-thg-4-2025.png');
-                playerTextureLoader.load((loader, resources) => {
-                    if (resources.playerTexture && resources.playerTexture.texture) {
-                        this.playerTexture = resources.playerTexture.texture;
-                    }
-                    
-                    // Vẽ bản đồ ban đầu
-                    this.createInitialMap();
-                    
-                    // Tạo các đám mây ban đầu
-                    this.createInitialClouds();
-                    
-                    // Tạo các con chim ban đầu
-                    this.createInitialBirds();
-                });
+                // Vẽ bản đồ ban đầu ngay lập tức để đảm bảo thấy được ngay khi bắt đầu game
+                this.createInitialMap();
+                
+                // Tạo các đám mây ban đầu
+                this.createInitialClouds();
+                
+                // Tạo các con chim ban đầu
+                this.createInitialBirds();
+                
+                // Tải texture cho player (không chờ đợi)
+                try {
+                    const playerImage = new Image();
+                    playerImage.crossOrigin = "Anonymous";
+                    playerImage.onload = () => {
+                        this.playerTexture = PIXI.Texture.from(playerImage);
+                        // Cập nhật sprite người chơi nếu đã tạo
+                        if (this.player && this.player.sprite) {
+                            const playerContainer = this.player.sprite;
+                            const oldGraphic = playerContainer.getChildAt(0);
+                            playerContainer.removeChild(oldGraphic);
+                            
+                            const newSprite = new PIXI.Sprite(this.playerTexture);
+                            newSprite.anchor.set(0.5, 0.5);
+                            newSprite.width = 40;
+                            newSprite.height = 40;
+                            playerContainer.addChildAt(newSprite, 0);
+                        }
+                    };
+                    playerImage.onerror = () => {
+                        console.error("Không thể tải hình ảnh người chơi");
+                    };
+                    playerImage.src = "https://img.upanh.tv/2025/04/29/ChatGPT-Image-12_31_11-29-thg-4-2025.png";
+                } catch (error) {
+                    console.error("Lỗi khi tải texture cho player:", error);
+                }
 
                 // Xử lý sự kiện resize
                 window.addEventListener('resize', () => {
@@ -1324,7 +1342,7 @@
                     
                     // Biểu tượng
                     shieldGraphic.beginFill(0xFFFFFF);
-                    shieldGraphic.drawStar(0, 0, 5, 5, 2);
+                    this.drawStar(shieldGraphic, 0, 0, 5, 5, 2);
                     shieldGraphic.endFill();
                     
                     itemContainer.addChild(shieldGraphic);
