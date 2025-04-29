@@ -1824,7 +1824,10 @@
                     jackpotOverlay.classList.add('show');
                 }, 500);
             } else if (section.extraSpin) {
-                spinsLeft++;
+    // Thêm kiểm tra giới hạn
+    if (spinsLeft < 50) {
+        spinsLeft++;
+    }
                 updateStats();
                 message += `<strong>${section.name}!</strong> Bạn nhận được thêm 1 lượt quay! `;
                 SOUNDS.win.play();
@@ -2360,17 +2363,18 @@
                                 now.getFullYear() === stateTime.getFullYear();
                 
                 if (sameDay && nowHour === stateHour) {
-                    points = gameState.points || 0;
-                    spinsLeft = gameState.spinsLeft !== undefined ? gameState.spinsLeft : 50;
-                    nextSpinDouble = gameState.nextSpinDouble || false;
-                    lastWheelRotation = gameState.wheelRotation || 0;
-                } else {
-                    // Reset spins for new hour but keep points
-                    points = gameState.points || 0;
-                    spinsLeft = 50;
-                    nextSpinDouble = false;
-                    lastWheelRotation = 0;
-                }
+    points = gameState.points || 0;
+    // Đảm bảo không vượt quá 50 lượt quay
+    spinsLeft = Math.min(50, gameState.spinsLeft !== undefined ? gameState.spinsLeft : 50);
+    nextSpinDouble = gameState.nextSpinDouble || false;
+    lastWheelRotation = gameState.wheelRotation || 0;
+} else {
+    // Reset spins for new hour but keep points
+    points = gameState.points || 0;
+    spinsLeft = 50; // Giá trị này đã cố định là 50
+    nextSpinDouble = false;
+    lastWheelRotation = 0;
+}
             }
             
             // Try to fetch from API
