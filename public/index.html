@@ -1570,10 +1570,10 @@
                 
                 showNotification("Đã kết nối máy chủ thành công!");
             } catch (error) {
-                console.error("Error initializing game:", error);
-                leaderboardStatus.textContent = "Đang sử dụng dữ liệu offline. Kết nối lại sau...";
-                showNotification("Đang sử dụng dữ liệu offline.");
-            }
+    console.error("Error initializing game:", error);
+    leaderboardStatus.textContent = "Đang tải dữ liệu...";
+    showNotification("Đang tải dữ liệu bảng xếp hạng.");
+}
         }
 
         // Check if name is registered
@@ -2473,28 +2473,30 @@
                 }
                 
                 updateLeaderboardDisplay(leaderboard);
-                leaderboardStatus.textContent = `Cập nhật lúc: ${new Date().toLocaleTimeString()}`;
+const now = new Date();
+const options = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+leaderboardStatus.textContent = `Cập nhật: ${now.toLocaleTimeString('vi-VN', options)}`;
             } catch (err) {
-                console.error("Error loading leaderboard:", err);
-                leaderboardStatus.textContent = 'Đang sử dụng dữ liệu offline. Kết nối lại sau...';
-                
-                // Fallback to local data
-                let localLeaderboard = localStorage.getItem('localLeaderboard');
-                if (localLeaderboard) {
-                    localLeaderboard = JSON.parse(localLeaderboard);
-                } else {
-                    localLeaderboard = [
-                        { userId: "sample1", name: "Vô Địch", score: 2800 },
-                        { userId: "sample2", name: "Tuấn Anh", score: 2200 },
-                        { userId: "sample3", name: "Mai Phương", score: 1800 },
-                        { userId: "sample4", name: "Bảo Long", score: 1500 },
-                        { userId: "sample5", name: "Thu Hà", score: 1200 }
-                    ];
-                    localStorage.setItem('localLeaderboard', JSON.stringify(localLeaderboard));
-                }
-                
-                updateLocalLeaderboard();
-            }
+    console.error("Error loading leaderboard:", err);
+    leaderboardStatus.textContent = 'Đang cập nhật bảng xếp hạng...';
+    
+    // Fallback to local data - vẫn giữ chức năng nhưng không hiển thị thông báo
+    let localLeaderboard = localStorage.getItem('localLeaderboard');
+    if (localLeaderboard) {
+        localLeaderboard = JSON.parse(localLeaderboard);
+    } else {
+        localLeaderboard = [
+            { userId: "sample1", name: "Vô Địch", score: 2800 },
+            { userId: "sample2", name: "Tuấn Anh", score: 2200 },
+            { userId: "sample3", name: "Mai Phương", score: 1800 },
+            { userId: "sample4", name: "Bảo Long", score: 1500 },
+            { userId: "sample5", name: "Thu Hà", score: 1200 }
+        ];
+        localStorage.setItem('localLeaderboard', JSON.stringify(localLeaderboard));
+    }
+    
+    updateLocalLeaderboard();
+}
         }
 
         // Update leaderboard display
