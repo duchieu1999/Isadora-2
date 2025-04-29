@@ -1210,6 +1210,80 @@
             margin-bottom: 10px;
             display: none;
         }
+
+        /* Poster overlay styles */
+        .poster-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .poster-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 90%;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s ease-out;
+        }
+
+        .poster-image {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .poster-image img {
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .poster-instructions {
+            color: white;
+            padding: 15px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .poster-button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .poster-share-button, .poster-close-button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            margin: 5px 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .poster-share-button {
+            background-color: #0088cc;
+            color: white;
+        }
+
+        .poster-close-button {
+            background-color: #666;
+            color: white;
+        }
         
         /* Responsive adjustments */
         @media screen and (max-height: 700px) {
@@ -1434,6 +1508,14 @@
     <div class="notification" id="notification"></div>
     
     <script>
+        // Phát hiện ngay nếu đang chạy trong Telegram WebApp
+        const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
+        if (isTelegramWebApp) {
+            console.log("Running in Telegram WebApp environment");
+            // Thiết lập các thông số ban đầu cho Telegram WebApp
+            document.documentElement.style.setProperty('--primary-color', '#0088cc');
+        }
+        
         // Sound effects
         const SOUNDS = {
             spin: new Howl({
@@ -1477,8 +1559,8 @@
             { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -35, probability: 0.08 },
             { name: "Nhận đôi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 },
             // Thêm phần thưởng jackpot với tỉ lệ thấp
-            { name: "JACKPOT ĐẶC BIỆT", icon: "💰", points: 100, jackpot: true, probability: 0.001 },
-            { name: "JACKPOT LỚN", icon: "💎", points: 150, jackpot: true, probability: 0.0005 }
+            { name: "JACKPOT ĐẶC BIỆT", icon: "💰", points: 5000, jackpot: true, probability: 0.001 },
+            { name: "JACKPOT LỚN", icon: "💎", points: 10000, jackpot: true, probability: 0.0005 }
         ];
 
         // DOM elements
@@ -1536,112 +1618,149 @@
         const API_BASE_URL = '/api';
 
         // Initialize the game
-async function initGame() {
-    try {
-        // Phát hiện nếu đang chạy trong Telegram WebApp
-        const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
-        if (isTelegramWebApp) {
-            console.log("Running in Telegram WebApp environment");
-            
-            // Cấu hình cụ thể cho Telegram nếu cần
-            document.documentElement.style.setProperty('--primary-color', '#0088cc'); // Telegram blue
-            
-            // Nghe sự kiện từ Telegram WebApp nếu cần
-            window.Telegram.WebApp.onEvent('viewportChanged', function() {
-                // Điều chỉnh giao diện cho phù hợp với kích thước WebApp mới
-                adjustWheelSize();
-            });
-            
-            // Thay đổi văn bản nút phiếu quà
-            if (saveRewardBtn) {
-                saveRewardBtn.textContent = 'XEM & LƯU PHIẾU THƯỞNG';
-            }
-            
-            // Cho Telegram biết app đã sẵn sàng
-            window.Telegram.WebApp.ready();
-            
-            // Đặt màu nền chính của thanh main button trong Telegram (nếu cần)
-            window.Telegram.WebApp.setHeaderColor('#d82f2f');
-        }
-        
-        // Khởi tạo các thành phần chính của game
-        createWheel();
-        setupUserId();
-        checkNameRegistration();
-        await loadGameState();
-        startRefreshTimer();
-        startEventCountdown();
-        updateStats();
-        await loadLeaderboard();
-        
-        // Setup redeem options
-        setupRedeemOptions();
-        
-        // Setup jackpot close
-        jackpotClose.addEventListener('click', () => {
-            jackpotOverlay.classList.remove('show');
-        });
-        
-        // Setup sound effect preloading
-        Object.values(SOUNDS).forEach(sound => {
-            sound.load();
-        });
-        
-        // Setup name registration
-        nameRegistrationButton.addEventListener('click', handleNameRegistration);
-        nameRegistrationInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                handleNameRegistration();
-            }
-        });
-        
-        // Thêm sự kiện resize để điều chỉnh kích thước bánh xe trên các thiết bị khác nhau
-        window.addEventListener('resize', adjustWheelSize);
-        adjustWheelSize();
-        
-        // Kiểm tra lại một lần nữa số lượt quay sau khi khởi tạo
-        setTimeout(() => {
-            const savedState = localStorage.getItem('wheelGameState');
-            if (savedState) {
-                const gameState = JSON.parse(savedState);
-                console.log("Current spins: " + spinsLeft + ", Saved spins: " + gameState.spinsLeft);
+        async function initGame() {
+            try {
+                // Phát hiện nếu đang chạy trong Telegram WebApp
+                if (isTelegramWebApp) {
+                    console.log("Configuring for Telegram WebApp");
+                    
+                    // Nghe sự kiện từ Telegram WebApp nếu cần
+                    window.Telegram.WebApp.onEvent('viewportChanged', function() {
+                        // Điều chỉnh giao diện cho phù hợp với kích thước WebApp mới
+                        adjustWheelSize();
+                    });
+                    
+                    // Thay đổi văn bản nút phiếu quà
+                    updateButtonText();
+                    
+                    // Cho Telegram biết app đã sẵn sàng
+                    window.Telegram.WebApp.ready();
+                    
+                    // Đặt màu nền chính của thanh main button trong Telegram (nếu cần)
+                    if (window.Telegram.WebApp.setHeaderColor) {
+                        window.Telegram.WebApp.setHeaderColor('#d82f2f');
+                    }
+                }
                 
-                // Đảm bảo UI hiển thị đúng số lượt quay
-                if (spinsLeft !== gameState.spinsLeft) {
-                    spinsLeft = gameState.spinsLeft;
-                    updateStats();
+                // Khởi tạo các thành phần chính của game
+                createWheel();
+                setupUserId();
+                checkNameRegistration();
+                await loadGameState();
+                startRefreshTimer();
+                startEventCountdown();
+                updateStats();
+                await loadLeaderboard();
+                
+                // Setup redeem options
+                setupRedeemOptions();
+                
+                // Setup jackpot close
+                jackpotClose.addEventListener('click', () => {
+                    jackpotOverlay.classList.remove('show');
+                });
+                
+                // Setup sound effect preloading
+                Object.values(SOUNDS).forEach(sound => {
+                    sound.load();
+                });
+                
+                // Setup name registration
+                nameRegistrationButton.addEventListener('click', handleNameRegistration);
+                nameRegistrationInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        handleNameRegistration();
+                    }
+                });
+                
+                // Thêm sự kiện resize để điều chỉnh kích thước bánh xe
+                window.addEventListener('resize', adjustWheelSize);
+                adjustWheelSize();
+                
+                // Kiểm tra lại một lần nữa số lượt quay sau khi khởi tạo
+                setTimeout(() => {
+                    const savedState = localStorage.getItem('wheelGameState');
+                    if (savedState) {
+                        const gameState = JSON.parse(savedState);
+                        console.log("Current spins: " + spinsLeft + ", Saved spins: " + gameState.spinsLeft);
+                        
+                        // Đảm bảo UI hiển thị đúng số lượt quay
+                        if (spinsLeft !== gameState.spinsLeft) {
+                            spinsLeft = gameState.spinsLeft;
+                            updateStats();
+                        }
+                    }
+                    
+                    // Kiểm tra và áp dụng reset lượt quay nếu cần
+                    checkSpinReset();
+                }, 500);
+                
+                showNotification("Đã kết nối máy chủ thành công!");
+            } catch (error) {
+                console.error("Error initializing game:", error);
+                leaderboardStatus.textContent = "Đang tải dữ liệu...";
+                showNotification("Đang tải dữ liệu bảng xếp hạng.");
+            }
+        }
+
+        // Thêm hàm điều chỉnh kích thước bánh xe
+        function adjustWheelSize() {
+            const isMobile = window.innerWidth < 500;
+            
+            // Điều chỉnh kích thước bánh xe dựa trên môi trường và thiết bị
+            const wheelContainer = document.querySelector('.wheel-outer-container');
+            if (wheelContainer) {
+                if (isMobile) {
+                    wheelContainer.style.maxWidth = isTelegramWebApp ? '280px' : '300px';
+                } else {
+                    wheelContainer.style.maxWidth = '340px';
                 }
             }
-            
-            // Kiểm tra và áp dụng reset lượt quay nếu cần
-            checkSpinReset();
-        }, 500);
-        
-        showNotification("Đã kết nối máy chủ thành công!");
-    } catch (error) {
-        console.error("Error initializing game:", error);
-        leaderboardStatus.textContent = "Đang tải dữ liệu...";
-        showNotification("Đang tải dữ liệu bảng xếp hạng.");
-    }
-}
-
-
-        // Thêm hàm mới này vào mã JavaScript
-function updateButtonText() {
-    const saveRewardBtn = document.getElementById('save-reward-btn');
-    const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
-    
-    if (saveRewardBtn) {
-        if (isTelegramWebApp) {
-            saveRewardBtn.textContent = 'XEM & LƯU PHIẾU THƯỞNG';
-        } else {
-            saveRewardBtn.textContent = 'TẢI POSTER NHẬN THƯỞNG';
         }
-    }
-}
+        
+        // Thêm hàm kiểm tra và áp dụng reset lượt quay
+        function checkSpinReset() {
+            const lastRefreshTime = localStorage.getItem('lastRefreshTime');
+            const now = new Date().getTime();
+            
+            // Nếu chưa có thời điểm làm mới hoặc đã qua 1 giờ kể từ lần làm mới cuối
+            if (!lastRefreshTime || (now - parseInt(lastRefreshTime)) >= 3600000) {
+                // Đặt lại số lượt quay lên 50
+                spinsLeft = 50;
+                updateStats();
+                
+                // Lưu thời điểm làm mới mới
+                localStorage.setItem('lastRefreshTime', now);
+                
+                // Tính toán thời điểm làm mới tiếp theo
+                const nextHour = new Date();
+                nextHour.setHours(nextHour.getHours() + 1);
+                nextHour.setMinutes(0, 0, 0);
+                nextHour.setSeconds(0, 0);
+                localStorage.setItem('nextRefreshTime', nextHour.getTime());
+                
+                // Lưu trạng thái mới
+                saveGameState();
+                
+                console.log("Reset spins to 50 at startup check");
+            }
+        }
 
-// Đăng ký sự kiện để chạy sau khi DOM đã tải xong
-document.addEventListener('DOMContentLoaded', updateButtonText);
+        // Hàm cập nhật văn bản nút dựa vào môi trường
+        function updateButtonText() {
+            const saveRewardBtn = document.getElementById('save-reward-btn');
+            
+            if (saveRewardBtn) {
+                if (isTelegramWebApp) {
+                    saveRewardBtn.textContent = 'XEM & LƯU PHIẾU THƯỞNG';
+                } else {
+                    saveRewardBtn.textContent = 'TẢI VỀ ẢNH PHIẾU NHẬN THƯỞNG';
+                }
+            }
+        }
+
+        // Đăng ký sự kiện để chạy sau khi DOM đã tải xong
+        document.addEventListener('DOMContentLoaded', updateButtonText);
 
         // Check if name is registered
         function checkNameRegistration() {
@@ -1891,10 +2010,10 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
                     jackpotOverlay.classList.add('show');
                 }, 500);
             } else if (section.extraSpin) {
-    // Thêm kiểm tra giới hạn
-    if (spinsLeft < 50) {
-        spinsLeft++;
-    }
+                // Thêm kiểm tra giới hạn
+                if (spinsLeft < 50) {
+                    spinsLeft++;
+                }
                 updateStats();
                 message += `<strong>${section.name}!</strong> Bạn nhận được thêm 1 lượt quay! `;
                 SOUNDS.win.play();
@@ -1903,7 +2022,7 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
                 SOUNDS.lose.play();
             } else if (section.randomCard) {
                 // Random card gives points between 10-200 (increased range)
-                const randomPoints = Math.floor(Math.random() * 81) + 10;
+                const randomPoints = Math.floor(Math.random() * 81) + 20;
                 pointsEarned = randomPoints;
                 message += `<strong>${section.name}!</strong> Bạn nhận được ${pointsEarned} điểm! `;
                 SOUNDS.win.play();
@@ -1961,7 +2080,7 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
             `;
             
             resultContainer.innerHTML = resultHtml;
-            resultContainer.classList.remove('bounce', 'highlight');
+            resultContainer.classList.remove('bounce', 'highlight', 'shake');
             void resultContainer.offsetWidth; // Force reflow
             
             // Apply different effects based on result
@@ -2101,63 +2220,97 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
             spinsValue.textContent = spinsLeft;
         }
 
+        // Start the refresh timer for spins
         function startRefreshTimer() {
-    // Check if we have a saved next refresh time in localStorage
-    let nextRefreshTime = localStorage.getItem('nextRefreshTime');
-    const now = new Date();
-    
-    // If no saved time or saved time is in the past, calculate next refresh hour
-    if (!nextRefreshTime || new Date(parseInt(nextRefreshTime)) <= now) {
-        // Calculate next whole hour
-        const nextHour = new Date(now);
-        nextHour.setMinutes(now.getMinutes() + 35, 0, 0);
-        
-        // Save to localStorage
-        nextRefreshTime = nextHour.getTime();
-        localStorage.setItem('nextRefreshTime', nextRefreshTime);
-    }
-    
-    // Calculate time left based on saved next refresh time
-    let timeLeft = new Date(parseInt(nextRefreshTime)) - now;
-    
-    // Update timer display
-    function updateTimer() {
-        const minutes = Math.floor((timeLeft / 1000) / 60);
-        const seconds = Math.floor((timeLeft / 1000) % 60);
-        timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        
-        timeLeft -= 1000;
-        
-        if (timeLeft <= 0) {
-            // Reset spins when timer reaches zero
-            spinsLeft = 50;
-            updateStats();
-            saveGameState();
+            // Check if we have a saved next refresh time in localStorage
+            let nextRefreshTime = localStorage.getItem('nextRefreshTime');
+            let lastRefreshTime = localStorage.getItem('lastRefreshTime');
+            const now = new Date().getTime();
             
-            // Show reset notification
-            showNotification("Lượt quay đã được làm mới!");
+            // If no saved time or saved time is in the past, calculate next refresh hour
+            if (!nextRefreshTime || parseInt(nextRefreshTime) <= now) {
+                // Calculate next whole hour
+                const nextHour = new Date();
+                nextHour.setHours(nextHour.getHours() + 1);
+                nextHour.setMinutes(0, 0, 0);
+                nextHour.setSeconds(0, 0);
+                
+                // Save to localStorage
+                nextRefreshTime = nextHour.getTime();
+                localStorage.setItem('nextRefreshTime', nextRefreshTime);
+                
+                // Also save the last refresh time if not set
+                if (!lastRefreshTime) {
+                    localStorage.setItem('lastRefreshTime', now);
+                }
+            }
             
-            // Calculate and save next refresh time
-            const nextHour = new Date();
-            nextHour.setMinutes(now.getMinutes() + 30, 0, 0);
-
+            // Calculate time left based on saved next refresh time
+            let timeLeft = parseInt(nextRefreshTime) - now;
             
-            nextRefreshTime = nextHour.getTime();
-            localStorage.setItem('nextRefreshTime', nextRefreshTime);
+            // Update timer display
+            function updateTimer() {
+                const minutes = Math.floor((timeLeft / 1000) / 60);
+                const seconds = Math.floor((timeLeft / 1000) % 60);
+                timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                
+                timeLeft -= 1000;
+                
+                if (timeLeft <= 0) {
+                    // Reset spins when timer reaches zero
+                    spinsLeft = 50;
+                    updateStats();
+                    
+                    // Save the current time as last refresh time
+                    const currentTime = new Date().getTime();
+                    localStorage.setItem('lastRefreshTime', currentTime);
+                    
+                    // Calculate next hour refresh time
+                    const nextHour = new Date();
+                    nextHour.setHours(nextHour.getHours() + 1);
+                    nextHour.setMinutes(0, 0, 0);
+                    nextHour.setSeconds(0, 0);
+                    nextRefreshTime = nextHour.getTime();
+                    localStorage.setItem('nextRefreshTime', nextRefreshTime);
+                    
+                    // Reset timeLeft for next cycle
+                    timeLeft = nextRefreshTime - currentTime;
+                    
+                    // Show reset notification
+                    showNotification("Lượt quay đã được làm mới!");
+                    
+                    // Add special reset effect
+                    const resetIcon = document.createElement('span');
+                    resetIcon.className = 'reset-icon';
+                    resetIcon.textContent = '🔄';
+                    spinsValue.prepend(resetIcon);
+                    
+                    anime({
+                        targets: '#spins-value',
+                        backgroundColor: [
+                            { value: 'rgba(255, 235, 59, 0.5)', duration: 500 },
+                            { value: 'transparent', duration: 500 }
+                        ],
+                        scale: [1, 1.2, 1],
+                        duration: 1000
+                    });
+                    
+                    setTimeout(() => {
+                        if (spinsValue.contains(resetIcon)) {
+                            spinsValue.removeChild(resetIcon);
+                        }
+                    }, 3000);
+                    
+                    // Save game state after reset
+                    saveGameState();
+                }
+            }
             
-            // Reset timeLeft for next cycle
-            timeLeft = 2100000; // 1 hour in milliseconds
-            
-            // Restart timer display
+            // Update immediately and then every second
             updateTimer();
+            clearInterval(refreshTimer); // Clear any existing timer
+            refreshTimer = setInterval(updateTimer, 1000);
         }
-    }
-    
-    // Update immediately and then every second
-    updateTimer();
-    clearInterval(refreshTimer); // Clear any existing timer
-    refreshTimer = setInterval(updateTimer, 1000);
-}
         
         // Start event countdown timer
         function startEventCountdown() {
@@ -2235,15 +2388,13 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
             // Update reward card
             rewardValue.textContent = `${amount.toLocaleString()} VNĐ`;
             rewardDate.textContent = new Date().toLocaleDateString('vi-VN');
-
-             // Show reward card with animation
-    rewardCard.style.display = 'block';
-    
-    // Cập nhật nội dung nút phù hợp với môi trường (thêm dòng này)
-    updateButtonText();
             
             // Show reward card with animation
             rewardCard.style.display = 'block';
+            
+            // Cập nhật nút dựa trên môi trường (Telegram hay browser)
+            updateButtonText();
+            
             anime({
                 targets: '#reward-card',
                 scale: [0.9, 1],
@@ -2268,8 +2419,6 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
             
             // Create mini celebration
             createConfetti(20);
-
-
         }
 
         // Generate reward poster 
@@ -2341,176 +2490,147 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
             customPosterImage = imageUrl;
         }
 
-     function saveRewardPoster() {
-    SOUNDS.click.play();
-    
-    // Thay đổi hướng dẫn dựa trên môi trường (Telegram hay trình duyệt)
-    const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
-    
-    if (isTelegramWebApp) {
-        // Hiển thị overlay toàn màn hình với poster và hướng dẫn
-        showPosterOverlay();
-    } else {
-        // Vẫn giữ chức năng tải xuống cho trình duyệt thông thường
-        if (customPosterImage) {
-            // Create a download link
-            const downloadLink = document.createElement('a');
-            downloadLink.href = customPosterImage;
-            downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
+        // Hiển thị poster toàn màn hình
+        function showPosterOverlay() {
+            // Tạo overlay hiển thị poster toàn màn hình
+            const overlay = document.createElement('div');
+            overlay.className = 'poster-overlay';
             
-            // Trigger download
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
+            // Tạo container cho poster
+            const posterContainer = document.createElement('div');
+            posterContainer.className = 'poster-container';
+            posterContainer.style.transform = 'scale(0.9)';
             
-            showNotification('Đã tải poster thành công!');
-        } else {
-            // Fallback to HTML2Canvas
-            html2canvas(rewardCard).then(canvas => {
-                const imageUrl = canvas.toDataURL('image/png');
+            // Hiển thị ảnh poster
+            const posterImage = document.createElement('div');
+            posterImage.className = 'poster-image';
+            
+            // Tạo ảnh từ canvas đã tạo
+            const img = document.createElement('img');
+            img.src = customPosterImage;
+            
+            posterImage.appendChild(img);
+            posterContainer.appendChild(posterImage);
+            
+            // Thêm hướng dẫn
+            const instructions = document.createElement('div');
+            instructions.className = 'poster-instructions';
+            instructions.innerHTML = `
+                <h3 style="margin-bottom:10px;font-size:18px;color:#fff">Chụp màn hình để lưu phiếu thưởng</h3>
+                <p style="margin-bottom:15px;font-size:14px;color:#ddd">Sau khi chụp, gửi hình ảnh cho Hiếu Gà để nhận thưởng</p>
+            `;
+            
+            // Container cho các nút
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'poster-button-container';
+            
+            // Nút chia sẻ qua Telegram (nếu có API)
+            if (isTelegramWebApp) {
+                const shareButton = document.createElement('button');
+                shareButton.textContent = 'Chia sẻ với Hiếu Gà';
+                shareButton.className = 'poster-share-button';
                 
-                const downloadLink = document.createElement('a');
-                downloadLink.href = imageUrl;
-                downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
+                // Xử lý sự kiện click cho nút chia sẻ
+                shareButton.addEventListener('click', function() {
+                    try {
+                        if (window.Telegram && window.Telegram.WebApp) {
+                            // Thông báo cho bot hoặc người dùng Telegram
+                            window.Telegram.WebApp.sendData(JSON.stringify({
+                                action: 'reward_claimed',
+                                amount: rewardValue.textContent,
+                                user: playerName,
+                                date: rewardDate.textContent
+                            }));
+                            
+                            // Đóng overlay và thông báo
+                            document.body.removeChild(overlay);
+                            showNotification('Đã gửi thông tin đến Hiếu Gà!');
+                        }
+                    } catch (e) {
+                        console.error("Error sharing to Telegram", e);
+                        showNotification('Không thể chia sẻ. Vui lòng chụp màn hình!');
+                    }
+                });
                 
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-                
-                showNotification('Đã tải poster thành công!');
-            }).catch(err => {
-                console.error('Error saving reward poster:', err);
-                alert('Không thể tải poster. Vui lòng thử lại sau!');
-            });
-        }
-    }
-}
-
-        // Thêm hàm mới để hiển thị poster toàn màn hình
-function showPosterOverlay() {
-    // Tạo overlay hiển thị poster toàn màn hình
-    const overlay = document.createElement('div');
-    overlay.className = 'poster-overlay';
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100vw';
-    overlay.style.height = '100vh';
-    overlay.style.backgroundColor = 'rgba(0,0,0,0.9)';
-    overlay.style.zIndex = '10000';
-    overlay.style.display = 'flex';
-    overlay.style.flexDirection = 'column';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
-    overlay.style.padding = '20px';
-    
-    // Tạo container cho poster
-    const posterContainer = document.createElement('div');
-    posterContainer.style.backgroundColor = 'white';
-    posterContainer.style.padding = '15px';
-    posterContainer.style.borderRadius = '10px';
-    posterContainer.style.maxWidth = '90%';
-    posterContainer.style.maxHeight = '70vh';
-    posterContainer.style.position = 'relative';
-    
-    // Clone poster từ reward card
-    const posterClone = rewardCard.cloneNode(true);
-    posterClone.style.display = 'block';
-    posterClone.style.width = '100%';
-    posterClone.style.maxWidth = '400px';
-    posterClone.style.margin = '0 auto';
-    posterClone.style.boxShadow = 'none';
-    posterClone.querySelector('#save-reward-btn').style.display = 'none';
-    
-    // Thêm poster vào container
-    posterContainer.appendChild(posterClone);
-    
-    // Thêm hướng dẫn
-    const instructions = document.createElement('div');
-    instructions.style.color = 'white';
-    instructions.style.padding = '15px';
-    instructions.style.textAlign = 'center';
-    instructions.style.marginTop = '20px';
-    instructions.innerHTML = `
-        <h3 style="margin-bottom:10px;">Chụp màn hình để lưu phiếu thưởng</h3>
-        <p style="margin-bottom:15px;">Sau khi chụp, gửi hình ảnh cho admin để nhận thưởng</p>
-    `;
-    
-    // Nút chia sẻ qua Telegram (nếu có API)
-    const shareButton = document.createElement('button');
-    shareButton.textContent = 'Chia sẻ với Admin';
-    shareButton.style.backgroundColor = '#0088cc'; // Màu Telegram
-    shareButton.style.color = 'white';
-    shareButton.style.border = 'none';
-    shareButton.style.padding = '12px 24px';
-    shareButton.style.borderRadius = '8px';
-    shareButton.style.marginTop = '10px';
-    shareButton.style.cursor = 'pointer';
-    shareButton.style.fontWeight = 'bold';
-    
-    // Xử lý sự kiện click cho nút chia sẻ
-    shareButton.addEventListener('click', function() {
-        try {
-            if (window.Telegram && window.Telegram.WebApp) {
-                // Thông báo cho bot hoặc người dùng Telegram
-                window.Telegram.WebApp.sendData(JSON.stringify({
-                    action: 'reward_claimed',
-                    amount: rewardValue.textContent,
-                    user: playerName,
-                    date: rewardDate.textContent
-                }));
-                
-                // Đóng overlay và thông báo
-                document.body.removeChild(overlay);
-                showNotification('Đã gửi thông tin đến Admin!');
+                buttonContainer.appendChild(shareButton);
             }
-        } catch (e) {
-            console.error("Error sharing to Telegram", e);
+            
+            // Nút đóng
+            const closeButton = document.createElement('button');
+            closeButton.textContent = 'Đóng';
+            closeButton.className = 'poster-close-button';
+            
+            // Xử lý sự kiện click cho nút đóng
+            closeButton.addEventListener('click', function() {
+                document.body.removeChild(overlay);
+            });
+            
+            buttonContainer.appendChild(closeButton);
+            
+            // Thêm các thành phần vào overlay
+            overlay.appendChild(posterContainer);
+            overlay.appendChild(instructions);
+            overlay.appendChild(buttonContainer);
+            
+            // Thêm overlay vào body
+            document.body.appendChild(overlay);
+            
+            // Thêm hiệu ứng hiển thị
+            setTimeout(() => {
+                posterContainer.style.transition = 'transform 0.3s ease-out';
+                posterContainer.style.transform = 'scale(1)';
+            }, 50);
         }
-    });
-    
-    // Nút đóng
-    const closeButton = document.createElement('button');
-    closeButton.textContent = 'Đóng';
-    closeButton.style.backgroundColor = '#666';
-    closeButton.style.color = 'white';
-    closeButton.style.border = 'none';
-    closeButton.style.padding = '12px 24px';
-    closeButton.style.borderRadius = '8px';
-    closeButton.style.marginTop = '10px';
-    closeButton.style.marginLeft = '10px';
-    closeButton.style.cursor = 'pointer';
-    
-    // Xử lý sự kiện click cho nút đóng
-    closeButton.addEventListener('click', function() {
-        document.body.removeChild(overlay);
-    });
-    
-    // Thêm các thành phần vào overlay
-    overlay.appendChild(posterContainer);
-    overlay.appendChild(instructions);
-    
-    // Container cho các nút
-    const buttonContainer = document.createElement('div');
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.justifyContent = 'center';
-    buttonContainer.style.marginTop = '10px';
-    
-    buttonContainer.appendChild(shareButton);
-    buttonContainer.appendChild(closeButton);
-    
-    overlay.appendChild(buttonContainer);
-    
-    // Thêm overlay vào body
-    document.body.appendChild(overlay);
-    
-    // Thêm hiệu ứng hiển thị
-    setTimeout(() => {
-        posterContainer.style.transition = 'transform 0.3s ease-out';
-        posterContainer.style.transform = 'scale(1)';
-    }, 50);
-}
 
+        // Lưu phiếu thưởng
+        function saveRewardPoster() {
+            SOUNDS.click.play();
+            
+            // Đảm bảo rằng customPosterImage đã được tạo
+            if (!customPosterImage) {
+                // Nếu chưa có, tạo lại
+                const amount = parseInt(rewardValue.textContent.replace(/\D/g, ''));
+                generateRewardPoster(amount);
+            }
+            
+            if (isTelegramWebApp) {
+                // Hiển thị overlay toàn màn hình với poster và hướng dẫn
+                showPosterOverlay();
+            } else {
+                // Chức năng tải xuống cho trình duyệt thông thường
+                try {
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = customPosterImage;
+                    downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    showNotification('Đã tải poster thành công!');
+                } catch (err) {
+                    console.error('Error downloading poster:', err);
+                    
+                    // Fallback to HTML2Canvas
+                    html2canvas(rewardCard).then(canvas => {
+                        const imageUrl = canvas.toDataURL('image/png');
+                        
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = imageUrl;
+                        downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
+                        
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                        
+                        showNotification('Đã tải poster thành công!');
+                    }).catch(err => {
+                        console.error('Error saving reward poster:', err);
+                        alert('Không thể tải poster. Vui lòng thử lại sau!');
+                    });
+                }
+            }
+        }
 
         // Save game state to localStorage and API
         async function saveGameState() {
@@ -2553,34 +2673,29 @@ function showPosterOverlay() {
         async function loadGameState() {
             // First load from localStorage
             const savedState = localStorage.getItem('wheelGameState');
+            const lastRefreshTime = localStorage.getItem('lastRefreshTime');
+            const now = new Date().getTime();
+            
             if (savedState) {
                 const gameState = JSON.parse(savedState);
                 
-                // Check if state is from current hour
-                const now = new Date();
-                const stateTime = new Date(gameState.lastUpdate);
-                
-                // Calculate if they're in the same hour period
-                const nowHour = now.getHours();
-                const stateHour = stateTime.getHours();
-                
-                const sameDay = now.getDate() === stateTime.getDate() && 
-                                now.getMonth() === stateTime.getMonth() && 
-                                now.getFullYear() === stateTime.getFullYear();
-                
-                if (sameDay && nowHour === stateHour) {
-    points = gameState.points || 0;
-    // Đảm bảo không vượt quá 50 lượt quay
-    spinsLeft = Math.min(50, gameState.spinsLeft !== undefined ? gameState.spinsLeft : 50);
-    nextSpinDouble = gameState.nextSpinDouble || false;
-    lastWheelRotation = gameState.wheelRotation || 0;
-} else {
-    // Reset spins for new hour but keep points
-    points = gameState.points || 0;
-    spinsLeft = 50; // Giá trị này đã cố định là 50
-    nextSpinDouble = false;
-    lastWheelRotation = 0;
-}
+                // Check if it's been more than an hour since the last refresh
+                if (!lastRefreshTime || (now - parseInt(lastRefreshTime)) >= 3600000) {
+                    // Reset spins but keep points
+                    points = gameState.points || 0;
+                    spinsLeft = 50;
+                    nextSpinDouble = false;
+                    lastWheelRotation = 0;
+                    
+                    // Update last refresh time
+                    localStorage.setItem('lastRefreshTime', now);
+                } else {
+                    // Use saved state
+                    points = gameState.points || 0;
+                    spinsLeft = Math.min(50, gameState.spinsLeft !== undefined ? gameState.spinsLeft : 50);
+                    nextSpinDouble = gameState.nextSpinDouble || false;
+                    lastWheelRotation = gameState.wheelRotation || 0;
+                }
             }
             
             // Try to fetch from API
@@ -2623,25 +2738,26 @@ function showPosterOverlay() {
             }
         }
 
+        // Update local leaderboard (fallback)
         function updateLocalLeaderboard() {
-    // Chỉ lưu trữ dữ liệu của người dùng hiện tại
-    let leaderboard = [];
-    
-    // Nếu có điểm, thêm người dùng vào bảng xếp hạng
-    if (points > 0 && playerName) {
-        leaderboard = [{
-            userId: userId,
-            name: playerName,
-            score: points
-        }];
-    }
-    
-    // Lưu vào localStorage để dùng làm cache tạm thời
-    localStorage.setItem('localLeaderboard', JSON.stringify(leaderboard));
-    
-    // Update UI
-    updateLeaderboardDisplay(leaderboard);
-}
+            // Chỉ lưu trữ dữ liệu của người dùng hiện tại
+            let leaderboard = [];
+            
+            // Nếu có điểm, thêm người dùng vào bảng xếp hạng
+            if (points > 0 && playerName) {
+                leaderboard = [{
+                    userId: userId,
+                    name: playerName,
+                    score: points
+                }];
+            }
+            
+            // Lưu vào localStorage để dùng làm cache tạm thời
+            localStorage.setItem('localLeaderboard', JSON.stringify(leaderboard));
+            
+            // Update UI
+            updateLeaderboardDisplay(leaderboard);
+        }
 
         // Load leaderboard
         async function loadLeaderboard() {
@@ -2662,86 +2778,87 @@ function showPosterOverlay() {
                 }
                 
                 updateLeaderboardDisplay(leaderboard);
-const now = new Date();
-const options = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
-leaderboardStatus.textContent = `Cập nhật: ${now.toLocaleTimeString('vi-VN', options)}`;
+                const now = new Date();
+                const options = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                leaderboardStatus.textContent = `Cập nhật: ${now.toLocaleTimeString('vi-VN', options)}`;
             } catch (err) {
-    console.error("Error loading leaderboard:", err);
-    leaderboardStatus.textContent = 'Đang cập nhật bảng xếp hạng...';
-    
-    // Chỉ hiển thị dữ liệu của người dùng hiện tại
-    let localLeaderboard = [];
-    
-    // Nếu có điểm, thêm người dùng hiện tại vào bảng xếp hạng
-    if (points > 0 && playerName) {
-        localLeaderboard = [{
-            userId: userId,
-            name: playerName,
-            score: points
-        }];
-    }
-    
-    // Cập nhật hiển thị
-    updateLeaderboardDisplay(localLeaderboard);
-}
+                console.error("Error loading leaderboard:", err);
+                leaderboardStatus.textContent = 'Đang cập nhật bảng xếp hạng...';
+                
+                // Chỉ hiển thị dữ liệu của người dùng hiện tại
+                let localLeaderboard = [];
+                
+                // Nếu có điểm, thêm người dùng hiện tại vào bảng xếp hạng
+                if (points > 0 && playerName) {
+                    localLeaderboard = [{
+                        userId: userId,
+                        name: playerName,
+                        score: points
+                    }];
+                }
+                
+                // Cập nhật hiển thị
+                updateLeaderboardDisplay(localLeaderboard);
+            }
         }
 
-       function updateLeaderboardDisplay(leaderboard) {
-    leaderboardList.innerHTML = '';
-    
-    // Hiển thị thông báo nếu không có dữ liệu
-    if (!leaderboard || leaderboard.length === 0) {
-        const emptyItem = document.createElement('li');
-        emptyItem.className = 'leaderboard-item';
-        emptyItem.style.justifyContent = 'center';
-        emptyItem.innerHTML = '<div style="color:#666;font-style:italic;">Chưa có dữ liệu xếp hạng</div>';
-        leaderboardList.appendChild(emptyItem);
-        return;
-    }
-    
-    // Sort the leaderboard
-    leaderboard.sort((a, b) => b.score - a.score);
-    
-    // Limit to top 10
-    const topScores = leaderboard.slice(0, 10);
-    
-    topScores.forEach((player, index) => {
-        const li = document.createElement('li');
-        li.className = 'leaderboard-item';
-        
-        const isCurrentPlayer = player.userId === userId;
-        if (isCurrentPlayer) {
-            li.style.backgroundColor = 'rgba(255, 235, 59, 0.2)';
+        // Update leaderboard display
+        function updateLeaderboardDisplay(leaderboard) {
+            leaderboardList.innerHTML = '';
+            
+            // Hiển thị thông báo nếu không có dữ liệu
+            if (!leaderboard || leaderboard.length === 0) {
+                const emptyItem = document.createElement('li');
+                emptyItem.className = 'leaderboard-item';
+                emptyItem.style.justifyContent = 'center';
+                emptyItem.innerHTML = '<div style="color:#666;font-style:italic;">Chưa có dữ liệu xếp hạng</div>';
+                leaderboardList.appendChild(emptyItem);
+                return;
+            }
+            
+            // Sort the leaderboard
+            leaderboard.sort((a, b) => b.score - a.score);
+            
+            // Limit to top 10
+            const topScores = leaderboard.slice(0, 10);
+            
+            topScores.forEach((player, index) => {
+                const li = document.createElement('li');
+                li.className = 'leaderboard-item';
+                
+                const isCurrentPlayer = player.userId === userId;
+                if (isCurrentPlayer) {
+                    li.style.backgroundColor = 'rgba(255, 235, 59, 0.2)';
+                }
+                
+                // Add extra effects for top 3 places
+                let specialEffect = '';
+                if (index === 0) {
+                    specialEffect = 'float';
+                } else if (index === 1 || index === 2) {
+                    specialEffect = 'pulse';
+                }
+                
+                li.innerHTML = `
+                    <div class="leaderboard-rank ${index < 3 ? specialEffect : ''}">${index + 1}</div>
+                    <div class="leaderboard-info">
+                        <div class="leaderboard-name">${player.name}${isCurrentPlayer ? ' (Bạn)' : ''}</div>
+                    </div>
+                    <div class="leaderboard-score">${player.score.toLocaleString()}</div>
+                `;
+                
+                leaderboardList.appendChild(li);
+            });
+            
+            // Animation for leaderboard items
+            anime({
+                targets: '.leaderboard-item',
+                translateX: [20, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(100),
+                easing: 'easeOutQuad'
+            });
         }
-        
-        // Add extra effects for top 3 places
-        let specialEffect = '';
-        if (index === 0) {
-            specialEffect = 'float';
-        } else if (index === 1 || index === 2) {
-            specialEffect = 'pulse';
-        }
-        
-        li.innerHTML = `
-            <div class="leaderboard-rank ${index < 3 ? specialEffect : ''}">${index + 1}</div>
-            <div class="leaderboard-info">
-                <div class="leaderboard-name">${player.name}${isCurrentPlayer ? ' (Bạn)' : ''}</div>
-            </div>
-            <div class="leaderboard-score">${player.score.toLocaleString()}</div>
-        `;
-        
-        leaderboardList.appendChild(li);
-    });
-    
-    // Animation for leaderboard items
-    anime({
-        targets: '.leaderboard-item',
-        translateX: [20, 0],
-        opacity: [0, 1],
-        delay: anime.stagger(100),
-        easing: 'easeOutQuad'
-    });
-}
 
         // Update leaderboard
         async function updateLeaderboard() {
