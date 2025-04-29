@@ -785,6 +785,8 @@
                 const tank = new PIXI.Sprite(this.playerTexture);
                 tank.anchor.set(0.5, 0.5);
                 tank.scale.set(GAME_CONFIG.TANK_SCALE);
+                // Xoay thêm 45 độ để mũi súng chỉ về đúng hướng di chuyển
+                tank.rotation = GAME_CONFIG.TANK_ROTATION_OFFSET;
                 
                 playerGraphic.addChild(tank);
                 
