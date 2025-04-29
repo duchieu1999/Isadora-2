@@ -1538,6 +1538,23 @@
         // Initialize the game
         async function initGame() {
             try {
+
+                // Phát hiện nếu đang chạy trong Telegram WebApp
+const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
+if (isTelegramWebApp) {
+    console.log("Running in Telegram WebApp environment");
+    
+    // Cấu hình cụ thể cho Telegram nếu cần
+    document.documentElement.style.setProperty('--primary-color', '#0088cc'); // Telegram blue
+    
+    // Nghe sự kiện từ Telegram WebApp nếu cần
+    window.Telegram.WebApp.onEvent('viewportChanged', function() {
+        // Điều chỉnh giao diện cho phù hợp với kích thước WebApp mới
+    });
+    
+    // Cho Telegram biết app đã sẵn sàng
+    window.Telegram.WebApp.ready();
+}
                 createWheel();
                 setupUserId();
                 checkNameRegistration();
@@ -2266,44 +2283,176 @@
             customPosterImage = imageUrl;
         }
 
-        // Save reward poster
-        function saveRewardPoster() {
-            SOUNDS.click.play();
+     function saveRewardPoster() {
+    SOUNDS.click.play();
+    
+    // Thay đổi hướng dẫn dựa trên môi trường (Telegram hay trình duyệt)
+    const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
+    
+    if (isTelegramWebApp) {
+        // Hiển thị overlay toàn màn hình với poster và hướng dẫn
+        showPosterOverlay();
+    } else {
+        // Vẫn giữ chức năng tải xuống cho trình duyệt thông thường
+        if (customPosterImage) {
+            // Create a download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = customPosterImage;
+            downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
             
-            if (customPosterImage) {
-                // Create a download link
+            // Trigger download
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            showNotification('Đã tải poster thành công!');
+        } else {
+            // Fallback to HTML2Canvas
+            html2canvas(rewardCard).then(canvas => {
+                const imageUrl = canvas.toDataURL('image/png');
+                
                 const downloadLink = document.createElement('a');
-                downloadLink.href = customPosterImage;
+                downloadLink.href = imageUrl;
                 downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
                 
-                // Trigger download
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
                 document.body.removeChild(downloadLink);
                 
                 showNotification('Đã tải poster thành công!');
-            } else {
-                // Fallback to HTML2Canvas if the canvas image is not available
-                html2canvas(rewardCard).then(canvas => {
-                    const imageUrl = canvas.toDataURL('image/png');
-                    
-                    // Create a download link
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = imageUrl;
-                    downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
-                    
-                    // Trigger download
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-                    
-                    showNotification('Đã tải poster thành công!');
-                }).catch(err => {
-                    console.error('Error saving reward poster:', err);
-                    alert('Không thể tải poster. Vui lòng thử lại sau!');
-                });
-            }
+            }).catch(err => {
+                console.error('Error saving reward poster:', err);
+                alert('Không thể tải poster. Vui lòng thử lại sau!');
+            });
         }
+    }
+}
+
+        // Thêm hàm mới để hiển thị poster toàn màn hình
+function showPosterOverlay() {
+    // Tạo overlay hiển thị poster toàn màn hình
+    const overlay = document.createElement('div');
+    overlay.className = 'poster-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.9)';
+    overlay.style.zIndex = '10000';
+    overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.padding = '20px';
+    
+    // Tạo container cho poster
+    const posterContainer = document.createElement('div');
+    posterContainer.style.backgroundColor = 'white';
+    posterContainer.style.padding = '15px';
+    posterContainer.style.borderRadius = '10px';
+    posterContainer.style.maxWidth = '90%';
+    posterContainer.style.maxHeight = '70vh';
+    posterContainer.style.position = 'relative';
+    
+    // Clone poster từ reward card
+    const posterClone = rewardCard.cloneNode(true);
+    posterClone.style.display = 'block';
+    posterClone.style.width = '100%';
+    posterClone.style.maxWidth = '400px';
+    posterClone.style.margin = '0 auto';
+    posterClone.style.boxShadow = 'none';
+    posterClone.querySelector('#save-reward-btn').style.display = 'none';
+    
+    // Thêm poster vào container
+    posterContainer.appendChild(posterClone);
+    
+    // Thêm hướng dẫn
+    const instructions = document.createElement('div');
+    instructions.style.color = 'white';
+    instructions.style.padding = '15px';
+    instructions.style.textAlign = 'center';
+    instructions.style.marginTop = '20px';
+    instructions.innerHTML = `
+        <h3 style="margin-bottom:10px;">Chụp màn hình để lưu phiếu thưởng</h3>
+        <p style="margin-bottom:15px;">Sau khi chụp, gửi hình ảnh cho admin để nhận thưởng</p>
+    `;
+    
+    // Nút chia sẻ qua Telegram (nếu có API)
+    const shareButton = document.createElement('button');
+    shareButton.textContent = 'Chia sẻ với Admin';
+    shareButton.style.backgroundColor = '#0088cc'; // Màu Telegram
+    shareButton.style.color = 'white';
+    shareButton.style.border = 'none';
+    shareButton.style.padding = '12px 24px';
+    shareButton.style.borderRadius = '8px';
+    shareButton.style.marginTop = '10px';
+    shareButton.style.cursor = 'pointer';
+    shareButton.style.fontWeight = 'bold';
+    
+    // Xử lý sự kiện click cho nút chia sẻ
+    shareButton.addEventListener('click', function() {
+        try {
+            if (window.Telegram && window.Telegram.WebApp) {
+                // Thông báo cho bot hoặc người dùng Telegram
+                window.Telegram.WebApp.sendData(JSON.stringify({
+                    action: 'reward_claimed',
+                    amount: rewardValue.textContent,
+                    user: playerName,
+                    date: rewardDate.textContent
+                }));
+                
+                // Đóng overlay và thông báo
+                document.body.removeChild(overlay);
+                showNotification('Đã gửi thông tin đến Admin!');
+            }
+        } catch (e) {
+            console.error("Error sharing to Telegram", e);
+        }
+    });
+    
+    // Nút đóng
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Đóng';
+    closeButton.style.backgroundColor = '#666';
+    closeButton.style.color = 'white';
+    closeButton.style.border = 'none';
+    closeButton.style.padding = '12px 24px';
+    closeButton.style.borderRadius = '8px';
+    closeButton.style.marginTop = '10px';
+    closeButton.style.marginLeft = '10px';
+    closeButton.style.cursor = 'pointer';
+    
+    // Xử lý sự kiện click cho nút đóng
+    closeButton.addEventListener('click', function() {
+        document.body.removeChild(overlay);
+    });
+    
+    // Thêm các thành phần vào overlay
+    overlay.appendChild(posterContainer);
+    overlay.appendChild(instructions);
+    
+    // Container cho các nút
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'center';
+    buttonContainer.style.marginTop = '10px';
+    
+    buttonContainer.appendChild(shareButton);
+    buttonContainer.appendChild(closeButton);
+    
+    overlay.appendChild(buttonContainer);
+    
+    // Thêm overlay vào body
+    document.body.appendChild(overlay);
+    
+    // Thêm hiệu ứng hiển thị
+    setTimeout(() => {
+        posterContainer.style.transition = 'transform 0.3s ease-out';
+        posterContainer.style.transform = 'scale(1)';
+    }, 50);
+}
+
 
         // Save game state to localStorage and API
         async function saveGameState() {
