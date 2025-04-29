@@ -453,23 +453,15 @@
             }
             
             createSprite() {
-                // Thân người chơi
-                const body = new PIXI.Graphics();
-                body.beginFill(0x5D5CDE);
-                body.drawCircle(0, 0, 20);
-                body.endFill();
+                // Tạo sprite xe tăng từ ảnh thay vì vẽ đồ họa
+                const tankTexture = PIXI.Texture.from('https://img.upanh.tv/2025/04/29/ChatGPT-Image-12_31_11-29-thg-4-2025.png');
+                const tankSprite = new PIXI.Sprite(tankTexture);
+                tankSprite.anchor.set(0.5, 0.5);
+                tankSprite.width = 60;
+                tankSprite.height = 60;
                 
-                // Hướng di chuyển (mũi tên)
-                const direction = new PIXI.Graphics();
-                direction.beginFill(0xFFFFFF);
-                direction.moveTo(0, -20);
-                direction.lineTo(10, 0);
-                direction.lineTo(-10, 0);
-                direction.lineTo(0, -20);
-                direction.endFill();
-                
-                this.body = body;
-                this.direction = direction;
+                this.body = tankSprite;
+                this.direction = tankSprite; // Xe tăng tự thân đã có hướng
                 
                 // Tạo text tên người chơi
                 const nameText = new PIXI.Text(this.name, {
@@ -482,20 +474,19 @@
                     strokeThickness: 3
                 });
                 nameText.anchor.set(0.5, 0.5);
-                nameText.y = -35;
+                nameText.y = -45;
                 
                 // Khiên bảo vệ
                 const shield = new PIXI.Graphics();
                 shield.beginFill(0x1E90FF, 0.5);
-                shield.drawCircle(0, 0, 30);
+                shield.drawCircle(0, 0, 40);
                 shield.endFill();
                 shield.visible = false;
                 this.shield = shield;
                 
-                this.container.addChild(body);
-                this.container.addChild(direction);
+                this.container.addChild(shield); // Thêm khiên trước để nằm dưới xe tăng
+                this.container.addChild(tankSprite);
                 this.container.addChild(nameText);
-                this.container.addChild(shield);
                 
                 // Hiệu ứng tỏa sáng
                 this.updateGlowEffect();
@@ -541,8 +532,8 @@
                 }
             }
             
-            activateShield(duration = 5000) {
-                // Kích hoạt khiên bảo vệ
+            activateShield(duration = 30000) {
+                // Kích hoạt khiên bảo vệ (30 giây)
                 this.activeShield = true;
                 
                 // Hủy timer cũ nếu có
@@ -2094,7 +2085,7 @@
                 if (!this.player) return;
                 
                 if (this.player.useShield()) {
-                    showGameMessage("Đã kích hoạt khiên bảo vệ (5 giây)!");
+                    showGameMessage("Đã kích hoạt khiên bảo vệ (30 giây)!");
                     
                     // Lưu trạng thái game
                     this.saveGameState();
