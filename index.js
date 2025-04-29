@@ -1,200 +1,1496 @@
-// Import thư viện cần thiết
-const TelegramBot = require('node-telegram-bot-api');
-const cron = require('node-cron');
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cờ Chiến Thắng - Game 30/4</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.2.4/dist/pixi.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #d22730;
+            --secondary-color: #ffff00;
+            --text-color: #ffffff;
+            --background-color: #f5f5f5;
+            --control-bg: rgba(210, 39, 48, 0.7);
+        }
+        
+        .dark {
+            --primary-color: #c41e2a;
+            --secondary-color: #ffff00;
+            --text-color: #ffffff;
+            --background-color: #181818;
+            --control-bg: rgba(196, 30, 42, 0.8);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background-color: var(--background-color);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #gameContainer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        #gameUI {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        #joystickContainer {
+            position: absolute;
+            bottom: 100px;
+            left: 50px;
+            width: 120px;
+            height: 120px;
+            pointer-events: auto;
+        }
+        
+        #joystickBase {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--control-bg);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #joystickKnob {
+            width: 50%;
+            height: 50%;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            position: relative;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        #collectButton {
+            position: absolute;
+            bottom: 120px;
+            right: 50px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--control-bg);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--text-color);
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        #collectButtonIcon {
+            width: 40px;
+            height: 40px;
+        }
+        
+        #scoreContainer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--control-bg);
+            padding: 10px 15px;
+            border-radius: 15px;
+            color: var(--text-color);
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #flagIcon {
+            width: 24px;
+            height: 16px;
+        }
+        
+        #leaderboardButton {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--control-bg);
+            padding: 10px 15px;
+            border-radius: 15px;
+            color: var(--text-color);
+            font-weight: bold;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        
+        #leaderboardPanel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 400px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            color: var(--text-color);
+            pointer-events: auto;
+            display: none;
+            z-index: 20;
+        }
+        
+        #leaderboardTitle {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+        }
+        
+        #leaderboardList {
+            list-style: none;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .leaderboard-rank {
+            width: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .leaderboard-name {
+            flex: 1;
+            margin: 0 15px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .leaderboard-score {
+            width: 50px;
+            text-align: right;
+        }
+        
+        #closeLeaderboard {
+            display: block;
+            margin: 20px auto 0;
+            padding: 8px 20px;
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        #introScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            padding: 20px;
+        }
+        
+        #gameTitle {
+            color: var(--primary-color);
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        #gameTitle span {
+            color: var(--secondary-color);
+        }
+        
+        #nameInput {
+            margin: 20px 0;
+            padding: 15px;
+            width: 80%;
+            max-width: 300px;
+            border-radius: 10px;
+            border: 2px solid var(--primary-color);
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        #startButton {
+            padding: 15px 40px;
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        #startButton:active {
+            transform: scale(0.95);
+        }
+        
+        #connectionStatus {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            background: var(--control-bg);
+            padding: 5px 10px;
+            border-radius: 10px;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+        
+        #gameMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--text-color);
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        
+        .firework {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        @media (max-width: 767px) {
+            #joystickContainer {
+                bottom: 80px;
+                left: 30px;
+                width: 100px;
+                height: 100px;
+            }
+            
+            #collectButton {
+                bottom: 100px;
+                right: 30px;
+                width: 70px;
+                height: 70px;
+            }
+            
+            #collectButtonIcon {
+                width: 35px;
+                height: 35px;
+            }
+            
+            #gameTitle {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="gameUI">
+            <div id="joystickContainer">
+                <div id="joystickBase">
+                    <div id="joystickKnob"></div>
+                </div>
+            </div>
+            <div id="collectButton">
+                <svg id="collectButtonIcon" viewBox="0 0 24 24" fill="white">
+                    <path d="M12,5.5l7,7H5l7-7M12,1L3,10h18L12,1z M12,16.5l-7-7h14l-7,7M12,21l9-9H3L12,21z"/>
+                </svg>
+            </div>
+            <div id="scoreContainer">
+                <svg id="flagIcon" viewBox="0 0 24 16">
+                    <rect x="0" y="0" width="24" height="16" fill="#d22730"/>
+                    <polygon points="12,3 14,8 19,8 15,11 17,16 12,13 7,16 9,11 5,8 10,8" fill="#ffff00"/>
+                </svg>
+                <span id="scoreValue">0</span>
+            </div>
+            <div id="connectionStatus">Offline Mode</div>
+            <div id="leaderboardButton">Bảng Xếp Hạng</div>
+            <div id="gameMessage"></div>
+        </div>
+        
+        <div id="leaderboardPanel">
+            <h2 id="leaderboardTitle">Bảng Xếp Hạng</h2>
+            <ul id="leaderboardList"></ul>
+            <button id="closeLeaderboard">Đóng</button>
+        </div>
+        
+        <div id="introScreen">
+            <h1 id="gameTitle">CỜ <span>CHIẾN THẮNG</span></h1>
+            <p style="color: white; text-align: center; margin-bottom: 15px;">Tự hào kỷ niệm ngày Giải phóng miền Nam 30/4</p>
+            <input type="text" id="nameInput" placeholder="Nhập tên của bạn" maxlength="15">
+            <button id="startButton">BẮT ĐẦU CHƠI</button>
+        </div>
+    </div>
 
-const keep_alive = require('./keep_alive.js')
+    <script>
+        // Xử lý chế độ màu (Dark/Light)
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
 
-// Token của bot - thay thế bằng token bot của bạn
-const token = '6737397282:AAEGGicIi4DRKOtDXIuWaOUpPQlIwqW_t2o';
+        // Các thiết lập game
+        const GAME_CONFIG = {
+            MAP_WIDTH: 3000,
+            MAP_HEIGHT: 3000,
+            PLAYER_SPEED: 5,
+            FLAG_COUNT: 50,
+            COLLECT_DISTANCE: 80,
+            FIREWORK_COUNT: 30,
+            SEED: Date.now(), // Seed cho việc tạo vị trí ngẫu nhiên giống nhau
+        };
 
-// Tạo một instance bot với chế độ polling
-const bot = new TelegramBot(token, { polling: true });
+        // Class người chơi
+        class Player {
+            constructor(id, name, x, y) {
+                this.id = id;
+                this.name = name;
+                this.x = x;
+                this.y = y;
+                this.score = 0;
+                this.angle = 0;
+                this.speedX = 0;
+                this.speedY = 0;
+            }
+        }
 
-// Danh sách từ khóa spam mở rộng
-const spamKeywords = [
-  // Chửi bậy, tục tĩu
-  "lừa đảo", "chó", "dmm", "lồn", "lừa", "địt", "bịp", "campuchia", "bọn điên", "chúng mày", "mày", "cứt", "buồi", "mrpip", "câm",
-  "súc vật", "vl", "có cl", "cút", "dm", "vkl", "mày", "xạo", "địt cụ", "con căc", "cc", "dốt", "chết", "khốn nạn",
-  // Từ viết tắt
-  "đcm", "đmm", "clgt", "vcl", "vloz", "đkm", "cmm", "đậu xanh", "vc", "đcmm", "mẹ", "baccarat", "nhà cái", 
-  "khuyến mãi", "tài xỉu",
-  // Thêm các từ khác
-  "ngu", "óc chó", "cặc", "đụ", "mất dạy", "ku", "như lồn", "chet me", "đb", "bọn", "điên"
-];
+        // Class cờ
+        class Flag {
+            constructor(id, x, y) {
+                this.id = id;
+                this.x = x;
+                this.y = y;
+                this.collected = false;
+                this.collectedBy = null;
+            }
+        }
 
-// Danh sách groupId được phép kiểm tra
-const allowedGroupIdss = [-1002208226506, -1002333438294, -1002117321924];
+        // Lớp quản lý game
+        class Game {
+            constructor() {
+                this.app = null;
+                this.socket = null;
+                this.connected = false;
+                this.gameStarted = false;
+                this.player = null;
+                this.players = {};
+                this.flags = [];
+                this.mapContainer = null;
+                this.playerContainer = null;
+                this.flagContainer = null;
+                this.playerSprites = {};
+                this.flagSprites = {};
+                this.lastTimestamp = 0;
+                this.joystickActive = false;
+                this.joystickAngle = 0;
+                this.joystickStrength = 0;
+                this.collectButtonActive = false;
+                this.collectCooldown = false;
+                this.leaderboardVisible = false;
+                this.randomGenerator = null;
+            }
 
-// Map để lưu thời gian tin nhắn cuối cùng của mỗi user (không dùng nữa nhưng vẫn giữ lại nếu cần mở rộng chức năng)
-const userLastMessageTime = new Map();
+            // Khởi tạo game
+            init() {
+                // Khởi tạo PIXI.js
+                this.app = new PIXI.Application({
+                    view: document.getElementById('gameCanvas'),
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    backgroundColor: 0x5EB45E, // Màu xanh lá cây cho bản đồ
+                    resolution: window.devicePixelRatio || 1,
+                    antialias: true,
+                    autoDensity: true,
+                });
 
-/**
- * Hàm kiểm tra tin nhắn spam dựa trên:
- * - Nội dung chứa từ khóa spam
- * - Nội dung chứa đường link
- * - Nội dung có tag @ trỏ đến thành viên không phải admin
- * - Nội dung chứa liên kết ẩn (text_link)
- */
-async function checkSpamMessage(msg, messageContent) {
-  if (!messageContent) return false;
-  
-  const lowerCaseMessage = messageContent.toLowerCase();
-  const userId = msg.from.id;
-  
-  // Kiểm tra quyền admin của người gửi, nếu là admin thì bỏ qua kiểm tra spam
-  const chatMember = await bot.getChatMember(msg.chat.id, userId);
-  if (chatMember.status === 'administrator' || chatMember.status === 'creator') {
-    return false;
-  }
+                // Tạo map container
+                this.mapContainer = new PIXI.Container();
+                this.app.stage.addChild(this.mapContainer);
 
-  // Kiểm tra độ dài tin nhắn (trên 100 từ)
-  if (messageContent.split(' ').length > 100) {
-    return true;
-  }
+                // Tạo container cho các lá cờ
+                this.flagContainer = new PIXI.Container();
+                this.mapContainer.addChild(this.flagContainer);
 
-  // Kiểm tra từ khóa spam
-  const containsSpam = spamKeywords.some(keyword => {
-    const regex = new RegExp(`\\b${keyword}\\b`, 'i');
-    return regex.test(lowerCaseMessage);
-  });
-  if (containsSpam) return true;
+                // Tạo container cho người chơi
+                this.playerContainer = new PIXI.Container();
+                this.mapContainer.addChild(this.playerContainer);
 
-  // Kiểm tra tin nhắn chứa đường link hoặc các cách né tránh bộ lọc link
-  const urlRegex = /(https?:\/\/|www\.)\S+/i;
-  const domainRegex = /\b([a-zA-Z0-9-]+\.(com|net|org|gov|edu|vn|xyz|info|biz|top|store|online|tech|pro|me|club|site|io|co|us|uk|jp|kr|cn|in|au|eu))\b/i;
-  const disguisedLinkRegex = /(\S+)\s*(\.\s*[a-z]{2,6})/i; // Phát hiện "google . com"
+                // Tạo random generator với seed cố định
+                this.randomGenerator = this.createRandomGenerator(GAME_CONFIG.SEED);
 
-  // Kiểm tra link Telegram (nhóm, kênh, bot, user)
-  const telegramLinkRegex = /(t\.me\/|telegram\.me\/|telegram\.dog\/|telegram\.org\/)\S+/i;
+                // Vẽ bản đồ
+                this.createMap();
 
-  // Nếu phát hiện bất kỳ link nào
-  if (
-    urlRegex.test(messageContent) || 
-    domainRegex.test(messageContent) || 
-    disguisedLinkRegex.test(messageContent) || 
-    telegramLinkRegex.test(messageContent)
-  ) {
-    console.log(`Phát hiện link từ user ${userId}`);
-    return true;
-  }
+                // Xử lý sự kiện resize
+                window.addEventListener('resize', () => this.handleResize());
+                this.handleResize();
 
-  // Kiểm tra các liên kết ẩn (text_link) trong tin nhắn
-  if (msg.entities || msg.caption_entities) {
-    const entities = msg.entities || msg.caption_entities || [];
-    for (const entity of entities) {
-      if (entity.type === 'text_link') {
-        // Đây là liên kết ẩn dạng "Tên người dùng" nhưng ẩn URL khác
-        console.log(`Phát hiện text_link từ user ${userId} với URL: ${entity.url}`);
-        return true;
-      }
-    }
-  }
-  
-  // Kiểm tra tag @ không phải admin
-  // Lấy danh sách admin của nhóm
-  let admins = [];
-  try {
-    admins = await bot.getChatAdministrators(msg.chat.id);
-  } catch (err) {
-    console.error("Lỗi khi lấy danh sách admin:", err);
-  }
-  // Tạo một set các username (loại bỏ dấu @ nếu có) của admin
-  const adminUsernames = new Set();
-  admins.forEach(admin => {
-    if (admin.user.username) {
-      adminUsernames.add(admin.user.username.toLowerCase());
-    }
-  });
-  
-  // Tìm các tag trong tin nhắn (theo dạng @username)
-  const tagRegex = /@(\w+)/g;
-  let match;
-  while ((match = tagRegex.exec(messageContent)) !== null) {
-    const taggedUsername = match[1].toLowerCase();
-    // Nếu tag không thuộc danh sách admin, coi là spam
-    if (!adminUsernames.has(taggedUsername)) {
-      return true;
-    }
-  }
-  
-  return false;
-}
+                // Khởi tạo các điều khiển game
+                this.initControls();
 
-// Xử lý tin nhắn
-bot.on('message', async (msg) => {
-  const chatId = msg.chat.id;
-  const messageContent = msg.text || msg.caption;
-  const userId = msg.from.id;
+                // Khởi tạo UI sự kiện
+                this.initUIEvents();
 
-  // Kiểm tra nhóm được phép
-  if (!allowedGroupIdss.includes(chatId)) {
-    return;
-  }
+                // Tải dữ liệu từ localStorage nếu có
+                this.loadGameState();
 
-  try {
-    const isSpam = await checkSpamMessage(msg, messageContent);
-    
-    if (isSpam) {
-      // Chỉ xóa tin nhắn spam
-      await bot.deleteMessage(chatId, msg.message_id);
-      console.log(`Đã xóa tin nhắn spam từ user ${userId} trong nhóm ${chatId}`);
-    } else {
-      // Nếu cần cập nhật thời gian gửi tin (ở đây đã bỏ kiểm tra gửi quá nhanh)
-      const currentTime = new Date().getTime();
-      userLastMessageTime.set(userId, currentTime);
-    }
-  } catch (error) {
-    console.error("Lỗi khi xử lý tin nhắn:", error);
-  }
-});
+                // Kiểm tra khả năng kết nối socket.io
+                this.tryConnectSocket();
 
-// Xử lý tin nhắn chỉnh sửa
-bot.on('edited_message', async (msg) => {
-  const chatId = msg.chat.id;
-  const messageContent = msg.text || msg.caption;
-  const userId = msg.from.id;
+                // Bắt đầu vòng lặp game
+                this.app.ticker.add(this.gameLoop.bind(this));
+            }
 
-  if (!allowedGroupIdss.includes(chatId)) {
-    return;
-  }
+            // Tạo random generator với seed cố định để đảm bảo các vị trí giống nhau trên mọi máy
+            createRandomGenerator(seed) {
+                return {
+                    _seed: seed,
+                    next: function() {
+                        this._seed = (this._seed * 9301 + 49297) % 233280;
+                        return this._seed / 233280;
+                    },
+                    nextInt: function(min, max) {
+                        return Math.floor(min + this.next() * (max - min + 1));
+                    }
+                };
+            }
 
-  try {
-    const isSpam = await checkSpamMessage(msg, messageContent);
-    
-    if (isSpam) {
-      await bot.deleteMessage(chatId, msg.message_id);
-      console.log(`Đã xóa tin nhắn spam (đã chỉnh sửa) từ user ${userId} trong nhóm ${chatId}`);
-    } else {
-      // Cập nhật thời gian gửi tin nếu cần
-      const currentTime = new Date().getTime();
-      userLastMessageTime.set(userId, currentTime);
-    }
-  } catch (error) {
-    console.error("Lỗi khi xử lý tin nhắn chỉnh sửa:", error);
-  }
-});
+            // Tạo bản đồ game
+            createMap() {
+                // Vẽ nền cỏ cho bản đồ
+                const grass = new PIXI.Graphics();
+                grass.beginFill(0x5EB45E);
+                grass.drawRect(0, 0, GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT);
+                grass.endFill();
+                this.mapContainer.addChild(grass);
 
-// Định kỳ xóa dữ liệu cũ trong Map để tránh memory leak (nếu sử dụng)
-setInterval(() => {
-  const currentTime = new Date().getTime();
-  for (const [userId, lastTime] of userLastMessageTime.entries()) {
-    // Xóa dữ liệu của các user không hoạt động trong 5 phút
-    if (currentTime - lastTime > 300000) { // 300000ms = 5 phút
-      userLastMessageTime.delete(userId);
-    }
-  }
-}, 300000); // Chạy mỗi 5 phút
+                // Tạo các yếu tố trang trí trên bản đồ
+                this.createDecorations();
 
+                // Giới hạn bản đồ (viền đỏ)
+                const border = new PIXI.Graphics();
+                border.lineStyle(10, 0xd22730, 1);
+                border.drawRect(0, 0, GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT);
+                this.mapContainer.addChild(border);
 
-// Xử lý lệnh /xinchao
-bot.onText(/\/xinchao/, (msg) => {
-  const chatId = msg.chat.id;
-  bot.sendMessage(chatId, "Xin chào! Chúc bạn một ngày tốt lành!");
-});
+                // Tạo các lá cờ trên bản đồ
+                this.createFlags();
+            }
 
-// Xử lý khi bot khởi động
-bot.on('polling_error', (error) => {
-  console.error(error);
-});
+            // Tạo các yếu tố trang trí trên bản đồ
+            createDecorations() {
+                // Tạo các cây cối
+                for (let i = 0; i < 150; i++) {
+                    const treeSize = this.randomGenerator.nextInt(30, 60);
+                    const treeX = this.randomGenerator.nextInt(50, GAME_CONFIG.MAP_WIDTH - 50);
+                    const treeY = this.randomGenerator.nextInt(50, GAME_CONFIG.MAP_HEIGHT - 50);
+                    
+                    const tree = new PIXI.Graphics();
+                    // Thân cây
+                    tree.beginFill(0x8B4513);
+                    tree.drawRect(treeX - 5, treeY, 10, 20);
+                    tree.endFill();
+                    
+                    // Tán lá
+                    tree.beginFill(0x2E8B57);
+                    tree.drawCircle(treeX, treeY - 15, treeSize / 2);
+                    tree.endFill();
+                    
+                    this.mapContainer.addChild(tree);
+                }
+                
+                // Tạo các bụi cây nhỏ
+                for (let i = 0; i < 300; i++) {
+                    const bushSize = this.randomGenerator.nextInt(15, 30);
+                    const bushX = this.randomGenerator.nextInt(20, GAME_CONFIG.MAP_WIDTH - 20);
+                    const bushY = this.randomGenerator.nextInt(20, GAME_CONFIG.MAP_HEIGHT - 20);
+                    
+                    const bush = new PIXI.Graphics();
+                    bush.beginFill(0x3CB371);
+                    bush.drawCircle(bushX, bushY, bushSize / 2);
+                    bush.endFill();
+                    
+                    this.mapContainer.addChild(bush);
+                }
+                
+                // Tạo các hoa
+                for (let i = 0; i < 200; i++) {
+                    const flowerX = this.randomGenerator.nextInt(10, GAME_CONFIG.MAP_WIDTH - 10);
+                    const flowerY = this.randomGenerator.nextInt(10, GAME_CONFIG.MAP_HEIGHT - 10);
+                    const flowerColor = [0xFF69B4, 0xFFFF00, 0xFF6347, 0x9370DB, 0xFF4500][this.randomGenerator.nextInt(0, 4)];
+                    
+                    const flower = new PIXI.Graphics();
+                    flower.beginFill(flowerColor);
+                    flower.drawCircle(flowerX, flowerY, 5);
+                    flower.endFill();
+                    
+                    this.mapContainer.addChild(flower);
+                }
+                
+                // Tạo các con đường
+                const pathCount = 5;
+                for (let i = 0; i < pathCount; i++) {
+                    const isHorizontal = i % 2 === 0;
+                    const pathWidth = 30;
+                    
+                    const path = new PIXI.Graphics();
+                    path.beginFill(0xDEB887);
+                    
+                    if (isHorizontal) {
+                        const y = this.randomGenerator.nextInt(300, GAME_CONFIG.MAP_HEIGHT - 300);
+                        path.drawRect(0, y - pathWidth/2, GAME_CONFIG.MAP_WIDTH, pathWidth);
+                    } else {
+                        const x = this.randomGenerator.nextInt(300, GAME_CONFIG.MAP_WIDTH - 300);
+                        path.drawRect(x - pathWidth/2, 0, pathWidth, GAME_CONFIG.MAP_HEIGHT);
+                    }
+                    
+                    path.endFill();
+                    this.mapContainer.addChild(path);
+                }
 
-console.log('Bot đã được khởi động! Đang chờ tin nhắn...');
+                // Tạo cờ đỏ sao vàng lớn ở giữa bản đồ
+                const centerFlag = new PIXI.Graphics();
+                // Nền đỏ
+                centerFlag.beginFill(0xd22730);
+                centerFlag.drawRect(GAME_CONFIG.MAP_WIDTH/2 - 75, GAME_CONFIG.MAP_HEIGHT/2 - 50, 150, 100);
+                centerFlag.endFill();
+                
+                // Ngôi sao vàng
+                centerFlag.beginFill(0xffff00);
+                this.drawStar(centerFlag, GAME_CONFIG.MAP_WIDTH/2, GAME_CONFIG.MAP_HEIGHT/2, 5, 30, 15);
+                centerFlag.endFill();
+                
+                this.mapContainer.addChild(centerFlag);
+                
+                // Tạo các biểu tượng kỷ niệm 30/4
+                const memorial = new PIXI.Text("30/4", {
+                    fontFamily: "Arial",
+                    fontSize: 48,
+                    fill: 0xd22730,
+                    fontWeight: "bold",
+                    stroke: 0xffff00,
+                    strokeThickness: 5
+                });
+                memorial.x = GAME_CONFIG.MAP_WIDTH/2 - 45;
+                memorial.y = GAME_CONFIG.MAP_HEIGHT/2 + 70;
+                this.mapContainer.addChild(memorial);
+            }
+
+            // Vẽ ngôi sao
+            drawStar(graphics, x, y, points, outerRadius, innerRadius) {
+                const startAngle = -Math.PI / 2; // Bắt đầu từ đỉnh trên
+                const step = Math.PI / points;
+                
+                // Di chuyển đến điểm đầu tiên
+                let angle = startAngle;
+                const firstX = x + Math.cos(angle) * outerRadius;
+                const firstY = y + Math.sin(angle) * outerRadius;
+                graphics.moveTo(firstX, firstY);
+                
+                // Vẽ các điểm của ngôi sao
+                for (let i = 1; i < points * 2; i++) {
+                    angle += step;
+                    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                    const pointX = x + Math.cos(angle) * radius;
+                    const pointY = y + Math.sin(angle) * radius;
+                    graphics.lineTo(pointX, pointY);
+                }
+                
+                // Kết nối lại với điểm đầu tiên
+                graphics.lineTo(firstX, firstY);
+            }
+
+            // Tạo các lá cờ trên bản đồ
+            createFlags() {
+                this.flags = [];
+                
+                // Tạo các lá cờ Việt Nam với vị trí ngẫu nhiên (sử dụng randomGenerator)
+                for (let i = 0; i < GAME_CONFIG.FLAG_COUNT; i++) {
+                    const flagX = this.randomGenerator.nextInt(100, GAME_CONFIG.MAP_WIDTH - 100);
+                    const flagY = this.randomGenerator.nextInt(100, GAME_CONFIG.MAP_HEIGHT - 100);
+                    
+                    const flag = new Flag(i, flagX, flagY);
+                    this.flags.push(flag);
+                    
+                    // Tạo sprite cờ Việt Nam (nền đỏ, sao vàng)
+                    const flagGraphic = new PIXI.Graphics();
+                    
+                    // Nền đỏ
+                    flagGraphic.beginFill(0xd22730);
+                    flagGraphic.drawRect(-15, -10, 30, 20);
+                    flagGraphic.endFill();
+                    
+                    // Ngôi sao vàng
+                    flagGraphic.beginFill(0xffff00);
+                    this.drawStar(flagGraphic, 0, 0, 5, 8, 4);
+                    flagGraphic.endFill();
+                    
+                    // Thêm cột cờ
+                    flagGraphic.beginFill(0x8B4513);
+                    flagGraphic.drawRect(-17, -10, 2, 30);
+                    flagGraphic.endFill();
+                    
+                    flagGraphic.x = flagX;
+                    flagGraphic.y = flagY;
+                    
+                    // Thêm hiệu ứng rung lắc nhẹ cho lá cờ
+                    this.app.ticker.add(() => {
+                        flagGraphic.rotation = Math.sin(this.app.ticker.lastTime / 500 + i) * 0.05;
+                    });
+                    
+                    // Thêm hiệu ứng sáng
+                    const glow = new PIXI.Graphics();
+                    glow.beginFill(0xffff00, 0.2);
+                    glow.drawCircle(0, 0, 25);
+                    glow.endFill();
+                    glow.x = flagX;
+                    glow.y = flagY;
+                    
+                    // Tạo hiệu ứng nhấp nháy
+                    this.app.ticker.add(() => {
+                        glow.alpha = 0.3 + Math.sin(this.app.ticker.lastTime / 800 + i * 0.5) * 0.2;
+                        glow.scale.set(1 + Math.sin(this.app.ticker.lastTime / 1000 + i * 0.3) * 0.1);
+                    });
+                    
+                    this.flagContainer.addChild(glow);
+                    this.flagContainer.addChild(flagGraphic);
+                    this.flagSprites[i] = { sprite: flagGraphic, glow };
+                }
+            }
+
+            // Khởi tạo người chơi
+            createPlayer(id, name, x, y) {
+                const player = new Player(id, name, x, y);
+                
+                // Tạo sprite cho người chơi
+                const playerGraphic = new PIXI.Container();
+                
+                // Thân người chơi
+                const body = new PIXI.Graphics();
+                body.beginFill(id === this.player?.id ? 0x5D5CDE : 0xFF6347);
+                body.drawCircle(0, 0, 20);
+                body.endFill();
+                
+                // Hướng di chuyển (mũi tên)
+                const direction = new PIXI.Graphics();
+                direction.beginFill(0xFFFFFF);
+                direction.moveTo(0, -20);
+                direction.lineTo(10, 0);
+                direction.lineTo(-10, 0);
+                direction.lineTo(0, -20);
+                direction.endFill();
+                
+                playerGraphic.addChild(body);
+                playerGraphic.addChild(direction);
+                
+                // Tạo text tên người chơi
+                const nameText = new PIXI.Text(name, {
+                    fontFamily: "Arial",
+                    fontSize: 14,
+                    fill: 0xFFFFFF,
+                    align: "center",
+                    fontWeight: "bold",
+                    stroke: 0x000000,
+                    strokeThickness: 3
+                });
+                nameText.anchor.set(0.5, 0.5);
+                nameText.y = -35;
+                
+                playerGraphic.addChild(nameText);
+                
+                // Điểm số
+                const scoreText = new PIXI.Text("0", {
+                    fontFamily: "Arial",
+                    fontSize: 12,
+                    fill: 0xFFFF00,
+                    align: "center",
+                    fontWeight: "bold",
+                    stroke: 0x000000,
+                    strokeThickness: 2
+                });
+                scoreText.anchor.set(0.5, 0.5);
+                scoreText.y = 28;
+                
+                playerGraphic.addChild(scoreText);
+                
+                playerGraphic.x = x;
+                playerGraphic.y = y;
+                
+                this.playerContainer.addChild(playerGraphic);
+                
+                this.playerSprites[id] = {
+                    sprite: playerGraphic,
+                    scoreText,
+                    direction
+                };
+                
+                return player;
+            }
+
+            // Cập nhật trạng thái người chơi
+            updatePlayer(player) {
+                if (!this.playerSprites[player.id]) {
+                    this.createPlayer(player.id, player.name, player.x, player.y);
+                    this.players[player.id] = player;
+                }
+                
+                const playerSprite = this.playerSprites[player.id].sprite;
+                const scoreText = this.playerSprites[player.id].scoreText;
+                const direction = this.playerSprites[player.id].direction;
+                
+                playerSprite.x = player.x;
+                playerSprite.y = player.y;
+                direction.rotation = player.angle;
+                scoreText.text = player.score.toString();
+                
+                this.players[player.id] = player;
+            }
+
+            // Cập nhật trạng thái cờ
+            updateFlag(flag) {
+                if (this.flagSprites[flag.id]) {
+                    const flagSprite = this.flagSprites[flag.id].sprite;
+                    const flagGlow = this.flagSprites[flag.id].glow;
+                    
+                    if (flag.collected && !flagSprite.collected) {
+                        // Ẩn cờ nếu đã được nhặt
+                        flagSprite.visible = false;
+                        flagGlow.visible = false;
+                        flagSprite.collected = true;
+                        
+                        // Hiệu ứng pháo hoa khi nhặt cờ
+                        if (flag.collectedBy === this.player?.id) {
+                            this.createFireworks(flag.x, flag.y);
+                            this.showGameMessage("Đã nhặt được 1 lá cờ! +1 điểm");
+                        }
+                    }
+                }
+            }
+
+            // Xử lý resize cửa sổ
+            handleResize() {
+                this.app.renderer.resize(window.innerWidth, window.innerHeight);
+                this.centerCamera();
+            }
+
+            // Khởi tạo các điều khiển game
+            initControls() {
+                const joystickBase = document.getElementById('joystickBase');
+                const joystickKnob = document.getElementById('joystickKnob');
+                const collectButton = document.getElementById('collectButton');
+                
+                // Xử lý joystick cho di chuyển
+                this.setupJoystick(joystickBase, joystickKnob);
+                
+                // Xử lý nút nhặt cờ
+                collectButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (!this.collectCooldown) {
+                        this.collectButtonActive = true;
+                        this.tryCollectFlag();
+                    }
+                });
+                collectButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.collectButtonActive = false;
+                });
+                collectButton.addEventListener('mousedown', (e) => {
+                    if (!this.collectCooldown) {
+                        this.collectButtonActive = true;
+                        this.tryCollectFlag();
+                    }
+                });
+                collectButton.addEventListener('mouseup', () => {
+                    this.collectButtonActive = false;
+                });
+            }
+
+            // Thiết lập joystick
+            setupJoystick(base, knob) {
+                const baseBounds = base.getBoundingClientRect();
+                const baseRadius = baseBounds.width / 2;
+                const knobRadius = knob.offsetWidth / 2;
+                const maxDistance = baseRadius - knobRadius;
+                
+                let isActive = false;
+                let touchId = null;
+                
+                // Reset joystick
+                const resetKnob = () => {
+                    knob.style.transform = `translate(0px, 0px)`;
+                    this.joystickActive = false;
+                    this.joystickAngle = 0;
+                    this.joystickStrength = 0;
+                };
+                
+                // Xử lý di chuyển joystick
+                const moveJoystick = (clientX, clientY) => {
+                    const bounds = base.getBoundingClientRect();
+                    const centerX = bounds.left + bounds.width / 2;
+                    const centerY = bounds.top + bounds.height / 2;
+                    const deltaX = clientX - centerX;
+                    const deltaY = clientY - centerY;
+                    
+                    const distance = Math.min(Math.hypot(deltaX, deltaY), maxDistance);
+                    const angle = Math.atan2(deltaY, deltaX);
+                    
+                    const moveX = distance * Math.cos(angle);
+                    const moveY = distance * Math.sin(angle);
+                    
+                    knob.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                    
+                    this.joystickActive = true;
+                    this.joystickAngle = angle;
+                    this.joystickStrength = distance / maxDistance;
+                };
+                
+                // Xử lý sự kiện chuột
+                base.addEventListener('mousedown', (e) => {
+                    isActive = true;
+                    moveJoystick(e.clientX, e.clientY);
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (isActive) {
+                        moveJoystick(e.clientX, e.clientY);
+                    }
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    if (isActive) {
+                        isActive = false;
+                        resetKnob();
+                    }
+                });
+                
+                // Xử lý sự kiện cảm ứng
+                base.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (!isActive && e.touches.length > 0) {
+                        isActive = true;
+                        touchId = e.touches[0].identifier;
+                        moveJoystick(e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                });
+                
+                document.addEventListener('touchmove', (e) => {
+                    if (isActive) {
+                        e.preventDefault();
+                        for (let i = 0; i < e.changedTouches.length; i++) {
+                            const touch = e.changedTouches[i];
+                            if (touch.identifier === touchId) {
+                                moveJoystick(touch.clientX, touch.clientY);
+                                break;
+                            }
+                        }
+                    }
+                });
+                
+                document.addEventListener('touchend', (e) => {
+                    for (let i = 0; i < e.changedTouches.length; i++) {
+                        const touch = e.changedTouches[i];
+                        if (isActive && touch.identifier === touchId) {
+                            isActive = false;
+                            touchId = null;
+                            resetKnob();
+                            break;
+                        }
+                    }
+                });
+                
+                document.addEventListener('touchcancel', (e) => {
+                    for (let i = 0; i < e.changedTouches.length; i++) {
+                        const touch = e.changedTouches[i];
+                        if (isActive && touch.identifier === touchId) {
+                            isActive = false;
+                            touchId = null;
+                            resetKnob();
+                            break;
+                        }
+                    }
+                });
+            }
+
+            // Khởi tạo các sự kiện UI
+            initUIEvents() {
+                const startButton = document.getElementById('startButton');
+                const nameInput = document.getElementById('nameInput');
+                const leaderboardButton = document.getElementById('leaderboardButton');
+                const closeLeaderboard = document.getElementById('closeLeaderboard');
+                
+                // Tải tên người chơi từ localStorage nếu có
+                const savedName = localStorage.getItem('playerName');
+                if (savedName) {
+                    nameInput.value = savedName;
+                }
+                
+                // Xử lý nút bắt đầu chơi
+                startButton.addEventListener('click', () => {
+                    let playerName = nameInput.value.trim();
+                    if (!playerName) playerName = `Player${Math.floor(Math.random() * 1000)}`;
+                    if (playerName.length > 15) playerName = playerName.substring(0, 15);
+                    
+                    // Lưu tên người chơi
+                    localStorage.setItem('playerName', playerName);
+                    
+                    // Khởi tạo người chơi
+                    const playerX = GAME_CONFIG.MAP_WIDTH / 2;
+                    const playerY = GAME_CONFIG.MAP_HEIGHT / 2;
+                    
+                    // Tạo ID cho người chơi
+                    const playerId = 'player_' + Date.now();
+                    
+                    // Kiểm tra xem có dữ liệu đã lưu không
+                    const savedPlayer = JSON.parse(localStorage.getItem('playerData'));
+                    let x = playerX;
+                    let y = playerY;
+                    let score = 0;
+                    
+                    if (savedPlayer) {
+                        x = savedPlayer.x;
+                        y = savedPlayer.y;
+                        score = savedPlayer.score;
+                    }
+                    
+                    this.player = this.createPlayer(playerId, playerName, x, y);
+                    this.player.score = score;
+                    
+                    // Cập nhật điểm số hiển thị
+                    document.getElementById('scoreValue').textContent = score;
+                    this.playerSprites[playerId].scoreText.text = score.toString();
+                    
+                    // Ẩn màn hình giới thiệu
+                    document.getElementById('introScreen').style.display = 'none';
+                    
+                    // Khôi phục trạng thái các lá cờ
+                    this.restoreFlagsState();
+                    
+                    // Bắt đầu game
+                    this.gameStarted = true;
+                    
+                    // Cập nhật trạng thái kết nối
+                    this.updateConnectionStatus();
+                    
+                    // Gửi thông tin người chơi đến server nếu đã kết nối
+                    if (this.connected && this.socket) {
+                        this.socket.emit('player-join', {
+                            id: this.player.id,
+                            name: this.player.name,
+                            x: this.player.x,
+                            y: this.player.y,
+                            score: this.player.score
+                        });
+                    }
+                });
+                
+                // Xử lý bảng xếp hạng
+                leaderboardButton.addEventListener('click', () => {
+                    this.toggleLeaderboard();
+                });
+                
+                closeLeaderboard.addEventListener('click', () => {
+                    this.toggleLeaderboard();
+                });
+            }
+
+            // Hiển thị/ẩn bảng xếp hạng
+            toggleLeaderboard() {
+                const leaderboardPanel = document.getElementById('leaderboardPanel');
+                
+                if (this.leaderboardVisible) {
+                    leaderboardPanel.style.display = 'none';
+                    this.leaderboardVisible = false;
+                } else {
+                    // Cập nhật bảng xếp hạng
+                    this.updateLeaderboard();
+                    leaderboardPanel.style.display = 'block';
+                    this.leaderboardVisible = true;
+                }
+            }
+
+            // Cập nhật bảng xếp hạng
+            updateLeaderboard() {
+                const leaderboardList = document.getElementById('leaderboardList');
+                leaderboardList.innerHTML = '';
+                
+                // Tạo mảng xếp hạng
+                const playerRanking = Object.values(this.players).sort((a, b) => b.score - a.score);
+                
+                // Hiển thị tối đa 10 người chơi
+                for (let i = 0; i < Math.min(10, playerRanking.length); i++) {
+                    const player = playerRanking[i];
+                    const listItem = document.createElement('li');
+                    listItem.className = 'leaderboard-item';
+                    
+                    // Highlight người chơi hiện tại
+                    if (player.id === this.player?.id) {
+                        listItem.style.backgroundColor = 'rgba(93, 92, 222, 0.3)';
+                    }
+                    
+                    const rankSpan = document.createElement('span');
+                    rankSpan.className = 'leaderboard-rank';
+                    rankSpan.textContent = (i + 1);
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'leaderboard-name';
+                    nameSpan.textContent = player.name;
+                    
+                    const scoreSpan = document.createElement('span');
+                    scoreSpan.className = 'leaderboard-score';
+                    scoreSpan.textContent = player.score;
+                    
+                    listItem.appendChild(rankSpan);
+                    listItem.appendChild(nameSpan);
+                    listItem.appendChild(scoreSpan);
+                    
+                    leaderboardList.appendChild(listItem);
+                }
+                
+                // Nếu không có người chơi nào
+                if (playerRanking.length === 0) {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'leaderboard-item';
+                    listItem.textContent = 'Chưa có người chơi nào';
+                    leaderboardList.appendChild(listItem);
+                }
+            }
+
+            // Thử kết nối socket.io
+            tryConnectSocket() {
+                try {
+                    // Trong thực tế, bạn sẽ cần một server socket.io thực
+                    // Đây chỉ là code mô phỏng, không thực sự kết nối
+                    /*
+                    this.socket = io('https://your-socket-server-url');
+                    
+                    this.socket.on('connect', () => {
+                        this.connected = true;
+                        this.updateConnectionStatus();
+                        
+                        if (this.gameStarted && this.player) {
+                            this.socket.emit('player-join', {
+                                id: this.player.id,
+                                name: this.player.name,
+                                x: this.player.x,
+                                y: this.player.y,
+                                score: this.player.score
+                            });
+                        }
+                    });
+                    
+                    this.socket.on('disconnect', () => {
+                        this.connected = false;
+                        this.updateConnectionStatus();
+                    });
+                    
+                    // Nhận danh sách người chơi
+                    this.socket.on('players-list', (playersList) => {
+                        for (const playerData of playersList) {
+                            if (playerData.id !== this.player?.id) {
+                                this.updatePlayer(new Player(
+                                    playerData.id,
+                                    playerData.name,
+                                    playerData.x,
+                                    playerData.y
+                                ));
+                                this.players[playerData.id].score = playerData.score;
+                            }
+                        }
+                        
+                        this.updateLeaderboard();
+                    });
+                    
+                    // Nhận cập nhật vị trí người chơi
+                    this.socket.on('player-update', (playerData) => {
+                        if (playerData.id !== this.player?.id) {
+                            const updatedPlayer = new Player(
+                                playerData.id,
+                                playerData.name,
+                                playerData.x,
+                                playerData.y
+                            );
+                            updatedPlayer.score = playerData.score;
+                            updatedPlayer.angle = playerData.angle;
+                            this.updatePlayer(updatedPlayer);
+                        }
+                    });
+                    
+                    // Nhận sự kiện người chơi rời đi
+                    this.socket.on('player-leave', (playerId) => {
+                        if (this.players[playerId] && this.playerSprites[playerId]) {
+                            this.playerContainer.removeChild(this.playerSprites[playerId].sprite);
+                            delete this.playerSprites[playerId];
+                            delete this.players[playerId];
+                            
+                            this.updateLeaderboard();
+                        }
+                    });
+                    
+                    // Nhận cập nhật trạng thái cờ
+                    this.socket.on('flag-update', (flagData) => {
+                        const flag = this.flags.find(f => f.id === flagData.id);
+                        if (flag) {
+                            flag.collected = flagData.collected;
+                            flag.collectedBy = flagData.collectedBy;
+                            this.updateFlag(flag);
+                        }
+                    });
+                    */
+                    
+                    // Đặt trạng thái là offline mode vì không có server thực
+                    this.connected = false;
+                    this.updateConnectionStatus();
+                } catch (error) {
+                    console.error("Socket connection error:", error);
+                    this.connected = false;
+                    this.updateConnectionStatus();
+                }
+            }
+
+            // Cập nhật trạng thái kết nối
+            updateConnectionStatus() {
+                const statusElement = document.getElementById('connectionStatus');
+                if (this.connected) {
+                    statusElement.textContent = 'Online';
+                    statusElement.style.backgroundColor = 'rgba(0, 128, 0, 0.7)';
+                } else {
+                    statusElement.textContent = 'Offline Mode';
+                    statusElement.style.backgroundColor = 'rgba(210, 39, 48, 0.7)';
+                }
+            }
+
+            // Kiểm tra va chạm với cờ
+            checkFlagCollision(x, y, distance = GAME_CONFIG.COLLECT_DISTANCE) {
+                for (const flag of this.flags) {
+                    if (!flag.collected) {
+                        const dx = flag.x - x;
+                        const dy = flag.y - y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist <= distance) {
+                            return flag;
+                        }
+                    }
+                }
+                
+                return null;
+            }
+
+            // Thử nhặt cờ
+            tryCollectFlag() {
+                if (!this.player || this.collectCooldown) return;
+                
+                const nearbyFlag = this.checkFlagCollision(
+                    this.player.x,
+                    this.player.y
+                );
+                
+                if (nearbyFlag) {
+                    // Đánh dấu cờ đã được nhặt
+                    nearbyFlag.collected = true;
+                    nearbyFlag.collectedBy = this.player.id;
+                    
+                    // Cập nhật điểm số
+                    this.player.score += 1;
+                    document.getElementById('scoreValue').textContent = this.player.score;
+                    this.playerSprites[this.player.id].scoreText.text = this.player.score.toString();
+                    
+                    // Cập nhật trạng thái cờ
+                    this.updateFlag(nearbyFlag);
+                    
+                    // Lưu trạng thái game
+                    this.saveGameState();
+                    
+                    // Gửi thông tin cập nhật đến server
+                    if (this.connected && this.socket) {
+                        this.socket.emit('collect-flag', nearbyFlag.id);
+                        this.socket.emit('player-update', {
+                            id: this.player.id,
+                            name: this.player.name,
+                            x: this.player.x,
+                            y: this.player.y,
+                            score: this.player.score,
+                            angle: this.player.angle
+                        });
+                    }
+                    
+                    // Hiệu ứng cooldown
+                    this.collectCooldown = true;
+                    document.getElementById('collectButton').style.opacity = '0.5';
+                    
+                    setTimeout(() => {
+                        this.collectCooldown = false;
+                        document.getElementById('collectButton').style.opacity = '1';
+                    }, 500);
+                }
+            }
+
+            // Tạo hiệu ứng pháo hoa
+            createFireworks(x, y) {
+                for (let i = 0; i < GAME_CONFIG.FIREWORK_COUNT; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 3;
+                    const size = 3 + Math.random() * 4;
+                    const lifespan = 1000 + Math.random() * 1000;
+                    const colors = [0xd22730, 0xffff00, 0xffffff, 0xff9900, 0xff00ff];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    const particle = new PIXI.Graphics();
+                    particle.beginFill(color);
+                    particle.drawCircle(0, 0, size);
+                    particle.endFill();
+                    particle.x = x;
+                    particle.y = y;
+                    particle.vx = Math.cos(angle) * speed;
+                    particle.vy = Math.sin(angle) * speed;
+                    particle.alpha = 1;
+                    particle.createdAt = Date.now();
+                    particle.lifespan = lifespan;
+                    
+                    this.mapContainer.addChild(particle);
+                    
+                    // Thêm vào ticker để cập nhật vị trí
+                    const tickerCallback = () => {
+                        const age = Date.now() - particle.createdAt;
+                        if (age >= particle.lifespan) {
+                            // Xóa particle sau khi hết thời gian
+                            this.mapContainer.removeChild(particle);
+                            this.app.ticker.remove(tickerCallback);
+                        } else {
+                            // Cập nhật vị trí và độ trong suốt
+                            particle.x += particle.vx;
+                            particle.y += particle.vy;
+                            particle.alpha = 1 - (age / particle.lifespan);
+                            
+                            // Thêm trọng lực nhẹ
+                            particle.vy += 0.05;
+                        }
+                    };
+                    
+                    this.app.ticker.add(tickerCallback);
+                }
+            }
+
+            // Hiển thị thông báo trong game
+            showGameMessage(text, duration = 2000) {
+                const messageElement = document.getElementById('gameMessage');
+                messageElement.textContent = text;
+                messageElement.style.opacity = '1';
+                
+                clearTimeout(this.messageTimeout);
+                this.messageTimeout = setTimeout(() => {
+                    messageElement.style.opacity = '0';
+                }, duration);
+            }
+
+            // Vòng lặp game chính
+            gameLoop(delta) {
+                if (!this.gameStarted || !this.player) return;
+                
+                // Di chuyển người chơi theo joystick
+                if (this.joystickActive && this.joystickStrength > 0.1) {
+                    const speed = GAME_CONFIG.PLAYER_SPEED * this.joystickStrength;
+                    this.player.speedX = Math.cos(this.joystickAngle) * speed;
+                    this.player.speedY = Math.sin(this.joystickAngle) * speed;
+                    this.player.angle = this.joystickAngle;
+                } else {
+                    // Giảm tốc độ khi không di chuyển
+                    this.player.speedX *= 0.8;
+                    this.player.speedY *= 0.8;
+                    
+                    if (Math.abs(this.player.speedX) < 0.1) this.player.speedX = 0;
+                    if (Math.abs(this.player.speedY) < 0.1) this.player.speedY = 0;
+                }
+                
+                // Cập nhật vị trí người chơi
+                this.player.x += this.player.speedX * delta;
+                this.player.y += this.player.speedY * delta;
+                
+                // Kiểm tra biên của bản đồ
+                if (this.player.x < 20) this.player.x = 20;
+                if (this.player.x > GAME_CONFIG.MAP_WIDTH - 20) this.player.x = GAME_CONFIG.MAP_WIDTH - 20;
+                if (this.player.y < 20) this.player.y = 20;
+                if (this.player.y > GAME_CONFIG.MAP_HEIGHT - 20) this.player.y = GAME_CONFIG.MAP_HEIGHT - 20;
+                
+                // Cập nhật sprite người chơi
+                this.updatePlayer(this.player);
+                
+                // Gửi vị trí mới đến server
+                if (this.connected && this.socket && (this.player.speedX !== 0 || this.player.speedY !== 0)) {
+                    this.socket.emit('player-update', {
+                        id: this.player.id,
+                        name: this.player.name,
+                        x: this.player.x,
+                        y: this.player.y,
+                        score: this.player.score,
+                        angle: this.player.angle
+                    });
+                }
+                
+                // Lưu trạng thái game định kỳ
+                const now = Date.now();
+                if (now - this.lastTimestamp > 5000) { // Mỗi 5 giây
+                    this.saveGameState();
+                    this.lastTimestamp = now;
+                }
+                
+                // Đặt camera theo người chơi
+                this.centerCamera();
+            }
+
+            // Đặt camera theo người chơi
+            centerCamera() {
+                if (!this.player) return;
+                
+                const viewWidth = window.innerWidth;
+                const viewHeight = window.innerHeight;
+                
+                // Đặt vị trí container để camera tập trung vào người chơi
+                this.mapContainer.x = viewWidth / 2 - this.player.x;
+                this.mapContainer.y = viewHeight / 2 - this.player.y;
+            }
+
+            // Lưu trạng thái game
+            saveGameState() {
+                if (!this.player) return;
+                
+                // Lưu thông tin người chơi
+                const playerData = {
+                    id: this.player.id,
+                    name: this.player.name,
+                    x: this.player.x,
+                    y: this.player.y,
+                    score: this.player.score
+                };
+                
+                // Lưu trạng thái cờ
+                const flagsData = this.flags.map(flag => ({
+                    id: flag.id,
+                    collected: flag.collected,
+                    collectedBy: flag.collectedBy
+                }));
+                
+                // Lưu vào localStorage
+                try {
+                    localStorage.setItem('playerData', JSON.stringify(playerData));
+                    localStorage.setItem('flagsData', JSON.stringify(flagsData));
+                    localStorage.setItem('gameTimestamp', Date.now().toString());
+                } catch (error) {
+                    console.error("Error saving game state:", error);
+                }
+            }
+
+            // Tải trạng thái game
+            loadGameState() {
+                try {
+                    // Kiểm tra xem có dữ liệu đã lưu không
+                    const playerData = localStorage.getItem('playerData');
+                    const flagsData = localStorage.getItem('flagsData');
+                    const gameTimestamp = localStorage.getItem('gameTimestamp');
+                    
+                    // Nếu dữ liệu đã được lưu và không quá 1 ngày
+                    if (playerData && flagsData && gameTimestamp) {
+                        const now = Date.now();
+                        const timestamp = parseInt(gameTimestamp);
+                        const oneDayMs = 24 * 60 * 60 * 1000;
+                        
+                        if (now - timestamp < oneDayMs) {
+                            // Dữ liệu còn mới, có thể sử dụng
+                            return true;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error loading game state:", error);
+                }
+                
+                return false;
+            }
+
+            // Khôi phục trạng thái cờ
+            restoreFlagsState() {
+                try {
+                    const flagsData = localStorage.getItem('flagsData');
+                    if (flagsData) {
+                        const savedFlags = JSON.parse(flagsData);
+                        
+                        for (const savedFlag of savedFlags) {
+                            const flag = this.flags.find(f => f.id === savedFlag.id);
+                            if (flag) {
+                                flag.collected = savedFlag.collected;
+                                flag.collectedBy = savedFlag.collectedBy;
+                                this.updateFlag(flag);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error restoring flags state:", error);
+                }
+            }
+        }
+
+        // Khởi tạo và bắt đầu game
+        const game = new Game();
+        game.init();
+    </script>
+</body>
+</html>
