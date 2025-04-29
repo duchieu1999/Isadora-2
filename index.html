@@ -35,7 +35,7 @@
             color: var(--text-color);
             min-height: 100vh;
             width: 100%;
-            background-image: url('https://img.upanh.tv/2025/04/29/ChatGPT-Image-18_17_30-29-thg-4-2025.png');
+            background-image: url('https://img.upanh.tv/2025/04/29/ChatGPT-Image-18_51_42-29-thg-4-2025.png');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -256,56 +256,61 @@
             background-color: var(--wheel-section-color);
             border: 12px solid var(--wheel-border-color);
             box-shadow: 0 0 0 2px var(--secondary-color), 0 10px 20px rgba(0,0,0,0.3);
-            transition: transform 8s cubic-bezier(0.17, 0.89, 0.24, 1.0);
+            will-change: transform;
+            backface-visibility: hidden;
             transform: rotate(0deg);
         }
         
         .wheel-section {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 50%);
-            transform-origin: center;
-            display: flex;
-            justify-content: center;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 50%;
+            transform-origin: bottom right;
+            text-align: center;
+            box-sizing: border-box;
+            border: 1px solid #ba8f4a;
             overflow: hidden;
         }
         
         .wheel-section-content {
             position: absolute;
-            top: 15px;
-            left: 50%;
-            width: 130px;
-            height: 130px;
-            margin-left: -50px;
-            transform-origin: bottom center;
+            width: 70px;
+            height: 70px;
+            top: 10px;
+            left: 5px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
+            transform: rotate(45deg);
+            overflow: hidden;
         }
         
         .wheel-section-icon {
-            width: 40px;
-            height: 40px;
-            margin-bottom: 5px;
-            object-fit: contain;
+            font-size: 22px;
+            margin-bottom: 4px;
         }
         
         .wheel-section-text {
-            font-size: 12px;
+            font-size: 8px; 
             font-weight: bold;
             color: var(--wheel-text-color);
             text-align: center;
             width: 100%;
-            line-height: 1.1;
+            line-height: 1;
             word-wrap: break-word;
+            max-height: 16px;
+            overflow: hidden;
+            padding: 0 2px;
         }
         
         .wheel-dots {
             position: absolute;
             width: 100%;
             height: 100%;
+            border-radius: 50%;
             pointer-events: none;
         }
         
@@ -344,12 +349,12 @@
         
         .wheel-pointer-container {
             position: absolute;
-            top: 0;
+            top: -5px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 6;
             width: 40px;
-            height: 60px;
+            height: 40px;
         }
         
         .wheel-pointer {
@@ -796,6 +801,10 @@
             background-color: var(--primary-dark);
         }
         
+        .user-id-hidden {
+            display: none;
+        }
+        
         /* Footer */
         .footer {
             text-align: center;
@@ -939,12 +948,8 @@
             </div>
             <div class="wheel-container">
                 <div class="wheel-wrapper">
-                    <div class="wheel" id="wheel">
-                        <!-- Wheel sections will be added dynamically -->
-                    </div>
-                    <div class="wheel-dots" id="wheel-dots">
-                        <!-- Dots will be added dynamically -->
-                    </div>
+                    <div class="wheel" id="wheel"></div>
+                    <div class="wheel-dots" id="wheel-dots"></div>
                     <div class="wheel-center">
                         <div class="wheel-center-circle"></div>
                     </div>
@@ -1033,6 +1038,7 @@
                 <input type="text" id="player-name" placeholder="Nhập tên của bạn">
                 <button id="save-name-btn">Lưu</button>
             </div>
+            <div class="user-id-hidden" id="user-id-container"></div>
         </div>
     </div>
     
@@ -1055,7 +1061,7 @@
             { name: "Lá cờ giải phóng", icon: "🚩", points: 80, probability: 0.04 },
             { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -10, probability: 0.10 },
             { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -15, probability: 0.08 },
-            { name: "Nhận đồi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 }
+            { name: "Nhận đôi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 }
         ];
 
         // DOM elements
@@ -1077,6 +1083,7 @@
         const leaderboardList = document.getElementById('leaderboard-list');
         const playerNameInput = document.getElementById('player-name');
         const saveNameBtn = document.getElementById('save-name-btn');
+        const userIdContainer = document.getElementById('user-id-container');
         
         // Countdown elements
         const daysValue = document.getElementById('days-value');
@@ -1094,10 +1101,13 @@
         let playerName = 'Người chơi ẩn danh';
         let selectedRedeemOption = null;
         let isEventEnded = false;
+        let userId = '';
+        let lastWheelRotation = 0;
 
         // Initialize the game
         function initGame() {
             createWheel();
+            setupUserId();
             loadGameState();
             startRefreshTimer();
             startEventCountdown();
@@ -1115,6 +1125,24 @@
             setupRedeemOptions();
         }
 
+        // Setup unique user ID
+        function setupUserId() {
+            // Get user ID from local storage or create a new one
+            userId = localStorage.getItem('wheelGameUserId');
+            if (!userId) {
+                userId = generateUniqueId();
+                localStorage.setItem('wheelGameUserId', userId);
+            }
+            userIdContainer.textContent = userId;
+        }
+
+        // Generate a unique ID for the user
+        function generateUniqueId() {
+            const timestamp = Date.now().toString(36);
+            const random = Math.random().toString(36).substring(2, 10);
+            return timestamp + random;
+        }
+
         // Create the wheel sections with exact styling from the image
         function createWheel() {
             // Clear existing sections
@@ -1123,24 +1151,21 @@
             
             // Select sections for the wheel (always use all 12 sections)
             const sectionsToUse = wheelSections;
-            
-            // Calculate angle per section
-            const anglePerSection = 360 / sectionsToUse.length;
+            const numSections = sectionsToUse.length;
             
             // Create wheel sections
-            sectionsToUse.forEach((section, index) => {
-                // Calculate rotation angle for this section
-                const rotationAngle = index * anglePerSection;
+            for (let i = 0; i < numSections; i++) {
+                const section = sectionsToUse[i];
+                const rotationAngle = (i * 360 / numSections);
                 
                 // Create section element
                 const sectionElement = document.createElement('div');
                 sectionElement.className = 'wheel-section';
                 sectionElement.style.transform = `rotate(${rotationAngle}deg)`;
                 
-                // Create section content
-                const contentElement = document.createElement('div');
-                contentElement.className = 'wheel-section-content';
-                contentElement.style.transform = `rotate(${anglePerSection/2}deg)`;
+                // Position and style the section
+                const sectionContent = document.createElement('div');
+                sectionContent.className = 'wheel-section-content';
                 
                 // Create icon
                 const iconElement = document.createElement('div');
@@ -1153,11 +1178,11 @@
                 textElement.textContent = section.name;
                 
                 // Assemble the section
-                contentElement.appendChild(iconElement);
-                contentElement.appendChild(textElement);
-                sectionElement.appendChild(contentElement);
+                sectionContent.appendChild(iconElement);
+                sectionContent.appendChild(textElement);
+                sectionElement.appendChild(sectionContent);
                 wheel.appendChild(sectionElement);
-            });
+            }
             
             // Add dots around the wheel (24 dots)
             const dotsCount = 24;
@@ -1189,6 +1214,7 @@
             
             // Determine the winning section
             const sections = window.currentWheelSections;
+            const numSections = sections.length;
             
             // Use weighted probability for selection
             const totalProbability = sections.reduce((sum, section) => sum + section.probability, 0);
@@ -1207,14 +1233,31 @@
             const winningSection = sections[winningIndex];
             
             // Calculate rotation angle to land on the winning section
-            const sectionAngle = 360 / sections.length;
-            const baseRotation = 360 * 5; // Spin at least 5 times
-            const landingAngle = 360 - (winningIndex * sectionAngle) - (sectionAngle / 2);
-            const finalRotation = baseRotation + landingAngle;
+            const sectionAngle = 360 / numSections;
+            const targetAngle = 360 - (winningIndex * sectionAngle) - (sectionAngle / 2); // Target middle of the section
             
-            // Set the rotation animation
-            wheel.style.transition = 'transform 8s cubic-bezier(0.17, 0.89, 0.24, 1.0)';
-            wheel.style.transform = `rotate(${finalRotation}deg)`;
+            // Ensure a full rotation (at least 2 times) plus the target angle
+            // and adjust for previous position
+            const fullRotations = 2 * 360; // 2 full rotations (reduced from 5)
+            const destinationAngle = fullRotations + targetAngle;
+            
+            // Remove any existing transition
+            wheel.style.transition = 'none';
+            // Force a reflow to immediately apply the above style
+            wheel.offsetHeight;
+            // Reset the wheel to its starting position
+            wheel.style.transform = `rotate(${lastWheelRotation}deg)`;
+            
+            // Force a reflow again to ensure the position is set
+            wheel.offsetHeight;
+            
+            // Now add the transition and spin to the destination
+            // Reduced from 8s to 3s as requested
+            wheel.style.transition = 'transform 3s cubic-bezier(0.17, 0.89, 0.24, 1.0)';
+            wheel.style.transform = `rotate(${destinationAngle}deg)`;
+            
+            // Save the current rotation for next spin
+            lastWheelRotation = destinationAngle % 360;
             
             // Disable spin button during spinning
             spinBtn.disabled = true;
@@ -1225,7 +1268,7 @@
                 spinBtn.disabled = false;
                 processResult(winningSection);
                 saveGameState();
-            }, 8000);
+            }, 3000); // Reduced from 8000 to 3000 as requested
         }
 
         // Process the result after spinning
@@ -1237,7 +1280,7 @@
             if (nextSpinDouble) {
                 pointsEarned *= 2;
                 nextSpinDouble = false;
-                message += '<strong>Nhận đồi biếm kích hoạt!</strong> Điểm nhân đôi! ';
+                message += '<strong>Nhận đôi biếm kích hoạt!</strong> Điểm nhân đôi! ';
             }
             
             // Process special effects
@@ -1414,6 +1457,7 @@
             
             // Update immediately and then every second
             updateTimer();
+            clearInterval(refreshTimer); // Clear any existing timer
             refreshTimer = setInterval(updateTimer, 1000);
         }
         
@@ -1455,6 +1499,7 @@
             
             // Update immediately and then every second
             updateCountdown();
+            clearInterval(countdownTimer); // Clear any existing timer
             countdownTimer = setInterval(updateCountdown, 1000);
         }
 
@@ -1520,12 +1565,21 @@
             return code;
         }
 
-        // Save reward card as image
+        // Save reward card as image (or provide download mechanism)
         function saveRewardCard() {
             alert('Đã lưu thẻ quà tặng! Hãy gửi mã này cho Hiếu Gà để nhận quà nhé!');
             
-            // In a real implementation, this would use html2canvas or similar to
-            // capture the reward card as an image and download it
+            // In a real implementation, this would capture and download the reward card as an image
+            // We would use HTML2Canvas or a similar library:
+            
+            /*
+            html2canvas(document.getElementById('reward-card')).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'the-qua-hieu-ga.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+            */
         }
 
         // Save game state to localStorage
@@ -1534,10 +1588,14 @@
                 points: points,
                 spinsLeft: spinsLeft,
                 nextSpinDouble: nextSpinDouble,
-                lastUpdate: Date.now()
+                lastUpdate: Date.now(),
+                wheelRotation: lastWheelRotation
             };
             
             localStorage.setItem('wheelGameState', JSON.stringify(gameState));
+            
+            // Also save to server (for the leaderboard)
+            saveScoreToServer();
         }
 
         // Load game state from localStorage
@@ -1558,11 +1616,13 @@
                     points = gameState.points || 0;
                     spinsLeft = gameState.spinsLeft !== undefined ? gameState.spinsLeft : 50;
                     nextSpinDouble = gameState.nextSpinDouble || false;
+                    lastWheelRotation = gameState.wheelRotation || 0;
                 } else {
                     // Reset spins for new hour but keep points
                     points = gameState.points || 0;
                     spinsLeft = 50;
                     nextSpinDouble = false;
+                    lastWheelRotation = 0;
                 }
             }
         }
@@ -1573,73 +1633,84 @@
             if (newName) {
                 playerName = newName;
                 localStorage.setItem('playerName', playerName);
-                updateLeaderboard();
+                
+                // Save to server
+                saveScoreToServer();
+                
+                // Update leaderboard display
+                loadLeaderboard();
                 
                 // Show confirmation
                 showResult('✅', `Tên "${playerName}" đã được lưu thành công!`);
             }
         }
 
-        // Load leaderboard from localStorage or server
-        function loadLeaderboard() {
-            // For this example, we'll create a mock leaderboard
-            // In a real application, you would fetch this from a server
+        // Save score to server (for leaderboard)
+        function saveScoreToServer() {
+            // In a real implementation, this would be an API call to save the score
+            // For this demo, we'll use localStorage to simulate a server
             
-            let leaderboard = localStorage.getItem('wheelGameLeaderboard');
+            // Add timestamp to see when it was last updated
+            const scoreData = {
+                userId: userId,
+                name: playerName,
+                score: points,
+                lastUpdate: Date.now()
+            };
+            
+            // Get current leaderboard
+            let leaderboard = localStorage.getItem('globalLeaderboard');
             if (leaderboard) {
                 leaderboard = JSON.parse(leaderboard);
             } else {
-                leaderboard = [
-                    { name: "Vô Địch", score: 2800 },
-                    { name: "Tuấn Anh", score: 2200 },
-                    { name: "Mai Phương", score: 1800 },
-                    { name: "Bảo Long", score: 1500 },
-                    { name: "Thu Hà", score: 1200 }
-                ];
-                localStorage.setItem('wheelGameLeaderboard', JSON.stringify(leaderboard));
+                leaderboard = [];
             }
             
-            updateLeaderboardDisplay(leaderboard);
+            // Update or add the score
+            const existingIndex = leaderboard.findIndex(entry => entry.userId === userId);
+            if (existingIndex !== -1) {
+                leaderboard[existingIndex] = scoreData;
+            } else {
+                leaderboard.push(scoreData);
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem('globalLeaderboard', JSON.stringify(leaderboard));
         }
 
-        // Update leaderboard
-        function updateLeaderboard() {
-            let leaderboard = localStorage.getItem('wheelGameLeaderboard');
+        // Load leaderboard from "server"
+        function loadLeaderboard() {
+            // In a real implementation, this would be an API call to get the leaderboard
+            let leaderboard = localStorage.getItem('globalLeaderboard');
             if (leaderboard) {
                 leaderboard = JSON.parse(leaderboard);
             } else {
+                // Create sample data if none exists
                 leaderboard = [
-                    { name: "Vô Địch", score: 2800 },
-                    { name: "Tuấn Anh", score: 2200 },
-                    { name: "Mai Phương", score: 1800 },
-                    { name: "Bảo Long", score: 1500 },
-                    { name: "Thu Hà", score: 1200 }
+                    { userId: "sample1", name: "Vô Địch", score: 2800, lastUpdate: Date.now() },
+                    { userId: "sample2", name: "Tuấn Anh", score: 2200, lastUpdate: Date.now() },
+                    { userId: "sample3", name: "Mai Phương", score: 1800, lastUpdate: Date.now() },
+                    { userId: "sample4", name: "Bảo Long", score: 1500, lastUpdate: Date.now() },
+                    { userId: "sample5", name: "Thu Hà", score: 1200, lastUpdate: Date.now() }
                 ];
+                localStorage.setItem('globalLeaderboard', JSON.stringify(leaderboard));
             }
             
-            // Check if player is already in leaderboard
-            const playerIndex = leaderboard.findIndex(p => p.name === playerName);
-            
-            if (playerIndex !== -1) {
-                // Update existing score if higher
-                if (points > leaderboard[playerIndex].score) {
-                    leaderboard[playerIndex].score = points;
-                }
-            } else if (points > 0) {
-                // Add player to leaderboard
-                leaderboard.push({ name: playerName, score: points });
+            // Make sure our current score is in there
+            let currentUserEntry = leaderboard.find(entry => entry.userId === userId);
+            if (!currentUserEntry && points > 0) {
+                currentUserEntry = {
+                    userId: userId,
+                    name: playerName,
+                    score: points,
+                    lastUpdate: Date.now()
+                };
+                leaderboard.push(currentUserEntry);
+                localStorage.setItem('globalLeaderboard', JSON.stringify(leaderboard));
             }
             
-            // Sort leaderboard
+            // Sort and update display
             leaderboard.sort((a, b) => b.score - a.score);
-            
-            // Limit to top 10
-            leaderboard = leaderboard.slice(0, 10);
-            
-            // Save leaderboard
-            localStorage.setItem('wheelGameLeaderboard', JSON.stringify(leaderboard));
-            
-            // Update display
             updateLeaderboardDisplay(leaderboard);
         }
 
@@ -1647,11 +1718,14 @@
         function updateLeaderboardDisplay(leaderboard) {
             leaderboardList.innerHTML = '';
             
-            leaderboard.forEach((player, index) => {
+            // Limit to top 10
+            const topScores = leaderboard.slice(0, 10);
+            
+            topScores.forEach((player, index) => {
                 const li = document.createElement('li');
                 li.className = 'leaderboard-item';
                 
-                const isCurrentPlayer = player.name === playerName;
+                const isCurrentPlayer = player.userId === userId;
                 if (isCurrentPlayer) {
                     li.style.backgroundColor = 'rgba(255, 235, 59, 0.2)';
                 }
