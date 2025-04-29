@@ -1324,7 +1324,7 @@
             </div>
             <div class="stat">
                 <div class="stat-value" id="timer-value">59:59</div>
-                <div class="stat-label">Thêm 50 lượt quay sau</div>
+                <div class="stat-label">+50 lượt quay sau</div>
             </div>
         </div>
         
@@ -1376,15 +1376,15 @@
                 </div>
             </div>
             <div class="reward-value" id="reward-value">0 VNĐ</div>
-            <div class="reward-info">Chúc mừng! Bạn đã đổi thành công điểm thưởng.</div>
+            <div class="reward-info">Chúc mừng! Bạn đã đổi thành công điểm thưởng. Hãy tải về phiếu nhận thưởng và gửi cho Hiếu Gà để nhận thưởng</div>
             <div class="reward-image" id="reward-image">
                 <img src="https://thietkehaithanh.com/wp-content/uploads/2018/12/in-voucher-1.jpg" alt="Hình ảnh mẫu" />
             </div>
             <div class="reward-footer">
                 <div class="reward-date" id="reward-date">30/04/2025</div>
             </div>
-            <div class="reward-watermark">HIẾU GÀ OFFICIAL</div>
-            <button class="save-btn" id="save-reward-btn">TẢI POSTER NHẬN THƯỞNG</button>
+            <div class="reward-watermark">SỰ KIỆN 30/4 HIẾU GÀ OFFICIAL</div>
+            <button class="save-btn" id="save-reward-btn">TẢI VỀ ẢNH PHIẾU NHẬN THƯỞNG</button>
         </div>
         
         <div class="leaderboard">
@@ -2036,8 +2036,7 @@
             // Get next hour's timestamp (changed back to 1 hour from 30 minutes)
             const now = new Date();
             const nextHour = new Date(now);
-            nextHour.setHours(now.getHours() + 1);
-            nextHour.setMinutes(0, 0, 0);
+            nextHour.setMinutes(now.getMinutes() + 30, 0, 0);
             
             let timeLeft = nextHour - now;
             
