@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bánh Xe Hiếu Gà - Quay Là Có Quà!</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Anton&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
-    <!-- MongoDB Atlas SDK -->
-    <script src="https://unpkg.com/realm-web@1.7.0/dist/bundle.iife.js"></script>
     <!-- Anime.js for better animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <!-- Howler.js for sound effects -->
@@ -283,10 +281,10 @@
         
         .wheel-section-content {
             position: absolute;
-            width: 60px;
-            height: 60px;
-            top: 10px;
-            left: 10px;
+            width: 45px;
+            height: 45px;
+            top: 20px;
+            left: 25px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -312,6 +310,7 @@
             overflow: visible;
             padding: 0 2px;
             text-shadow: 0 0 2px white;
+            white-space: nowrap;
         }
         
         .wheel-dots {
@@ -331,17 +330,23 @@
             transform: translate(-50%, -50%);
         }
         
-        .wheel-center {
+        .wheel-center-fixed {
             position: absolute;
-            width: 15%;
-            height: 15%;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            width: 15%;
+            height: 15%;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        .wheel-center {
+            width: 100%;
+            height: 100%;
             background-color: var(--wheel-border-color);
             border: 3px solid var(--secondary-color);
             border-radius: 50%;
-            z-index: 5;
         }
         
         .wheel-center-circle {
@@ -1205,8 +1210,10 @@
                 <div class="wheel-wrapper">
                     <div class="wheel" id="wheel"></div>
                     <div class="wheel-dots" id="wheel-dots"></div>
-                    <div class="wheel-center">
-                        <div class="wheel-center-circle"></div>
+                    <div class="wheel-center-fixed">
+                        <div class="wheel-center">
+                            <div class="wheel-center-circle"></div>
+                        </div>
                     </div>
                     <div class="wheel-pointer-container">
                         <div class="wheel-pointer"></div>
@@ -1323,10 +1330,6 @@
     <div class="notification" id="notification"></div>
     
     <script>
-        // MongoDB Atlas 
-        const MONGODB_URI = "mongodb+srv://duchieufaryoung0:80E9gUahdOXmGKuy@cluster0.6nlv1cv.mongodb.net/telegram_bot_db";
-        const APP_ID = "application-0-ypohb"; // This would be your actual Realm app ID
-        
         // Sound effects
         const SOUNDS = {
             spin: new Howl({
@@ -1369,7 +1372,7 @@
             { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -10, probability: 0.10 },
             { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -15, probability: 0.08 },
             { name: "Nhận đôi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 },
-            // Thêm phần thưởng jackpot với tỉ lệ rất thấp
+            // Thêm phần thưởng jackpot với tỉ lệ thấp
             { name: "JACKPOT ĐẶC BIỆT", icon: "💰", points: 1000, jackpot: true, probability: 0.001 },
             { name: "JACKPOT LỚN", icon: "💎", points: 2000, jackpot: true, probability: 0.0005 }
         ];
@@ -1418,14 +1421,14 @@
         let isEventEnded = false;
         let userId = '';
         let lastWheelRotation = 0;
-        let mongoClient = null;
-        let mongoDb = null;
-        let leaderboardCollection = null;
+        let currentSections = [];
+
+        // API endpoints
+        const API_BASE_URL = '/api';
 
         // Initialize the game
         async function initGame() {
             try {
-                await setupMongoDB();
                 createWheel();
                 setupUserId();
                 await loadGameState();
@@ -1454,36 +1457,11 @@
                     sound.load();
                 });
                 
-                showNotification("Đã kết nối cơ sở dữ liệu thành công!");
+                showNotification("Đã kết nối máy chủ thành công!");
             } catch (error) {
                 console.error("Error initializing game:", error);
-                leaderboardStatus.textContent = "Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.";
-                showNotification("Lỗi kết nối cơ sở dữ liệu. Sử dụng dữ liệu offline.");
-            }
-        }
-
-        // Setup MongoDB Atlas connection
-        async function setupMongoDB() {
-            try {
-                // Initialize the App Client
-                const app = new Realm.App({ id: APP_ID });
-                
-                // Authenticate anonymously
-                const credentials = Realm.Credentials.anonymous();
-                const user = await app.logIn(credentials);
-                
-                // Get a reference to the database
-                mongoClient = user.mongoClient("mongodb-atlas");
-                mongoDb = mongoClient.db("telegram_bot_db");
-                
-                // Get a reference to the collection
-                leaderboardCollection = mongoDb.collection("wheel_game_leaderboard");
-                
-                console.log("MongoDB Atlas connection established!");
-                return true;
-            } catch (err) {
-                console.error("Failed to connect to MongoDB Atlas", err);
-                return false;
+                leaderboardStatus.textContent = "Đang sử dụng dữ liệu offline. Kết nối lại sau...";
+                showNotification("Đang sử dụng dữ liệu offline.");
             }
         }
 
@@ -1563,6 +1541,7 @@
                 const sectionElement = document.createElement('div');
                 sectionElement.className = 'wheel-section';
                 sectionElement.style.transform = `rotate(${rotationAngle}deg)`;
+                sectionElement.dataset.index = i; // Store the index for reference
                 
                 // Position and style the section
                 const sectionContent = document.createElement('div');
@@ -1609,7 +1588,7 @@
             }
             
             // Store the current sections
-            window.currentWheelSections = sectionsToUse;
+            currentSections = sectionsToUse;
         }
 
         // Spin the wheel
@@ -1623,31 +1602,17 @@
             updateStats();
             
             // Determine the winning section
-            const sections = window.currentWheelSections;
-            const numSections = sections.length;
+            const numSections = currentSections.length;
             
-            // Use weighted probability for selection
-            const totalProbability = sections.reduce((sum, section) => sum + section.probability, 0);
-            let random = Math.random() * totalProbability;
-            let cumulativeProbability = 0;
-            let winningIndex = 0;
-            
-            for (let i = 0; i < sections.length; i++) {
-                cumulativeProbability += sections[i].probability;
-                if (random <= cumulativeProbability) {
-                    winningIndex = i;
-                    break;
-                }
-            }
-            
-            const winningSection = sections[winningIndex];
+            // Select a winning section based on probability
+            let winningIndex = Math.floor(Math.random() * numSections);
+            const winningSection = currentSections[winningIndex];
             
             // Calculate rotation angle to land on the winning section
             const sectionAngle = 360 / numSections;
             const targetAngle = 360 - (winningIndex * sectionAngle) - (sectionAngle / 2); // Target middle of the section
             
             // Ensure a full rotation (at least 2 times) plus the target angle
-            // and adjust for previous position
             const fullRotations = 2 * 360; // 2 full rotations
             const destinationAngle = fullRotations + targetAngle;
             
@@ -1666,14 +1631,6 @@
             wheel.style.transform = `rotate(${destinationAngle}deg)`;
             
             // Add some visual effects during spinning
-            anime({
-                targets: '.wheel-center',
-                scale: [1, 1.1, 1],
-                duration: 3000,
-                easing: 'easeInOutQuad'
-            });
-            
-            // Pulsate the wheel pointer
             anime({
                 targets: '.wheel-pointer',
                 scale: [1, 1.2, 1, 1.2, 1],
@@ -2117,26 +2074,29 @@
             return code;
         }
 
-        // Save reward card as image (or provide download mechanism)
+        // Save reward card as image
         function saveRewardCard() {
             SOUNDS.click.play();
             
-            alert('Đã lưu thẻ quà tặng! Hãy gửi mã này cho Hiếu Gà để nhận quà nhé!');
-            
-            // In a real implementation, this would capture and download the reward card as an image
-            // We would use HTML2Canvas or a similar library:
-            
-            /*
-            html2canvas(document.getElementById('reward-card')).then(canvas => {
+            // Create a canvas from the reward card element
+            html2canvas(rewardCard).then(canvas => {
+                // Create a link to download the image
                 const link = document.createElement('a');
-                link.download = 'the-qua-hieu-ga.png';
                 link.href = canvas.toDataURL('image/png');
+                link.download = 'the-qua-hieu-ga.png';
+                
+                // Trigger the download
                 link.click();
+                
+                // Show notification
+                showNotification('Đã lưu thẻ quà tặng thành công!');
+            }).catch(err => {
+                console.error('Error saving reward card:', err);
+                alert('Đã lưu thẻ quà tặng! Hãy gửi mã này cho Hiếu Gà để nhận quà nhé!');
             });
-            */
         }
 
-        // Save game state to localStorage and MongoDB
+        // Save game state to localStorage and API
         async function saveGameState() {
             const gameState = {
                 points: points,
@@ -2149,18 +2109,33 @@
             // Save to localStorage
             localStorage.setItem('wheelGameState', JSON.stringify(gameState));
             
-            // Also save to MongoDB
+            // Save to API
             try {
-                if (leaderboardCollection) {
-                    await saveScoreToMongoDB();
+                const response = await fetch(`${API_BASE_URL}/saveScore`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        name: playerName,
+                        score: points
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to save score to server');
                 }
             } catch (err) {
-                console.error("Error saving to MongoDB:", err);
+                console.error("Error saving to API:", err);
+                // Use localStorage as fallback
+                updateLocalLeaderboard();
             }
         }
 
-        // Load game state from localStorage
+        // Load game state
         async function loadGameState() {
+            // First load from localStorage
             const savedState = localStorage.getItem('wheelGameState');
             if (savedState) {
                 const gameState = JSON.parse(savedState);
@@ -2191,26 +2166,19 @@
                 }
             }
             
-            // Try to fetch the score from MongoDB (which might be higher)
+            // Try to fetch from API
             try {
-                if (leaderboardCollection) {
-                    await loadScoreFromMongoDB();
+                const response = await fetch(`${API_BASE_URL}/getScore?userId=${userId}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.score > points) {
+                        points = data.score;
+                        updateStats();
+                    }
                 }
             } catch (err) {
-                console.error("Error loading from MongoDB:", err);
-            }
-        }
-
-        // Load score from MongoDB
-        async function loadScoreFromMongoDB() {
-            try {
-                const playerDoc = await leaderboardCollection.findOne({ userId: userId });
-                if (playerDoc && playerDoc.score > points) {
-                    points = playerDoc.score;
-                    updateStats();
-                }
-            } catch (err) {
-                console.error("Error loading score from MongoDB:", err);
+                console.error("Error loading from API:", err);
             }
         }
 
@@ -2223,14 +2191,13 @@
                 playerName = newName;
                 localStorage.setItem('playerName', playerName);
                 
-                // Save to MongoDB
+                // Save to API
                 try {
-                    if (leaderboardCollection) {
-                        await saveScoreToMongoDB();
-                        await loadLeaderboard(); // Refresh leaderboard to show new name
-                    }
+                    await saveGameState();
+                    await loadLeaderboard();
                 } catch (err) {
-                    console.error("Error saving name to MongoDB:", err);
+                    console.error("Error saving name to API:", err);
+                    updateLocalLeaderboard();
                 }
                 
                 // Show confirmation
@@ -2239,107 +2206,84 @@
             }
         }
 
-        // Save score to MongoDB
-        async function saveScoreToMongoDB() {
-            if (!leaderboardCollection) return;
-            
-            try {
-                const playerData = {
-                    userId: userId,
-                    name: playerName,
-                    score: points,
-                    lastUpdate: new Date()
-                };
-                
-                const filter = { userId: userId };
-                const updateOperation = {
-                    $set: playerData,
-                    $setOnInsert: { createdAt: new Date() }
-                };
-                
-                const options = { upsert: true };
-                
-                await leaderboardCollection.updateOne(filter, updateOperation, options);
-                console.log("Score saved to MongoDB");
-                
-                return true;
-            } catch (err) {
-                console.error("Error saving score to MongoDB:", err);
-                return false;
-            }
-        }
-
-        // Load leaderboard from MongoDB
-        async function loadLeaderboard() {
-            leaderboardList.innerHTML = '<li class="leaderboard-item"><div class="spinner"></div></li>';
-            leaderboardStatus.textContent = 'Đang tải dữ liệu...';
-            
-            try {
-                if (leaderboardCollection) {
-                    // Find top 10 scores
-                    let leaderboard = await leaderboardCollection.find({})
-                                          .sort({ score: -1 })
-                                          .limit(10)
-                                          .toArray();
-                    
-                    // If there's no data or error, use local data
-                    if (!leaderboard || leaderboard.length === 0) {
-                        throw new Error("No leaderboard data found");
-                    }
-                    
-                    // Make sure our current score is in there
-                    let currentUserInList = leaderboard.some(entry => entry.userId === userId);
-                    if (!currentUserInList && points > 0) {
-                        // Add user's data to MongoDB
-                        await saveScoreToMongoDB();
-                        
-                        // Refresh leaderboard
-                        leaderboard = await leaderboardCollection.find({})
-                                           .sort({ score: -1 })
-                                           .limit(10)
-                                           .toArray();
-                    }
-                    
-                    // Update the leaderboard display
-                    updateLeaderboardDisplay(leaderboard);
-                    leaderboardStatus.textContent = `Cập nhật lúc: ${new Date().toLocaleTimeString()}`;
-                } else {
-                    throw new Error("Leaderboard collection not available");
-                }
-            } catch (err) {
-                console.error("Error loading leaderboard from MongoDB:", err);
-                leaderboardStatus.textContent = 'Không thể tải dữ liệu. Đang sử dụng dữ liệu offline.';
-                
-                // Fallback to local data if MongoDB fails
-                const localLeaderboard = [
+        // Update local leaderboard (fallback when API fails)
+        function updateLocalLeaderboard() {
+            let leaderboard = localStorage.getItem('localLeaderboard');
+            if (leaderboard) {
+                leaderboard = JSON.parse(leaderboard);
+            } else {
+                leaderboard = [
                     { userId: "sample1", name: "Vô Địch", score: 2800 },
                     { userId: "sample2", name: "Tuấn Anh", score: 2200 },
                     { userId: "sample3", name: "Mai Phương", score: 1800 },
                     { userId: "sample4", name: "Bảo Long", score: 1500 },
                     { userId: "sample5", name: "Thu Hà", score: 1200 }
                 ];
+            }
+            
+            // Update current player
+            const existingIndex = leaderboard.findIndex(entry => entry.userId === userId);
+            if (existingIndex !== -1) {
+                if (points > leaderboard[existingIndex].score) {
+                    leaderboard[existingIndex].score = points;
+                    leaderboard[existingIndex].name = playerName;
+                }
+            } else if (points > 0) {
+                leaderboard.push({
+                    userId: userId,
+                    name: playerName,
+                    score: points
+                });
+            }
+            
+            // Sort and save
+            leaderboard.sort((a, b) => b.score - a.score);
+            localStorage.setItem('localLeaderboard', JSON.stringify(leaderboard));
+            
+            // Update UI
+            updateLeaderboardDisplay(leaderboard);
+        }
+
+        // Load leaderboard
+        async function loadLeaderboard() {
+            leaderboardList.innerHTML = '<li class="leaderboard-item"><div class="spinner"></div></li>';
+            leaderboardStatus.textContent = 'Đang tải dữ liệu...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/getLeaderboard`);
                 
-                // Add current player to local leaderboard if they have points
-                if (points > 0) {
-                    const playerEntry = {
-                        userId: userId,
-                        name: playerName,
-                        score: points
-                    };
-                    
-                    // Add or update player in local leaderboard
-                    const playerIndex = localLeaderboard.findIndex(entry => entry.userId === userId);
-                    if (playerIndex !== -1) {
-                        localLeaderboard[playerIndex] = playerEntry;
-                    } else {
-                        localLeaderboard.push(playerEntry);
-                    }
-                    
-                    // Sort the leaderboard
-                    localLeaderboard.sort((a, b) => b.score - a.score);
+                if (!response.ok) {
+                    throw new Error('Failed to load leaderboard');
                 }
                 
-                updateLeaderboardDisplay(localLeaderboard);
+                const leaderboard = await response.json();
+                
+                if (!leaderboard || leaderboard.length === 0) {
+                    throw new Error('No leaderboard data');
+                }
+                
+                updateLeaderboardDisplay(leaderboard);
+                leaderboardStatus.textContent = `Cập nhật lúc: ${new Date().toLocaleTimeString()}`;
+            } catch (err) {
+                console.error("Error loading leaderboard:", err);
+                leaderboardStatus.textContent = 'Đang sử dụng dữ liệu offline. Kết nối lại sau...';
+                
+                // Fallback to local data
+                let localLeaderboard = localStorage.getItem('localLeaderboard');
+                if (localLeaderboard) {
+                    localLeaderboard = JSON.parse(localLeaderboard);
+                } else {
+                    localLeaderboard = [
+                        { userId: "sample1", name: "Vô Địch", score: 2800 },
+                        { userId: "sample2", name: "Tuấn Anh", score: 2200 },
+                        { userId: "sample3", name: "Mai Phương", score: 1800 },
+                        { userId: "sample4", name: "Bảo Long", score: 1500 },
+                        { userId: "sample5", name: "Thu Hà", score: 1200 }
+                    ];
+                    localStorage.setItem('localLeaderboard', JSON.stringify(localLeaderboard));
+                }
+                
+                updateLocalLeaderboard();
             }
         }
 
@@ -2391,20 +2335,76 @@
             });
         }
 
+        // Update leaderboard
+        async function updateLeaderboard() {
+            // First update the local leaderboard as fallback
+            updateLocalLeaderboard();
+            
+            // Then try to update via API
+            try {
+                await saveGameState();
+                // Only reload leaderboard sometimes to reduce API calls
+                if (Math.random() < 0.3) {
+                    await loadLeaderboard();
+                }
+            } catch (err) {
+                console.error("Error updating leaderboard:", err);
+            }
+        }
+
         // Event listeners
         spinBtn.addEventListener('click', spinWheel);
         saveRewardBtn.addEventListener('click', saveRewardCard);
         saveNameBtn.addEventListener('click', savePlayerName);
 
-        // Refresh leaderboard periodically
-        setInterval(async () => {
-            if (leaderboardCollection) {
-                await loadLeaderboard();
-            }
-        }, 60000); // Every minute
+        // HTML2Canvas library for saving reward card as image
+        // This would normally be included via a CDN, but here's a minimal implementation
+        function html2canvas(element) {
+            return new Promise((resolve, reject) => {
+                try {
+                    // Create canvas element
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    
+                    // Set canvas dimensions to match element
+                    const rect = element.getBoundingClientRect();
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+                    
+                    // Draw a white background
+                    context.fillStyle = 'white';
+                    context.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // In a real implementation, this would render the HTML element to the canvas
+                    // Here we're just creating a simple placeholder
+                    context.fillStyle = 'red';
+                    context.font = 'bold 20px Arial';
+                    context.textAlign = 'center';
+                    context.fillText('Thẻ quà tặng Hiếu Gà', canvas.width/2, 30);
+                    
+                    context.fillStyle = 'black';
+                    context.font = '16px Arial';
+                    context.fillText(rewardValue.textContent, canvas.width/2, 60);
+                    
+                    context.fillStyle = 'blue';
+                    context.fillText(rewardCode.textContent, canvas.width/2, 90);
+                    
+                    context.fillStyle = 'gray';
+                    context.font = '12px Arial';
+                    context.fillText(rewardDate.textContent, canvas.width/2, 120);
+                    
+                    resolve(canvas);
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
 
         // Initialize the game when the page loads
         window.addEventListener('load', initGame);
+        
+        // Periodically refresh leaderboard
+        setInterval(loadLeaderboard, 60000); // Every minute
     </script>
 </body>
 </html>
