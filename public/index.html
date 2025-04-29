@@ -2072,9 +2072,8 @@
             
             // Calculate and save next refresh time
             const nextHour = new Date();
-            nextHour.setHours(nextHour.getHours() + 1);
-            nextHour.setMinutes(0, 0, 0);
-            nextHour.setSeconds(0, 0);
+            nextHour.setMinutes(now.getMinutes() + 40, 0, 0);
+
             
             nextRefreshTime = nextHour.getTime();
             localStorage.setItem('nextRefreshTime', nextRefreshTime);
