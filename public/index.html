@@ -1341,7 +1341,7 @@
         </div>
         
         <div class="redeem-section" id="redeem-section">
-            <div class="redeem-title">Đổi điểm lấy phần thưởng</div>
+            <div class="redeem-title">Chọn một mức đổi điểm lấy phần thưởng</div>
             <div class="redeem-options">
                 <div class="redeem-option" data-amount="1000" data-points="1000">
                     <div class="redeem-option-amount">1.000 VNĐ</div>
@@ -1473,8 +1473,8 @@
             { name: "Quà tặng bất ngờ", icon: "🎁", points: 0, randomCard: true, probability: 0.08 },
             { name: "Pháo hoa giải phóng", icon: "🎆", points: 10, extraSpin: true, probability: 0.07 },
             { name: "Lá cờ giải phóng", icon: "🚩", points: 80, probability: 0.04 },
-            { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -10, probability: 0.10 },
-            { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -15, probability: 0.08 },
+            { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -40, probability: 0.10 },
+            { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -30, probability: 0.08 },
             { name: "Nhận đôi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 },
             // Thêm phần thưởng jackpot với tỉ lệ thấp
             { name: "JACKPOT ĐẶC BIỆT", icon: "💰", points: 200, jackpot: true, probability: 0.001 },
@@ -2015,7 +2015,7 @@
             // If no option is selected but points are enough for at least one option, highlight the button
             if (!selectedRedeemOption && hasEnoughPoints) {
                 redeemConfirmBtn.disabled = false;
-                redeemConfirmBtn.textContent = 'CHỌN MỘT MỨC';
+                redeemConfirmBtn.textContent = 'ĐỔI LẤY PHẦN THƯỞNG';
                 redeemConfirmBtn.classList.add('pulse');
             } else if (selectedRedeemOption) {
                 redeemConfirmBtn.disabled = false;
