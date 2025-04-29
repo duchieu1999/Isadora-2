@@ -2416,37 +2416,25 @@
             }
         }
 
-        // Update local leaderboard (fallback when API fails)
         function updateLocalLeaderboard() {
-            let leaderboard = localStorage.getItem('localLeaderboard');
-            if (leaderboard) {
-                leaderboard = JSON.parse(leaderboard);
-            } else {
-                
-            }
-            
-            // Update current player
-            const existingIndex = leaderboard.findIndex(entry => entry.userId === userId);
-            if (existingIndex !== -1) {
-                if (points > leaderboard[existingIndex].score) {
-                    leaderboard[existingIndex].score = points;
-                    leaderboard[existingIndex].name = playerName;
-                }
-            } else if (points > 0) {
-                leaderboard.push({
-                    userId: userId,
-                    name: playerName,
-                    score: points
-                });
-            }
-            
-            // Sort and save
-            leaderboard.sort((a, b) => b.score - a.score);
-            localStorage.setItem('localLeaderboard', JSON.stringify(leaderboard));
-            
-            // Update UI
-            updateLeaderboardDisplay(leaderboard);
-        }
+    // Chỉ lưu trữ dữ liệu của người dùng hiện tại
+    let leaderboard = [];
+    
+    // Nếu có điểm, thêm người dùng vào bảng xếp hạng
+    if (points > 0 && playerName) {
+        leaderboard = [{
+            userId: userId,
+            name: playerName,
+            score: points
+        }];
+    }
+    
+    // Lưu vào localStorage để dùng làm cache tạm thời
+    localStorage.setItem('localLeaderboard', JSON.stringify(leaderboard));
+    
+    // Update UI
+    updateLeaderboardDisplay(leaderboard);
+}
 
         // Load leaderboard
         async function loadLeaderboard() {
@@ -2474,65 +2462,79 @@ leaderboardStatus.textContent = `Cập nhật: ${now.toLocaleTimeString('vi-VN',
     console.error("Error loading leaderboard:", err);
     leaderboardStatus.textContent = 'Đang cập nhật bảng xếp hạng...';
     
-    // Fallback to local data - vẫn giữ chức năng nhưng không hiển thị thông báo
-    let localLeaderboard = localStorage.getItem('localLeaderboard');
-    if (localLeaderboard) {
-        localLeaderboard = JSON.parse(localLeaderboard);
-    } else {
-        localStorage.setItem('localLeaderboard', JSON.stringify(localLeaderboard));
+    // Chỉ hiển thị dữ liệu của người dùng hiện tại
+    let localLeaderboard = [];
+    
+    // Nếu có điểm, thêm người dùng hiện tại vào bảng xếp hạng
+    if (points > 0 && playerName) {
+        localLeaderboard = [{
+            userId: userId,
+            name: playerName,
+            score: points
+        }];
     }
     
-    updateLocalLeaderboard();
+    // Cập nhật hiển thị
+    updateLeaderboardDisplay(localLeaderboard);
 }
         }
 
-        // Update leaderboard display
-        function updateLeaderboardDisplay(leaderboard) {
-            leaderboardList.innerHTML = '';
-            
-            // Sort the leaderboard
-            leaderboard.sort((a, b) => b.score - a.score);
-            
-            // Limit to top 10
-            const topScores = leaderboard.slice(0, 10);
-            
-            topScores.forEach((player, index) => {
-                const li = document.createElement('li');
-                li.className = 'leaderboard-item';
-                
-                const isCurrentPlayer = player.userId === userId;
-                if (isCurrentPlayer) {
-                    li.style.backgroundColor = 'rgba(255, 235, 59, 0.2)';
-                }
-                
-                // Add extra effects for top 3 places
-                let specialEffect = '';
-                if (index === 0) {
-                    specialEffect = 'float';
-                } else if (index === 1 || index === 2) {
-                    specialEffect = 'pulse';
-                }
-                
-                li.innerHTML = `
-                    <div class="leaderboard-rank ${index < 3 ? specialEffect : ''}">${index + 1}</div>
-                    <div class="leaderboard-info">
-                        <div class="leaderboard-name">${player.name}${isCurrentPlayer ? ' (Bạn)' : ''}</div>
-                    </div>
-                    <div class="leaderboard-score">${player.score.toLocaleString()}</div>
-                `;
-                
-                leaderboardList.appendChild(li);
-            });
-            
-            // Animation for leaderboard items
-            anime({
-                targets: '.leaderboard-item',
-                translateX: [20, 0],
-                opacity: [0, 1],
-                delay: anime.stagger(100),
-                easing: 'easeOutQuad'
-            });
+       function updateLeaderboardDisplay(leaderboard) {
+    leaderboardList.innerHTML = '';
+    
+    // Hiển thị thông báo nếu không có dữ liệu
+    if (!leaderboard || leaderboard.length === 0) {
+        const emptyItem = document.createElement('li');
+        emptyItem.className = 'leaderboard-item';
+        emptyItem.style.justifyContent = 'center';
+        emptyItem.innerHTML = '<div style="color:#666;font-style:italic;">Chưa có dữ liệu xếp hạng</div>';
+        leaderboardList.appendChild(emptyItem);
+        return;
+    }
+    
+    // Sort the leaderboard
+    leaderboard.sort((a, b) => b.score - a.score);
+    
+    // Limit to top 10
+    const topScores = leaderboard.slice(0, 10);
+    
+    topScores.forEach((player, index) => {
+        const li = document.createElement('li');
+        li.className = 'leaderboard-item';
+        
+        const isCurrentPlayer = player.userId === userId;
+        if (isCurrentPlayer) {
+            li.style.backgroundColor = 'rgba(255, 235, 59, 0.2)';
         }
+        
+        // Add extra effects for top 3 places
+        let specialEffect = '';
+        if (index === 0) {
+            specialEffect = 'float';
+        } else if (index === 1 || index === 2) {
+            specialEffect = 'pulse';
+        }
+        
+        li.innerHTML = `
+            <div class="leaderboard-rank ${index < 3 ? specialEffect : ''}">${index + 1}</div>
+            <div class="leaderboard-info">
+                <div class="leaderboard-name">${player.name}${isCurrentPlayer ? ' (Bạn)' : ''}</div>
+            </div>
+            <div class="leaderboard-score">${player.score.toLocaleString()}</div>
+        `;
+        
+        leaderboardList.appendChild(li);
+    });
+    
+    // Animation for leaderboard items
+    anime({
+        targets: '.leaderboard-item',
+        translateX: [20, 0],
+        opacity: [0, 1],
+        delay: anime.stagger(100),
+        easing: 'easeOutQuad'
+    });
+}
 
         // Update leaderboard
         async function updateLeaderboard() {
