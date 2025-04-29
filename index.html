@@ -390,14 +390,15 @@
 
         // Các thiết lập game
         const GAME_CONFIG = {
-            MAP_WIDTH: 3000,
-            MAP_HEIGHT: 3000,
-            PLAYER_SPEED: 5,
-            FLAG_COUNT: 50,
-            COLLECT_DISTANCE: 80,
+            MAP_WIDTH: 10000,           // Bản đồ rộng hơn (gần như vô tận)
+            MAP_HEIGHT: 10000,          // Bản đồ rộng hơn (gần như vô tận)
+            PLAYER_SPEED: 8,            // Tăng tốc độ xe tăng
+            FLAG_COUNT: 100,            // Tăng số lượng cờ
+            COLLECT_DISTANCE: 100,      // Tăng khoảng cách có thể nhặt cờ
             FIREWORK_COUNT: 30,
-            SEED: Date.now(), // Seed cho việc tạo vị trí ngẫu nhiên giống nhau
-            TANK_SCALE: 0.3, // Tỉ lệ kích thước xe tăng
+            SEED: Date.now(),           // Seed cho việc tạo vị trí ngẫu nhiên giống nhau
+            TANK_SCALE: 0.4,            // Tăng kích thước xe tăng
+            FLAG_SCALE: 0.7,            // Tỉ lệ kích thước lá cờ (nhỏ hơn)
         };
 
         // Class người chơi
@@ -434,6 +435,8 @@
                 this.players = {};
                 this.flags = [];
                 this.mapContainer = null;
+                this.backgroundContainer = null;
+                this.decorationContainer = null;
                 this.playerContainer = null;
                 this.flagContainer = null;
                 this.playerSprites = {};
@@ -467,11 +470,19 @@
                 this.mapContainer = new PIXI.Container();
                 this.app.stage.addChild(this.mapContainer);
 
+                // Tạo container cho nền
+                this.backgroundContainer = new PIXI.Container();
+                this.mapContainer.addChild(this.backgroundContainer);
+                
+                // Tạo container cho trang trí
+                this.decorationContainer = new PIXI.Container();
+                this.mapContainer.addChild(this.decorationContainer);
+
                 // Tạo container cho các lá cờ
                 this.flagContainer = new PIXI.Container();
                 this.mapContainer.addChild(this.flagContainer);
 
-                // Tạo container cho người chơi
+                // Tạo container cho người chơi - đảm bảo ở trên cùng
                 this.playerContainer = new PIXI.Container();
                 this.mapContainer.addChild(this.playerContainer);
 
@@ -570,16 +581,10 @@
                 grass.beginFill(0x5EB45E);
                 grass.drawRect(0, 0, GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT);
                 grass.endFill();
-                this.mapContainer.addChild(grass);
+                this.backgroundContainer.addChild(grass);
 
                 // Tạo các yếu tố trang trí trên bản đồ
                 this.createDecorations();
-
-                // Giới hạn bản đồ (viền đỏ)
-                const border = new PIXI.Graphics();
-                border.lineStyle(10, 0xd22730, 1);
-                border.drawRect(0, 0, GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT);
-                this.mapContainer.addChild(border);
 
                 // Tạo các lá cờ trên bản đồ
                 this.createFlags();
@@ -588,43 +593,43 @@
             // Tạo các yếu tố trang trí trên bản đồ
             createDecorations() {
                 // Tạo các cây cối
-                for (let i = 0; i < 150; i++) {
-                    const treeSize = this.randomGenerator.nextInt(30, 60);
-                    const treeX = this.randomGenerator.nextInt(50, GAME_CONFIG.MAP_WIDTH - 50);
-                    const treeY = this.randomGenerator.nextInt(50, GAME_CONFIG.MAP_HEIGHT - 50);
+                for (let i = 0; i < 300; i++) {
+                    const treeSize = this.randomGenerator.nextInt(40, 80);
+                    const treeX = this.randomGenerator.nextInt(100, GAME_CONFIG.MAP_WIDTH - 100);
+                    const treeY = this.randomGenerator.nextInt(100, GAME_CONFIG.MAP_HEIGHT - 100);
                     
                     const tree = new PIXI.Graphics();
                     // Thân cây
                     tree.beginFill(0x8B4513);
-                    tree.drawRect(treeX - 5, treeY, 10, 20);
+                    tree.drawRect(treeX - 5, treeY, 10, 25);
                     tree.endFill();
                     
                     // Tán lá
                     tree.beginFill(0x2E8B57);
-                    tree.drawCircle(treeX, treeY - 15, treeSize / 2);
+                    tree.drawCircle(treeX, treeY - 20, treeSize / 2);
                     tree.endFill();
                     
-                    this.mapContainer.addChild(tree);
+                    this.decorationContainer.addChild(tree);
                 }
                 
                 // Tạo các bụi cây nhỏ
-                for (let i = 0; i < 300; i++) {
+                for (let i = 0; i < 500; i++) {
                     const bushSize = this.randomGenerator.nextInt(15, 30);
-                    const bushX = this.randomGenerator.nextInt(20, GAME_CONFIG.MAP_WIDTH - 20);
-                    const bushY = this.randomGenerator.nextInt(20, GAME_CONFIG.MAP_HEIGHT - 20);
+                    const bushX = this.randomGenerator.nextInt(50, GAME_CONFIG.MAP_WIDTH - 50);
+                    const bushY = this.randomGenerator.nextInt(50, GAME_CONFIG.MAP_HEIGHT - 50);
                     
                     const bush = new PIXI.Graphics();
                     bush.beginFill(0x3CB371);
                     bush.drawCircle(bushX, bushY, bushSize / 2);
                     bush.endFill();
                     
-                    this.mapContainer.addChild(bush);
+                    this.decorationContainer.addChild(bush);
                 }
                 
                 // Tạo các hoa
-                for (let i = 0; i < 200; i++) {
-                    const flowerX = this.randomGenerator.nextInt(10, GAME_CONFIG.MAP_WIDTH - 10);
-                    const flowerY = this.randomGenerator.nextInt(10, GAME_CONFIG.MAP_HEIGHT - 10);
+                for (let i = 0; i < 400; i++) {
+                    const flowerX = this.randomGenerator.nextInt(20, GAME_CONFIG.MAP_WIDTH - 20);
+                    const flowerY = this.randomGenerator.nextInt(20, GAME_CONFIG.MAP_HEIGHT - 20);
                     const flowerColor = [0xFF69B4, 0xFFFF00, 0xFF6347, 0x9370DB, 0xFF4500][this.randomGenerator.nextInt(0, 4)];
                     
                     const flower = new PIXI.Graphics();
@@ -632,56 +637,57 @@
                     flower.drawCircle(flowerX, flowerY, 5);
                     flower.endFill();
                     
-                    this.mapContainer.addChild(flower);
+                    this.decorationContainer.addChild(flower);
                 }
                 
                 // Tạo các con đường
-                const pathCount = 5;
+                const pathCount = 8;
                 for (let i = 0; i < pathCount; i++) {
                     const isHorizontal = i % 2 === 0;
-                    const pathWidth = 30;
+                    const pathWidth = 40;
                     
                     const path = new PIXI.Graphics();
                     path.beginFill(0xDEB887);
                     
                     if (isHorizontal) {
-                        const y = this.randomGenerator.nextInt(300, GAME_CONFIG.MAP_HEIGHT - 300);
+                        const y = this.randomGenerator.nextInt(500, GAME_CONFIG.MAP_HEIGHT - 500);
                         path.drawRect(0, y - pathWidth/2, GAME_CONFIG.MAP_WIDTH, pathWidth);
                     } else {
-                        const x = this.randomGenerator.nextInt(300, GAME_CONFIG.MAP_WIDTH - 300);
+                        const x = this.randomGenerator.nextInt(500, GAME_CONFIG.MAP_WIDTH - 500);
                         path.drawRect(x - pathWidth/2, 0, pathWidth, GAME_CONFIG.MAP_HEIGHT);
                     }
                     
                     path.endFill();
-                    this.mapContainer.addChild(path);
+                    this.decorationContainer.addChild(path);
                 }
 
                 // Tạo cờ đỏ sao vàng lớn ở giữa bản đồ
                 const centerFlag = new PIXI.Graphics();
                 // Nền đỏ
                 centerFlag.beginFill(0xd22730);
-                centerFlag.drawRect(GAME_CONFIG.MAP_WIDTH/2 - 75, GAME_CONFIG.MAP_HEIGHT/2 - 50, 150, 100);
+                centerFlag.drawRect(GAME_CONFIG.MAP_WIDTH/2 - 150, GAME_CONFIG.MAP_HEIGHT/2 - 100, 300, 200);
                 centerFlag.endFill();
                 
                 // Ngôi sao vàng
                 centerFlag.beginFill(0xffff00);
-                this.drawStar(centerFlag, GAME_CONFIG.MAP_WIDTH/2, GAME_CONFIG.MAP_HEIGHT/2, 5, 30, 15);
+                this.drawStar(centerFlag, GAME_CONFIG.MAP_WIDTH/2, GAME_CONFIG.MAP_HEIGHT/2, 5, 60, 30);
                 centerFlag.endFill();
                 
-                this.mapContainer.addChild(centerFlag);
+                this.decorationContainer.addChild(centerFlag);
                 
                 // Tạo các biểu tượng kỷ niệm 30/4
                 const memorial = new PIXI.Text("30/4", {
                     fontFamily: "Arial",
-                    fontSize: 48,
+                    fontSize: 72,
                     fill: 0xd22730,
                     fontWeight: "bold",
                     stroke: 0xffff00,
-                    strokeThickness: 5
+                    strokeThickness: 8
                 });
-                memorial.x = GAME_CONFIG.MAP_WIDTH/2 - 45;
-                memorial.y = GAME_CONFIG.MAP_HEIGHT/2 + 70;
-                this.mapContainer.addChild(memorial);
+                memorial.anchor.set(0.5, 0.5);
+                memorial.x = GAME_CONFIG.MAP_WIDTH/2;
+                memorial.y = GAME_CONFIG.MAP_HEIGHT/2 + 150;
+                this.decorationContainer.addChild(memorial);
             }
 
             // Vẽ ngôi sao
@@ -714,8 +720,8 @@
                 
                 // Tạo các lá cờ Việt Nam với vị trí ngẫu nhiên (sử dụng randomGenerator)
                 for (let i = 0; i < GAME_CONFIG.FLAG_COUNT; i++) {
-                    const flagX = this.randomGenerator.nextInt(100, GAME_CONFIG.MAP_WIDTH - 100);
-                    const flagY = this.randomGenerator.nextInt(100, GAME_CONFIG.MAP_HEIGHT - 100);
+                    const flagX = this.randomGenerator.nextInt(200, GAME_CONFIG.MAP_WIDTH - 200);
+                    const flagY = this.randomGenerator.nextInt(200, GAME_CONFIG.MAP_HEIGHT - 200);
                     
                     const flag = new Flag(i, flagX, flagY);
                     this.flags.push(flag);
@@ -725,17 +731,19 @@
                     
                     // Nền đỏ
                     flagGraphic.beginFill(0xd22730);
-                    flagGraphic.drawRect(-15, -10, 30, 20);
+                    flagGraphic.drawRect(-15 * GAME_CONFIG.FLAG_SCALE, -10 * GAME_CONFIG.FLAG_SCALE, 
+                                         30 * GAME_CONFIG.FLAG_SCALE, 20 * GAME_CONFIG.FLAG_SCALE);
                     flagGraphic.endFill();
                     
                     // Ngôi sao vàng
                     flagGraphic.beginFill(0xffff00);
-                    this.drawStar(flagGraphic, 0, 0, 5, 8, 4);
+                    this.drawStar(flagGraphic, 0, 0, 5, 8 * GAME_CONFIG.FLAG_SCALE, 4 * GAME_CONFIG.FLAG_SCALE);
                     flagGraphic.endFill();
                     
                     // Thêm cột cờ
                     flagGraphic.beginFill(0x8B4513);
-                    flagGraphic.drawRect(-17, -10, 2, 30);
+                    flagGraphic.drawRect(-17 * GAME_CONFIG.FLAG_SCALE, -10 * GAME_CONFIG.FLAG_SCALE, 
+                                         2 * GAME_CONFIG.FLAG_SCALE, 30 * GAME_CONFIG.FLAG_SCALE);
                     flagGraphic.endFill();
                     
                     flagGraphic.x = flagX;
@@ -749,7 +757,7 @@
                     // Thêm hiệu ứng sáng
                     const glow = new PIXI.Graphics();
                     glow.beginFill(0xffff00, 0.2);
-                    glow.drawCircle(0, 0, 25);
+                    glow.drawCircle(0, 0, 25 * GAME_CONFIG.FLAG_SCALE);
                     glow.endFill();
                     glow.x = flagX;
                     glow.y = flagY;
@@ -783,7 +791,7 @@
                 // Tạo text tên người chơi
                 const nameText = new PIXI.Text(name, {
                     fontFamily: "Arial",
-                    fontSize: 14,
+                    fontSize: 16,
                     fill: 0xFFFFFF,
                     align: "center",
                     fontWeight: "bold",
@@ -791,14 +799,14 @@
                     strokeThickness: 3
                 });
                 nameText.anchor.set(0.5, 0.5);
-                nameText.y = -45;
+                nameText.y = -50;
                 
                 playerGraphic.addChild(nameText);
                 
                 // Điểm số
                 const scoreText = new PIXI.Text("0", {
                     fontFamily: "Arial",
-                    fontSize: 12,
+                    fontSize: 14,
                     fill: 0xFFFF00,
                     align: "center",
                     fontWeight: "bold",
@@ -806,7 +814,7 @@
                     strokeThickness: 2
                 });
                 scoreText.anchor.set(0.5, 0.5);
-                scoreText.y = 40;
+                scoreText.y = 50;
                 
                 playerGraphic.addChild(scoreText);
                 
@@ -1326,11 +1334,13 @@
                 this.player.x += this.player.speedX * delta;
                 this.player.y += this.player.speedY * delta;
                 
-                // Kiểm tra biên của bản đồ
-                if (this.player.x < 20) this.player.x = 20;
-                if (this.player.x > GAME_CONFIG.MAP_WIDTH - 20) this.player.x = GAME_CONFIG.MAP_WIDTH - 20;
-                if (this.player.y < 20) this.player.y = 20;
-                if (this.player.y > GAME_CONFIG.MAP_HEIGHT - 20) this.player.y = GAME_CONFIG.MAP_HEIGHT - 20;
+                // Không có kiểm tra giới hạn bản đồ - cho phép di chuyển vô tận
+                // Chỉ ngăn người chơi đi quá xa khỏi biên của bản đồ
+                const buffer = 200;
+                if (this.player.x < -buffer) this.player.x = -buffer;
+                if (this.player.x > GAME_CONFIG.MAP_WIDTH + buffer) this.player.x = GAME_CONFIG.MAP_WIDTH + buffer;
+                if (this.player.y < -buffer) this.player.y = -buffer;
+                if (this.player.y > GAME_CONFIG.MAP_HEIGHT + buffer) this.player.y = GAME_CONFIG.MAP_HEIGHT + buffer;
                 
                 // Cập nhật sprite người chơi
                 this.updatePlayer(this.player);
