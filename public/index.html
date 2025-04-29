@@ -2039,7 +2039,7 @@
             // Get next hour's timestamp (changed back to 1 hour from 30 minutes)
             const now = new Date();
             const nextHour = new Date(now);
-            nextHour.setMinutes(now.getMinutes() + 30, 0, 0);
+            nextHour.setMinutes(now.getMinutes() + 40, 0, 0);
             
             let timeLeft = nextHour - now;
             
