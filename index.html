@@ -756,6 +756,16 @@
                 // Tạo random generator với seed cố định
                 this.randomGenerator = this.createRandomGenerator(GAME_CONFIG.SEED);
                 
+                // Đảm bảo ban đầu luôn là ban ngày (trừ khi load từ save)
+                this.dayTime = true;
+                this.dayStartTime = Date.now();
+                
+                // Make sure night effect isn't applied at start
+                if (this.app) {
+                    this.app.stage.filters = null;
+                    this.app.renderer.backgroundColor = 0x87CEEB;
+                }
+                
                 // Khởi tạo PIXI.js
                 this.app = new PIXI.Application({
                     view: document.getElementById('gameCanvas'),
@@ -788,6 +798,8 @@
 
                 // Tạo filter cho hiệu ứng ngày/đêm
                 this.nightFilter = new PIXI.ColorMatrixFilter();
+                // Đảm bảo ban đầu không áp dụng filter
+                this.dayTime = true;
 
                 // Vẽ bản đồ ban đầu ngay lập tức để đảm bảo thấy được ngay khi bắt đầu game
                 this.createInitialMap();
@@ -798,31 +810,28 @@
                 // Tạo các con chim ban đầu
                 this.createInitialBirds();
                 
-                // Tải texture cho player (không chờ đợi)
+                // Tạo texture màu cho player thay vì tải từ URL
                 try {
-                    const playerImage = new Image();
-                    playerImage.crossOrigin = "Anonymous";
-                    playerImage.onload = () => {
-                        this.playerTexture = PIXI.Texture.from(playerImage);
-                        // Cập nhật sprite người chơi nếu đã tạo
-                        if (this.player && this.player.sprite) {
-                            const playerContainer = this.player.sprite;
-                            const oldGraphic = playerContainer.getChildAt(0);
-                            playerContainer.removeChild(oldGraphic);
-                            
-                            const newSprite = new PIXI.Sprite(this.playerTexture);
-                            newSprite.anchor.set(0.5, 0.5);
-                            newSprite.width = 40;
-                            newSprite.height = 40;
-                            playerContainer.addChildAt(newSprite, 0);
-                        }
-                    };
-                    playerImage.onerror = () => {
-                        console.error("Không thể tải hình ảnh người chơi");
-                    };
-                    playerImage.src = "https://img.upanh.tv/2025/04/29/ChatGPT-Image-12_31_11-29-thg-4-2025.png";
+                    // Tạo texture tạm thời cho player
+                    const tempGraphic = new PIXI.Graphics();
+                    tempGraphic.beginFill(0x5D5CDE);
+                    tempGraphic.drawCircle(0, 0, 20);
+                    tempGraphic.endFill();
+                    
+                    // Thêm hướng di chuyển
+                    tempGraphic.beginFill(0xFFFFFF);
+                    tempGraphic.moveTo(0, -20);
+                    tempGraphic.lineTo(10, 0);
+                    tempGraphic.lineTo(-10, 0);
+                    tempGraphic.lineTo(0, -20);
+                    tempGraphic.endFill();
+                    
+                    // Tạo texture từ graphic
+                    this.playerTexture = this.app.renderer.generateTexture(tempGraphic);
+                    
+                    console.log("Đã tạo texture cho người chơi");
                 } catch (error) {
-                    console.error("Lỗi khi tải texture cho player:", error);
+                    console.error("Lỗi khi tạo texture cho player:", error);
                 }
 
                 // Xử lý sự kiện resize
