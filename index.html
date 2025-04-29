@@ -13,6 +13,8 @@
             --background-color: #f5f5f5;
             --control-bg: rgba(210, 39, 48, 0.7);
             --shop-bg: rgba(0, 0, 0, 0.8);
+            --health-color: #ff3232;
+            --mana-color: #3264ff;
         }
         
         .dark {
@@ -22,6 +24,8 @@
             --background-color: #181818;
             --control-bg: rgba(196, 30, 42, 0.8);
             --shop-bg: rgba(20, 20, 20, 0.9);
+            --health-color: #ff3232;
+            --mana-color: #3264ff;
         }
         
         * {
@@ -99,12 +103,10 @@
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
         }
         
-        #collectButton {
+        .actionButton {
             position: absolute;
-            bottom: 120px;
-            right: 50px;
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: var(--control-bg);
             border: 3px solid rgba(255, 255, 255, 0.5);
@@ -118,14 +120,95 @@
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
         }
         
-        #collectButtonIcon {
-            width: 40px;
-            height: 40px;
+        #fireButton {
+            bottom: 120px;
+            right: 50px;
+        }
+        
+        #bombButton {
+            bottom: 180px;
+            right: 100px;
+        }
+        
+        #shieldButton {
+            bottom: 200px;
+            right: 30px;
+        }
+        
+        #healButton {
+            bottom: 150px;
+            right: 160px;
+        }
+        
+        .actionButtonIcon {
+            width: 30px;
+            height: 30px;
+        }
+        
+        #statsContainer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 200px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 10px;
+            color: var(--text-color);
+        }
+        
+        .statBar {
+            height: 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .statBarFill {
+            height: 100%;
+            width: 100%;
+            transition: width 0.3s;
+        }
+        
+        #healthBar .statBarFill {
+            background: var(--health-color);
+        }
+        
+        #manaBar .statBarFill {
+            background: var(--mana-color);
+        }
+        
+        .statHeader {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+        
+        #ammoContainer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .ammoIcon {
+            width: 30px;
+            height: 30px;
+            background: var(--control-bg);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
         }
         
         #scoreContainer {
             position: absolute;
-            top: 20px;
+            top: 110px;
             left: 20px;
             background: var(--control-bg);
             padding: 10px 15px;
@@ -145,7 +228,7 @@
         
         #goldContainer {
             position: absolute;
-            top: 65px;
+            top: 155px;
             left: 20px;
             background: var(--control-bg);
             padding: 10px 15px;
@@ -200,6 +283,8 @@
             pointer-events: auto;
             display: none;
             z-index: 20;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         
         .panel-title {
@@ -351,7 +436,7 @@
         
         #connectionStatus {
             position: absolute;
-            top: 110px;
+            top: 200px;
             left: 20px;
             background: var(--control-bg);
             padding: 5px 10px;
@@ -419,16 +504,34 @@
                 height: 100px;
             }
             
-            #collectButton {
-                bottom: 100px;
-                right: 30px;
-                width: 70px;
-                height: 70px;
+            .actionButton {
+                width: 50px;
+                height: 50px;
             }
             
-            #collectButtonIcon {
-                width: 35px;
-                height: 35px;
+            .actionButtonIcon {
+                width: 25px;
+                height: 25px;
+            }
+            
+            #fireButton {
+                bottom: 100px;
+                right: 30px;
+            }
+            
+            #bombButton {
+                bottom: 150px;
+                right: 70px;
+            }
+            
+            #shieldButton {
+                bottom: 170px;
+                right: 20px;
+            }
+            
+            #healButton {
+                bottom: 125px;
+                right: 120px;
             }
             
             #gameTitle {
@@ -450,6 +553,10 @@
             #shopItemsContainer {
                 grid-template-columns: 1fr;
             }
+            
+            #statsContainer {
+                width: 150px;
+            }
         }
     </style>
 </head>
@@ -462,11 +569,56 @@
                     <div id="joystickKnob"></div>
                 </div>
             </div>
-            <div id="collectButton">
-                <svg id="collectButtonIcon" viewBox="0 0 24 24" fill="white">
-                    <path d="M12,5.5l7,7H5l7-7M12,1L3,10h18L12,1z M12,16.5l-7-7h14l-7,7M12,21l9-9H3L12,21z"/>
+            
+            <div id="fireButton" class="actionButton">
+                <svg class="actionButtonIcon" viewBox="0 0 24 24" fill="white">
+                    <path d="M7,12L12,7V10H16V14H12V17L7,12M22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2A10,10 0 0,1 22,12M20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12Z"/>
                 </svg>
             </div>
+            
+            <div id="bombButton" class="actionButton">
+                <svg class="actionButtonIcon" viewBox="0 0 24 24" fill="white">
+                    <circle cx="12" cy="12" r="9" stroke="white" stroke-width="2" fill-opacity="0"/>
+                    <circle cx="12" cy="5" r="3" fill="white"/>
+                </svg>
+            </div>
+            
+            <div id="shieldButton" class="actionButton">
+                <svg class="actionButtonIcon" viewBox="0 0 24 24" fill="white">
+                    <path d="M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12V5L12,1zM12,11.99h7c-0.53,4.12 -3.28,7.79 -7,8.94V12H5V6.3l7,-3.11v8.8z"/>
+                </svg>
+            </div>
+            
+            <div id="healButton" class="actionButton">
+                <svg class="actionButtonIcon" viewBox="0 0 24 24" fill="white">
+                    <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
+                </svg>
+            </div>
+            
+            <div id="statsContainer">
+                <div class="statHeader">
+                    <span>Máu:</span>
+                    <span id="healthValue">10000/10000</span>
+                </div>
+                <div id="healthBar" class="statBar">
+                    <div class="statBarFill" style="width: 100%"></div>
+                </div>
+                
+                <div class="statHeader">
+                    <span>Mana:</span>
+                    <span id="manaValue">10000/10000</span>
+                </div>
+                <div id="manaBar" class="statBar">
+                    <div class="statBarFill" style="width: 100%"></div>
+                </div>
+            </div>
+            
+            <div id="ammoContainer">
+                <div class="ammoIcon" id="bombCount">0</div>
+                <div class="ammoIcon" id="healPotionCount">0</div>
+                <div class="ammoIcon" id="manaPotionCount">0</div>
+            </div>
+            
             <div id="scoreContainer">
                 <svg id="flagIcon" viewBox="0 0 24 16">
                     <rect x="0" y="0" width="24" height="16" fill="#d22730"/>
@@ -502,13 +654,32 @@
                 <div class="shop-item" data-item="SHIELD">
                     <div class="shop-item-icon">
                         <svg viewBox="0 0 24 24" width="40" height="40">
-                            <circle cx="12" cy="12" r="10" fill="rgba(0,136,255,0.7)"/>
-                            <circle cx="12" cy="12" r="8" fill="none" stroke="#0055AA" stroke-width="2"/>
-                            <text x="12" y="16" text-anchor="middle" fill="white" font-size="10" font-weight="bold">S</text>
+                            <path d="M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12V5L12,1z" fill="rgba(0,136,255,0.7)"/>
+                            <path d="M12,2.5 L5,5.7 v5.3 c0,4.5 2.8,8.4 7,9.9 4.2,-1.5 7,-5.5 7,-9.9 v-5.3 L12,2.5z" fill="none" stroke="#0055AA" stroke-width="1"/>
                         </svg>
                     </div>
                     <div class="shop-item-name">Khiên</div>
                     <div class="shop-item-price">300 Vàng</div>
+                </div>
+                <div class="shop-item" data-item="HEALTH_POTION">
+                    <div class="shop-item-icon">
+                        <svg viewBox="0 0 24 24" width="40" height="40">
+                            <path d="M12,2L4,5v5c0,5 2,10 8,14 6,-4 8,-9 8,-14V5L12,2z" fill="#ff5555" fill-opacity="0.7"/>
+                            <path d="M12,6 L12,18 M6,12 L18,12" stroke="white" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="shop-item-name">Lọ máu</div>
+                    <div class="shop-item-price">100 Vàng</div>
+                </div>
+                <div class="shop-item" data-item="MANA_POTION">
+                    <div class="shop-item-icon">
+                        <svg viewBox="0 0 24 24" width="40" height="40">
+                            <path d="M12,2L4,5v5c0,5 2,10 8,14 6,-4 8,-9 8,-14V5L12,2z" fill="#5555ff" fill-opacity="0.7"/>
+                            <path d="M9,12 L15,12 M12,9 L12,15" stroke="white" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="shop-item-name">Lọ mana</div>
+                    <div class="shop-item-price">100 Vàng</div>
                 </div>
                 <div class="shop-item" data-item="SPEED">
                     <div class="shop-item-icon">
@@ -565,40 +736,92 @@
         const GAME_CONFIG = {
             CHUNK_SIZE: 1000,           // Kích thước mỗi chunk của bản đồ
             ACTIVE_CHUNKS_RADIUS: 3,    // Số chunk hoạt động xung quanh người chơi
-            PLAYER_SPEED: 4,            // Giảm tốc độ xe tăng (1/3 so với trước)
+            PLAYER_SPEED: 4,            // Tốc độ xe tăng
             COLLECT_DISTANCE: 120,      // Khoảng cách có thể nhặt items
             FIREWORK_COUNT: 30,
             SEED: Date.now(),           // Seed cho việc tạo vị trí ngẫu nhiên giống nhau
-            TANK_SCALE: 0.08,           // Giảm kích thước xe tăng (1/3 so với trước)
-            TANK_ROTATION_OFFSET: Math.PI/2, // Xoay tank thêm 90 độ
+            TANK_SCALE: 0.08,           // Kích thước xe tăng
+            TANK_ROTATION_OFFSET: Math.PI/2, // Xoay tank 90 độ
             FLAG_SCALE: 0.5,            // Tỉ lệ kích thước lá cờ
+            
+            // Thiết lập mới cho hệ thống chiến đấu
+            PLAYER_MAX_HEALTH: 10000,   // Máu tối đa của người chơi
+            PLAYER_MAX_MANA: 10000,     // Mana tối đa của người chơi
+            PLAYER_SHOT_MANA_COST: 60,  // Chi phí mana mỗi lần bắn (50-80)
+            PLAYER_SHOT_DAMAGE: [100, 300], // Sát thương mỗi viên đạn (100-300)
+            PLAYER_SHOT_SPEED: 10,      // Tốc độ đạn bay
+            PLAYER_SHOT_COOLDOWN: 200,  // Thời gian hồi chiêu bắn (ms)
+            PLAYER_SHOT_RANGE: 600,     // Tầm bắn tối đa
+            
+            ENEMY_MAX_HEALTH: 5000,     // Máu tối đa của kẻ thù
+            ENEMY_SHOT_DAMAGE: [100, 300], // Sát thương đạn địch (100-300)
+            ENEMY_SHOT_SPEED: 7,        // Tốc độ đạn địch bay
+            ENEMY_SHOT_COOLDOWN: 1000,  // Thời gian hồi chiêu bắn của địch (ms)
+            ENEMY_SHOT_RANGE: 500,      // Tầm bắn tối đa của địch
+            ENEMY_AGGRO_RANGE: 400,     // Phạm vi truy đuổi khi bị bắn hoặc ở gần
+            ENEMY_SPAWN_INTERVAL: 30000, // Thời gian xuất hiện kẻ thù (30 giây)
+            
+            ITEM_AUTO_COLLECT_RANGE: 80, // Khoảng cách tự động nhặt item
+            HEALTH_POTION_HEAL: 500,    // Lượng hồi máu mỗi lọ
+            MANA_POTION_RESTORE: 500,   // Lượng hồi mana mỗi lọ
+            
             ITEM_SPAWN_CHANCE: {        // Tỉ lệ xuất hiện các item
-                FLAG: 0.15,             // Cờ tăng tỉ lệ xuất hiện (15%) 
-                GOLD: 0.30,             // Vàng phổ biến (30%)
-                BOMB: 0.05,             // Bom ít hiếm (5%)
-                SHIELD: 0.03            // Khiên rất hiếm (3%)
+                GOLD: 0.4,              // Vàng phổ biến (40%)
+                HEALTH_POTION: 0.15,    // Lọ máu (15%)
+                MANA_POTION: 0.15,      // Lọ mana (15%)
+                BOMB: 0.1,              // Bom (10%)
+                SHIELD: 0.05,           // Khiên (5%)
+                FLAG: 0.03              // Cờ rất hiếm (3%)
             },
-            ITEM_SPAWN_INTERVAL: 2000,  // Thời gian kiểm tra spawn (2 giây)
-            ITEM_VALUE: {               // Giá trị điểm của các item
-                FLAG: 1,
-                GOLD: 100,
-                BOMB: -50,
-                SHIELD: 0
+            
+            ANIMAL_TYPES: ['HEDGEHOG', 'BUTTERFLY', 'BOAR', 'RABBIT', 'BIRD'],
+            ANIMAL_MAX_HEALTH: {
+                HEDGEHOG: 500,
+                BUTTERFLY: 200,
+                BOAR: 1000,
+                RABBIT: 300,
+                BIRD: 250
             },
-            MAX_ITEMS_PER_CHUNK: 10,    // Số lượng item tối đa mỗi chunk
+            ANIMAL_DAMAGE: {
+                HEDGEHOG: [50, 100],
+                BUTTERFLY: [20, 50],
+                BOAR: [100, 200],
+                RABBIT: [0, 0],  // Không gây sát thương
+                BIRD: [30, 70]
+            },
+            ANIMAL_AGGRO_RANGE: {
+                HEDGEHOG: 200,
+                BUTTERFLY: 150,
+                BOAR: 300,
+                RABBIT: 0,  // Không tấn công
+                BIRD: 250
+            },
+            ANIMAL_SPEED: {
+                HEDGEHOG: 2,
+                BUTTERFLY: 3,
+                BOAR: 4,
+                RABBIT: 5,
+                BIRD: 4
+            },
+            ANIMAL_SPAWN_INTERVAL: 10000, // Thời gian giữa các lần spawn động vật (10 giây)
+            ANIMAL_SPAWN_PER_INTERVAL: 3, // Số lượng động vật spawn mỗi lần
+            MAX_ANIMALS: 30,             // Số lượng động vật tối đa trên bản đồ
+            
             SHOP_PRICES: {              // Giá các item trong shop
                 BOMB: 200,
                 SHIELD: 300,
+                HEALTH_POTION: 100,
+                MANA_POTION: 100,
                 SPEED: 500,
                 MAGNET: 800
             },
+            
             SPEED_BOOST_DURATION: 30000, // Thời gian tăng tốc (30 giây)
             SPEED_BOOST_MULTIPLIER: 1.5, // Hệ số tăng tốc
             MAGNET_DURATION: 20000,     // Thời gian hút item (20 giây)
             MAGNET_RADIUS: 300,         // Bán kính hút
-            ENEMY_SPAWN_INTERVAL: 60000, // Thời gian xuất hiện kẻ thù (60 giây)
-            ENEMY_SPEED: 3,             // Tốc độ kẻ thù
-            ENEMY_DETECTION_RADIUS: 500, // Bán kính phát hiện kẻ thù
+            SHIELD_DURATION: 30000,     // Thời gian khiên (30 giây)
+            
             CLOUD_COUNT: 20,            // Số lượng đám mây
             CLOUD_MOVE_SPEED: 0.2       // Tốc độ di chuyển của mây
         };
@@ -615,82 +838,246 @@
                 this.angle = 0;
                 this.speedX = 0;
                 this.speedY = 0;
+                this.health = GAME_CONFIG.PLAYER_MAX_HEALTH;
+                this.mana = GAME_CONFIG.PLAYER_MAX_MANA;
                 this.inventory = {
                     BOMB: 0,
-                    SHIELD: 0
+                    HEALTH_POTION: 0,
+                    MANA_POTION: 0
                 };
+                this.isShooting = false;
+                this.lastShotTime = 0;
                 this.speedBoostEndTime = 0;
                 this.magnetEndTime = 0;
+                this.isRespawning = false; // Đánh dấu đang hồi sinh
+            }
+            
+            takeDamage(amount) {
+                // Nếu có khiên, không nhận sát thương
+                if (game.shieldActive) return false;
+                
+                this.health -= amount;
+                
+                // Kiểm tra xem có chết không
+                if (this.health <= 0) {
+                    this.health = 0;
+                    return true; // Đã chết
+                }
+                
+                return false; // Vẫn sống
+            }
+            
+            respawn() {
+                // Mất 1 lá cờ khi chết
+                if (this.score > 0) {
+                    this.score--;
+                }
+                
+                // Hồi sinh với đầy máu và mana
+                this.health = GAME_CONFIG.PLAYER_MAX_HEALTH;
+                this.mana = GAME_CONFIG.PLAYER_MAX_MANA;
+                
+                // Đánh dấu trạng thái hồi sinh và hiệu ứng
+                this.isRespawning = true;
+                
+                // Sau 3 giây, trở lại trạng thái bình thường
+                setTimeout(() => {
+                    this.isRespawning = false;
+                }, 3000);
+                
+                // Cập nhật UI
+                game.updateHealthBar();
+                game.updateManaBar();
+                document.getElementById('scoreValue').textContent = this.score;
+            }
+            
+            heal(amount) {
+                this.health = Math.min(this.health + amount, GAME_CONFIG.PLAYER_MAX_HEALTH);
+                game.updateHealthBar();
+            }
+            
+            restoreMana(amount) {
+                this.mana = Math.min(this.mana + amount, GAME_CONFIG.PLAYER_MAX_MANA);
+                game.updateManaBar();
+            }
+            
+            useMana(amount) {
+                if (this.mana < amount) return false;
+                
+                this.mana -= amount;
+                game.updateManaBar();
+                return true;
+            }
+        }
+        
+        // Class Projectile
+        class Projectile {
+            constructor(id, ownerId, isEnemy, x, y, angle, speed, range, damage) {
+                this.id = id;
+                this.ownerId = ownerId;
+                this.isEnemy = isEnemy;
+                this.x = x;
+                this.y = y;
+                this.angle = angle;
+                this.speed = speed;
+                this.range = range;
+                this.damage = damage;
+                this.distanceTraveled = 0;
+                this.active = true;
+            }
+            
+            update(delta) {
+                if (!this.active) return;
+                
+                // Di chuyển đạn
+                const moveX = Math.cos(this.angle) * this.speed * delta;
+                const moveY = Math.sin(this.angle) * this.speed * delta;
+                
+                this.x += moveX;
+                this.y += moveY;
+                
+                // Cập nhật khoảng cách đã bay
+                this.distanceTraveled += Math.sqrt(moveX * moveX + moveY * moveY);
+                
+                // Kiểm tra xem đã vượt quá tầm bắn chưa
+                if (this.distanceTraveled >= this.range) {
+                    this.active = false;
+                }
             }
         }
         
         // Class Enemy
         class Enemy {
-            constructor(id, x, y, targetPlayer) {
+            constructor(id, type, x, y, health) {
                 this.id = id;
+                this.type = type; // TANK, HEDGEHOG, BUTTERFLY, BOAR, etc.
                 this.x = x;
                 this.y = y;
-                this.targetPlayer = targetPlayer;
-                this.speed = GAME_CONFIG.ENEMY_SPEED;
+                this.health = health || GAME_CONFIG.ENEMY_MAX_HEALTH;
+                this.maxHealth = health || GAME_CONFIG.ENEMY_MAX_HEALTH;
+                this.speed = type === 'TANK' ? 3 : GAME_CONFIG.ANIMAL_SPEED[type] || 2;
                 this.angle = 0;
                 this.active = true;
-                this.health = 100;
+                this.isAggressive = false;
+                this.lastShotTime = 0;
+                this.targetX = null;
+                this.targetY = null;
+                this.aggroTimer = 0;
+                this.aggroRange = type === 'TANK' 
+                    ? GAME_CONFIG.ENEMY_AGGRO_RANGE 
+                    : GAME_CONFIG.ANIMAL_AGGRO_RANGE[type] || 200;
             }
             
-            update(delta) {
-                if (!this.active || !this.targetPlayer) return;
-                
-                // Calculate direction to player
-                const dx = this.targetPlayer.x - this.x;
-                const dy = this.targetPlayer.y - this.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                // If close enough, try to steal a flag
-                if (distance < 50) {
-                    this.tryStealFlag();
-                    return;
-                }
-                
-                // Move towards player
-                this.angle = Math.atan2(dy, dx);
-                const speedX = Math.cos(this.angle) * this.speed;
-                const speedY = Math.sin(this.angle) * this.speed;
-                
-                this.x += speedX * delta;
-                this.y += speedY * delta;
-            }
-            
-            tryStealFlag() {
-                // Only try once
+            update(delta, playerX, playerY) {
                 if (!this.active) return;
                 
-                // Check if player has flags
-                if (this.targetPlayer.score > 0) {
-                    this.targetPlayer.score -= 1;
+                const dx = playerX - this.x;
+                const dy = playerY - this.y;
+                const distToPlayer = Math.sqrt(dx * dx + dy * dy);
+                
+                // Logic tấn công và di chuyển
+                if (this.isAggressive || distToPlayer < this.aggroRange) {
+                    // Trở nên hung hăng khi người chơi ở gần
+                    this.isAggressive = true;
+                    this.aggroTimer = 5000; // Giữ trạng thái hung hăng trong 5 giây
                     
-                    // Alert player
-                    const alert = document.getElementById('enemyAlert');
-                    alert.textContent = 'Kẻ cướp đã lấy 1 lá cờ của bạn!';
-                    alert.style.opacity = '1';
-                    setTimeout(() => {
-                        alert.style.opacity = '0';
-                    }, 3000);
+                    // Hướng về phía người chơi
+                    this.angle = Math.atan2(dy, dx);
+                    
+                    // Di chuyển về phía người chơi
+                    const moveSpeed = this.speed * delta;
+                    
+                    // Nếu ở quá gần, giữ khoảng cách để bắn
+                    if (distToPlayer > 200) {
+                        this.x += Math.cos(this.angle) * moveSpeed;
+                        this.y += Math.sin(this.angle) * moveSpeed;
+                    }
+                    
+                    // Bắn vào người chơi nếu có thể
+                    this.tryShoot();
+                } else if (this.aggroTimer > 0) {
+                    // Giảm thời gian hung hăng dần
+                    this.aggroTimer -= delta * 16.67; // delta * (1000/60) để chuyển đổi sang ms
+                    
+                    if (this.aggroTimer <= 0) {
+                        this.isAggressive = false;
+                        
+                        // Tạo điểm đích mới khi hết hung hăng
+                        this.pickNewDestination();
+                    }
+                } else {
+                    // Di chuyển ngẫu nhiên khi không hung hăng
+                    if (this.targetX === null || this.targetY === null) {
+                        this.pickNewDestination();
+                    }
+                    
+                    // Di chuyển đến điểm đích
+                    const dxTarget = this.targetX - this.x;
+                    const dyTarget = this.targetY - this.y;
+                    const distToTarget = Math.sqrt(dxTarget * dxTarget + dyTarget * dyTarget);
+                    
+                    if (distToTarget > 5) {
+                        this.angle = Math.atan2(dyTarget, dxTarget);
+                        this.x += Math.cos(this.angle) * this.speed * delta * 0.5; // Di chuyển chậm hơn khi thư giãn
+                        this.y += Math.sin(this.angle) * this.speed * delta * 0.5;
+                    } else {
+                        // Đã đến điểm đích, chọn điểm mới sau 1-3 giây
+                        setTimeout(() => this.pickNewDestination(), 1000 + Math.random() * 2000);
+                        this.targetX = this.x;
+                        this.targetY = this.y;
+                    }
+                }
+            }
+            
+            pickNewDestination() {
+                // Chọn một điểm đích ngẫu nhiên trong phạm vi 300 đơn vị
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 100 + Math.random() * 200;
+                this.targetX = this.x + Math.cos(angle) * distance;
+                this.targetY = this.y + Math.sin(angle) * distance;
+            }
+            
+            tryShoot() {
+                const now = Date.now();
+                const cooldown = this.type === 'TANK' ? GAME_CONFIG.ENEMY_SHOT_COOLDOWN : 1500;
+                
+                if (now - this.lastShotTime >= cooldown) {
+                    this.lastShotTime = now;
+                    
+                    if (this.type === 'TANK' || this.canAttack()) {
+                        return true; // Có thể bắn
+                    }
                 }
                 
-                // Go inactive for a while
-                this.active = false;
-                setTimeout(() => {
-                    this.active = true;
-                }, 5000);
+                return false;
+            }
+            
+            canAttack() {
+                // Kiểm tra xem loại động vật này có thể tấn công không
+                switch(this.type) {
+                    case 'HEDGEHOG':
+                    case 'BOAR':
+                    case 'BIRD':
+                        return true;
+                    case 'BUTTERFLY': 
+                        return Math.random() < 0.3; // Chỉ tấn công 30% thời gian
+                    default:
+                        return false;
+                }
             }
             
             takeDamage(amount) {
                 this.health -= amount;
+                this.isAggressive = true;
+                this.aggroTimer = 8000; // Hung hăng lâu hơn khi bị tấn công
+                
                 if (this.health <= 0) {
+                    this.health = 0;
                     this.active = false;
-                    return true; // Enemy defeated
+                    return true; // Đã chết
                 }
-                return false;
+                
+                return false; // Vẫn sống
             }
         }
 
@@ -698,7 +1085,7 @@
         class Item {
             constructor(id, type, x, y) {
                 this.id = id;
-                this.type = type; // 'FLAG', 'GOLD', 'BOMB', 'SHIELD'
+                this.type = type; // 'FLAG', 'GOLD', 'BOMB', 'SHIELD', 'HEALTH_POTION', 'MANA_POTION'
                 this.x = x;
                 this.y = y;
                 this.collected = false;
@@ -738,6 +1125,8 @@
                 this.players = {};
                 this.items = [];
                 this.enemies = [];
+                this.animals = [];
+                this.projectiles = [];
                 this.clouds = [];
                 this.mapContainer = null;
                 this.skyContainer = null;
@@ -746,32 +1135,42 @@
                 this.playerContainer = null;
                 this.itemContainer = null;
                 this.enemyContainer = null;
+                this.animalContainer = null;
+                this.projectileContainer = null;
                 this.playerSprites = {};
                 this.itemSprites = {};
                 this.enemySprites = {};
+                this.animalSprites = {};
+                this.projectileSprites = {};
                 this.lastTimestamp = 0;
                 this.lastItemGeneration = 0;
                 this.lastEnemySpawn = 0;
+                this.lastAnimalSpawn = 0;
                 this.joystickActive = false;
                 this.joystickAngle = 0;
                 this.joystickStrength = 0;
-                this.collectButtonActive = false;
-                this.collectCooldown = false;
+                this.shootingActive = false;
+                this.shootingInterval = null;
                 this.shopVisible = false;
                 this.leaderboardVisible = false;
                 this.randomGenerator = null;
                 this.highScore = 0;
                 this.playerTexture = null;
                 this.enemyTexture = null;
+                this.projectileTexture = null;
                 this.activeChunks = new Set();
                 this.chunkDecorations = {};
                 this.nextItemId = 0;
+                this.nextProjectileId = 0;
+                this.nextEnemyId = 0;
+                this.nextAnimalId = 0;
                 this.shieldActive = false;
                 this.shieldEndTime = 0;
                 this.speedBoostActive = false;
                 this.speedBoostEndTime = 0;
                 this.magnetActive = false;
                 this.magnetEndTime = 0;
+                this.autoCollectEnabled = true; // Tự động nhặt item khi đến gần
             }
 
             // Khởi tạo game
@@ -807,9 +1206,17 @@
                 this.itemContainer = new PIXI.Container();
                 this.mapContainer.addChild(this.itemContainer);
                 
+                // Tạo container cho động vật
+                this.animalContainer = new PIXI.Container();
+                this.mapContainer.addChild(this.animalContainer);
+                
                 // Tạo container cho kẻ thù
                 this.enemyContainer = new PIXI.Container();
                 this.mapContainer.addChild(this.enemyContainer);
+                
+                // Tạo container cho đạn
+                this.projectileContainer = new PIXI.Container();
+                this.mapContainer.addChild(this.projectileContainer);
 
                 // Tạo container cho người chơi - đảm bảo ở trên cùng
                 this.playerContainer = new PIXI.Container();
@@ -850,7 +1257,7 @@
                 });
             }
 
-            // Tải texture cho xe tăng và kẻ thù
+            // Tải texture cho xe tăng, kẻ thù và đạn
             async loadTextures() {
                 return new Promise((resolve) => {
                     try {
@@ -869,6 +1276,13 @@
                         enemyGraphics.drawRect(-32, -32, 64, 64);
                         enemyGraphics.endFill();
                         this.enemyTexture = this.app.renderer.generateTexture(enemyGraphics);
+                        
+                        // Texture cho đạn
+                        const projectileGraphics = new PIXI.Graphics();
+                        projectileGraphics.beginFill(0xFFFF00);
+                        projectileGraphics.drawCircle(0, 0, 5);
+                        projectileGraphics.endFill();
+                        this.projectileTexture = this.app.renderer.generateTexture(projectileGraphics);
                         
                         // Tải hình ảnh xe tăng
                         const img = new Image();
@@ -1344,48 +1758,30 @@
                 this.activeChunks = newActiveChunks;
             }
             
-            // Kiểm tra và tạo các item mới
-            checkItemGeneration() {
-                const now = Date.now();
-                if (now - this.lastItemGeneration < GAME_CONFIG.ITEM_SPAWN_INTERVAL) return;
+            // Cập nhật các health bar và mana bar
+            updateHealthBar() {
+                if (!this.player) return;
                 
-                this.lastItemGeneration = now;
+                const healthPercent = (this.player.health / GAME_CONFIG.PLAYER_MAX_HEALTH) * 100;
+                document.getElementById('healthBar').querySelector('.statBarFill').style.width = `${healthPercent}%`;
+                document.getElementById('healthValue').textContent = `${Math.ceil(this.player.health)}/${GAME_CONFIG.PLAYER_MAX_HEALTH}`;
+            }
+            
+            updateManaBar() {
+                if (!this.player) return;
                 
-                // Cơ hội tạo item mới khi người chơi di chuyển
-                if (Math.abs(this.player.speedX) < 0.1 && Math.abs(this.player.speedY) < 0.1) return;
+                const manaPercent = (this.player.mana / GAME_CONFIG.PLAYER_MAX_MANA) * 100;
+                document.getElementById('manaBar').querySelector('.statBarFill').style.width = `${manaPercent}%`;
+                document.getElementById('manaValue').textContent = `${Math.ceil(this.player.mana)}/${GAME_CONFIG.PLAYER_MAX_MANA}`;
+            }
+            
+            // Cập nhật số lượng item trong túi đồ
+            updateInventory() {
+                if (!this.player) return;
                 
-                const currentChunkId = this.getChunkId(this.player.x, this.player.y);
-                
-                // Kiểm tra số lượng item trong chunk hiện tại
-                if (!this.chunkDecorations[currentChunkId]) return;
-                
-                const chunkItems = this.chunkDecorations[currentChunkId].items || [];
-                if (chunkItems.length >= GAME_CONFIG.MAX_ITEMS_PER_CHUNK) return;
-                
-                // Xác định loại item sẽ tạo
-                let itemType = null;
-                const rand = Math.random();
-                
-                if (rand < GAME_CONFIG.ITEM_SPAWN_CHANCE.FLAG) {
-                    itemType = 'FLAG';
-                } else if (rand < GAME_CONFIG.ITEM_SPAWN_CHANCE.FLAG + GAME_CONFIG.ITEM_SPAWN_CHANCE.GOLD) {
-                    itemType = 'GOLD';
-                } else if (rand < GAME_CONFIG.ITEM_SPAWN_CHANCE.FLAG + GAME_CONFIG.ITEM_SPAWN_CHANCE.GOLD + GAME_CONFIG.ITEM_SPAWN_CHANCE.BOMB) {
-                    itemType = 'BOMB';
-                } else if (rand < GAME_CONFIG.ITEM_SPAWN_CHANCE.FLAG + GAME_CONFIG.ITEM_SPAWN_CHANCE.GOLD + GAME_CONFIG.ITEM_SPAWN_CHANCE.BOMB + GAME_CONFIG.ITEM_SPAWN_CHANCE.SHIELD) {
-                    itemType = 'SHIELD';
-                }
-                
-                if (!itemType) return;
-                
-                // Xác định vị trí item trong phạm vi gần người chơi (200-500 đơn vị)
-                const angle = Math.random() * Math.PI * 2;
-                const distance = 200 + Math.random() * 300;
-                const itemX = this.player.x + Math.cos(angle) * distance;
-                const itemY = this.player.y + Math.sin(angle) * distance;
-                
-                // Tạo item mới
-                this.createItem(itemType, itemX, itemY);
+                document.getElementById('bombCount').textContent = this.player.inventory.BOMB;
+                document.getElementById('healPotionCount').textContent = this.player.inventory.HEALTH_POTION;
+                document.getElementById('manaPotionCount').textContent = this.player.inventory.MANA_POTION;
             }
             
             // Tạo item mới
@@ -1499,6 +1895,48 @@
                             itemSprite.alpha = 0.7 + Math.sin(this.app.ticker.lastTime / 200) * 0.3;
                         });
                         break;
+                        
+                    case 'HEALTH_POTION':
+                        // Tạo lọ máu
+                        itemSprite = new PIXI.Graphics();
+                        itemSprite.beginFill(0xFF5555, 0.8);
+                        itemSprite.drawRect(-8, -12, 16, 20);
+                        itemSprite.drawCircle(0, -15, 8);
+                        itemSprite.endFill();
+                        
+                        // Viền
+                        itemSprite.lineStyle(2, 0xFFFFFF);
+                        itemSprite.moveTo(-3, -5);
+                        itemSprite.lineTo(3, -5);
+                        itemSprite.moveTo(0, -8);
+                        itemSprite.lineTo(0, -2);
+                        
+                        // Hiệu ứng nhấp nháy
+                        this.app.ticker.add(() => {
+                            itemSprite.alpha = 0.7 + Math.sin(this.app.ticker.lastTime / 200) * 0.3;
+                        });
+                        break;
+                        
+                    case 'MANA_POTION':
+                        // Tạo lọ mana
+                        itemSprite = new PIXI.Graphics();
+                        itemSprite.beginFill(0x5555FF, 0.8);
+                        itemSprite.drawRect(-8, -12, 16, 20);
+                        itemSprite.drawCircle(0, -15, 8);
+                        itemSprite.endFill();
+                        
+                        // Viền
+                        itemSprite.lineStyle(2, 0xFFFFFF);
+                        itemSprite.moveTo(-3, -5);
+                        itemSprite.lineTo(3, -5);
+                        itemSprite.moveTo(0, -8);
+                        itemSprite.lineTo(0, -2);
+                        
+                        // Hiệu ứng nhấp nháy
+                        this.app.ticker.add(() => {
+                            itemSprite.alpha = 0.7 + Math.sin(this.app.ticker.lastTime / 200) * 0.3;
+                        });
+                        break;
                 }
                 
                 itemGraphic.addChild(itemSprite);
@@ -1524,22 +1962,60 @@
                 return item;
             }
             
+            // Tạo các bụi item ngẫu nhiên
+            spawnRandomItems(x, y, count = 3) {
+                const types = Object.keys(GAME_CONFIG.ITEM_SPAWN_CHANCE);
+                const chances = types.map(type => GAME_CONFIG.ITEM_SPAWN_CHANCE[type]);
+                
+                for (let i = 0; i < count; i++) {
+                    // Tạo vị trí ngẫu nhiên xung quanh điểm x, y
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 20 + Math.random() * 40;
+                    const itemX = x + Math.cos(angle) * distance;
+                    const itemY = y + Math.sin(angle) * distance;
+                    
+                    // Chọn loại item dựa trên tỉ lệ
+                    const rand = Math.random();
+                    let cumulativeChance = 0;
+                    let selectedType = 'GOLD'; // Mặc định là vàng
+                    
+                    for (let j = 0; j < types.length; j++) {
+                        cumulativeChance += chances[j];
+                        if (rand < cumulativeChance) {
+                            selectedType = types[j];
+                            break;
+                        }
+                    }
+                    
+                    // Tạo item
+                    this.createItem(selectedType, itemX, itemY);
+                }
+            }
+            
             // Tạo kẻ thù (xe tăng địch)
             createEnemy() {
                 if (!this.player) return;
                 
                 // Đặt enemy ở vị trí cách người chơi một khoảng
                 const angle = Math.random() * Math.PI * 2;
-                const distance = GAME_CONFIG.ENEMY_DETECTION_RADIUS + 200; // Outside detection radius
+                const distance = GAME_CONFIG.ENEMY_AGGRO_RANGE + 200; // Outside detection radius
                 const x = this.player.x + Math.cos(angle) * distance;
                 const y = this.player.y + Math.sin(angle) * distance;
                 
-                const enemyId = 'enemy_' + Date.now();
-                const enemy = new Enemy(enemyId, x, y, this.player);
+                const enemyId = 'enemy_' + this.nextEnemyId++;
+                const enemy = new Enemy(enemyId, 'TANK', x, y);
                 this.enemies.push(enemy);
                 
                 // Tạo sprite cho kẻ thù
                 const enemyGraphic = new PIXI.Container();
+                
+                // Đổ bóng đơn giản
+                const shadow = new PIXI.Graphics();
+                shadow.beginFill(0x000000, 0.3);
+                shadow.drawEllipse(0, 0, 20, 10);
+                shadow.endFill();
+                shadow.y = 20;
+                enemyGraphic.addChild(shadow);
                 
                 // Sử dụng texture xe tăng tương tự nhưng màu đỏ
                 const tank = new PIXI.Sprite(this.enemyTexture);
@@ -1550,18 +2026,16 @@
                 
                 enemyGraphic.addChild(tank);
                 
-                // Đổ bóng đơn giản
-                const shadow = new PIXI.Graphics();
-                shadow.beginFill(0x000000, 0.3);
-                shadow.drawEllipse(0, 5, 20, 10);
-                shadow.endFill();
-                shadow.y = 20;
-                enemyGraphic.addChild(shadow);
-                
                 // Hiển thị thanh máu
+                const healthBarBg = new PIXI.Graphics();
+                healthBarBg.beginFill(0x000000, 0.5);
+                healthBarBg.drawRect(-20, -40, 40, 6);
+                healthBarBg.endFill();
+                enemyGraphic.addChild(healthBarBg);
+                
                 const healthBar = new PIXI.Graphics();
                 healthBar.beginFill(0xFF0000);
-                healthBar.drawRect(-15, -40, 30, 5);
+                healthBar.drawRect(-20, -40, 40, 6);
                 healthBar.endFill();
                 enemyGraphic.addChild(healthBar);
                 
@@ -1573,7 +2047,8 @@
                 this.enemySprites[enemyId] = {
                     sprite: enemyGraphic,
                     tank,
-                    healthBar
+                    healthBar,
+                    shadow
                 };
                 
                 // Hiển thị cảnh báo
@@ -1585,6 +2060,721 @@
                 }, 3000);
                 
                 return enemy;
+            }
+            
+            // Tạo động vật
+            createAnimal(type = null) {
+                if (!this.player) return;
+                
+                // Đặt động vật ở vị trí ngẫu nhiên cách người chơi một khoảng
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 500 + Math.random() * 300;
+                const x = this.player.x + Math.cos(angle) * distance;
+                const y = this.player.y + Math.sin(angle) * distance;
+                
+                // Chọn loại động vật ngẫu nhiên nếu không được chỉ định
+                if (!type) {
+                    const animalTypes = GAME_CONFIG.ANIMAL_TYPES;
+                    type = animalTypes[Math.floor(Math.random() * animalTypes.length)];
+                }
+                
+                const animalId = 'animal_' + this.nextAnimalId++;
+                const maxHealth = GAME_CONFIG.ANIMAL_MAX_HEALTH[type];
+                const animal = new Enemy(animalId, type, x, y, maxHealth);
+                this.animals.push(animal);
+                
+                // Tạo sprite cho động vật
+                const animalGraphic = new PIXI.Container();
+                
+                // Đổ bóng đơn giản
+                const shadow = new PIXI.Graphics();
+                shadow.beginFill(0x000000, 0.3);
+                shadow.drawEllipse(0, 0, 15, 6);
+                shadow.endFill();
+                shadow.y = 15;
+                animalGraphic.addChild(shadow);
+                
+                // Vẽ động vật dựa trên loại
+                let animalSprite = new PIXI.Graphics();
+                
+                switch (type) {
+                    case 'HEDGEHOG':
+                        // Nhím
+                        animalSprite.beginFill(0x8B4513);
+                        animalSprite.drawEllipse(0, 0, 15, 10);
+                        animalSprite.endFill();
+                        
+                        // Gai nhím
+                        for (let i = 0; i < 12; i++) {
+                            const spikeAngle = i * Math.PI / 6;
+                            animalSprite.lineStyle(2, 0x8B4513);
+                            animalSprite.moveTo(Math.cos(spikeAngle) * 13, Math.sin(spikeAngle) * 8);
+                            animalSprite.lineTo(Math.cos(spikeAngle) * 20, Math.sin(spikeAngle) * 13);
+                        }
+                        
+                        // Mắt
+                        animalSprite.beginFill(0x000000);
+                        animalSprite.drawCircle(6, -3, 2);
+                        animalSprite.endFill();
+                        break;
+                        
+                    case 'BUTTERFLY':
+                        // Bươm bướm
+                        animalSprite.beginFill(0xFF00FF);
+                        animalSprite.drawCircle(0, 0, 5);
+                        animalSprite.endFill();
+                        
+                        // Cánh
+                        animalSprite.beginFill(0xFF55FF, 0.7);
+                        animalSprite.drawEllipse(-8, 0, 8, 12);
+                        animalSprite.drawEllipse(8, 0, 8, 12);
+                        animalSprite.endFill();
+                        
+                        // Hiệu ứng vỗ cánh
+                        this.app.ticker.add(() => {
+                            const wingScale = 0.8 + Math.sin(this.app.ticker.lastTime / 100) * 0.2;
+                            animalSprite.scale.x = wingScale;
+                        });
+                        break;
+                        
+                    case 'BOAR':
+                        // Lợn rừng
+                        animalSprite.beginFill(0x8B4513);
+                        animalSprite.drawEllipse(0, 0, 20, 12);
+                        animalSprite.endFill();
+                        
+                        // Đầu
+                        animalSprite.beginFill(0x8B4513);
+                        animalSprite.drawEllipse(15, 0, 10, 8);
+                        animalSprite.endFill();
+                        
+                        // Mắt
+                        animalSprite.beginFill(0x000000);
+                        animalSprite.drawCircle(18, -3, 2);
+                        animalSprite.endFill();
+                        
+                        // Nanh
+                        animalSprite.beginFill(0xFFFFFF);
+                        animalSprite.drawRect(22, 0, 3, 5);
+                        animalSprite.endFill();
+                        break;
+                        
+                    case 'RABBIT':
+                        // Thỏ
+                        animalSprite.beginFill(0xDDDDDD);
+                        animalSprite.drawEllipse(0, 0, 12, 8);
+                        animalSprite.endFill();
+                        
+                        // Đầu
+                        animalSprite.beginFill(0xFFFFFF);
+                        animalSprite.drawCircle(10, 0, 8);
+                        animalSprite.endFill();
+                        
+                        // Tai
+                        animalSprite.beginFill(0xFFDDDD);
+                        animalSprite.drawEllipse(8, -12, 3, 8);
+                        animalSprite.drawEllipse(14, -12, 3, 8);
+                        animalSprite.endFill();
+                        
+                        // Mắt
+                        animalSprite.beginFill(0xFF0000);
+                        animalSprite.drawCircle(13, -2, 2);
+                        animalSprite.endFill();
+                        break;
+                        
+                    case 'BIRD':
+                        // Chim
+                        animalSprite.beginFill(0x22AADD);
+                        animalSprite.drawEllipse(0, 0, 10, 7);
+                        animalSprite.endFill();
+                        
+                        // Đầu
+                        animalSprite.beginFill(0x22AADD);
+                        animalSprite.drawCircle(10, -3, 7);
+                        animalSprite.endFill();
+                        
+                        // Mỏ
+                        animalSprite.beginFill(0xFFCC00);
+                        animalSprite.drawTriangle(15, -3, 22, -3, 18, 0);
+                        animalSprite.endFill();
+                        
+                        // Cánh
+                        animalSprite.beginFill(0x1199CC);
+                        animalSprite.drawEllipse(0, -5, 10, 3);
+                        animalSprite.endFill();
+                        
+                        // Hiệu ứng vỗ cánh
+                        this.app.ticker.add(() => {
+                            const wingScale = 0.8 + Math.sin(this.app.ticker.lastTime / 150) * 0.2;
+                            animalSprite.scale.y = wingScale;
+                        });
+                        break;
+                }
+                
+                animalGraphic.addChild(animalSprite);
+                
+                // Hiển thị thanh máu
+                const healthBarBg = new PIXI.Graphics();
+                healthBarBg.beginFill(0x000000, 0.5);
+                healthBarBg.drawRect(-15, -30, 30, 4);
+                healthBarBg.endFill();
+                animalGraphic.addChild(healthBarBg);
+                
+                const healthBar = new PIXI.Graphics();
+                healthBar.beginFill(0xFF0000);
+                healthBar.drawRect(-15, -30, 30, 4);
+                healthBar.endFill();
+                animalGraphic.addChild(healthBar);
+                
+                animalGraphic.x = x;
+                animalGraphic.y = y;
+                
+                this.animalContainer.addChild(animalGraphic);
+                
+                this.animalSprites[animalId] = {
+                    sprite: animalGraphic,
+                    animalSprite,
+                    healthBar,
+                    shadow
+                };
+                
+                return animal;
+            }
+            
+            // Tạo đạn
+            createProjectile(ownerId, isEnemy, x, y, angle) {
+                const projectileId = 'projectile_' + this.nextProjectileId++;
+                
+                // Xác định sát thương dựa vào loại đạn (người chơi hay kẻ địch)
+                const damageRange = isEnemy ? GAME_CONFIG.ENEMY_SHOT_DAMAGE : GAME_CONFIG.PLAYER_SHOT_DAMAGE;
+                const damage = Math.floor(damageRange[0] + Math.random() * (damageRange[1] - damageRange[0]));
+                
+                // Xác định tốc độ và tầm bắn
+                const speed = isEnemy ? GAME_CONFIG.ENEMY_SHOT_SPEED : GAME_CONFIG.PLAYER_SHOT_SPEED;
+                const range = isEnemy ? GAME_CONFIG.ENEMY_SHOT_RANGE : GAME_CONFIG.PLAYER_SHOT_RANGE;
+                
+                const projectile = new Projectile(
+                    projectileId, 
+                    ownerId, 
+                    isEnemy, 
+                    x, 
+                    y, 
+                    angle, 
+                    speed, 
+                    range, 
+                    damage
+                );
+                
+                this.projectiles.push(projectile);
+                
+                // Tạo sprite cho đạn
+                const projectileGraphic = new PIXI.Graphics();
+                
+                if (isEnemy) {
+                    // Đạn địch màu đỏ
+                    projectileGraphic.beginFill(0xFF3300);
+                    projectileGraphic.drawCircle(0, 0, 5);
+                    projectileGraphic.endFill();
+                    
+                    // Hiệu ứng sau đạn
+                    projectileGraphic.beginFill(0xFF9900, 0.5);
+                    projectileGraphic.drawCircle(0, 0, 7);
+                    projectileGraphic.endFill();
+                } else {
+                    // Đạn người chơi màu vàng/xanh
+                    projectileGraphic.beginFill(0x33CCFF);
+                    projectileGraphic.drawCircle(0, 0, 5);
+                    projectileGraphic.endFill();
+                    
+                    // Hiệu ứng sau đạn
+                    projectileGraphic.beginFill(0x99EEFF, 0.5);
+                    projectileGraphic.drawCircle(0, 0, 7);
+                    projectileGraphic.endFill();
+                }
+                
+                projectileGraphic.x = x;
+                projectileGraphic.y = y;
+                
+                this.projectileContainer.addChild(projectileGraphic);
+                
+                this.projectileSprites[projectileId] = {
+                    sprite: projectileGraphic
+                };
+                
+                return projectile;
+            }
+            
+            // Bắn đạn
+            shoot() {
+                if (!this.player) return;
+                
+                const now = Date.now();
+                if (now - this.player.lastShotTime < GAME_CONFIG.PLAYER_SHOT_COOLDOWN) return;
+                
+                // Kiểm tra mana
+                if (this.player.mana < GAME_CONFIG.PLAYER_SHOT_MANA_COST) {
+                    this.showGameMessage("Không đủ mana!", 1000);
+                    return;
+                }
+                
+                // Trừ mana
+                this.player.useMana(GAME_CONFIG.PLAYER_SHOT_MANA_COST);
+                
+                // Cập nhật thời gian bắn
+                this.player.lastShotTime = now;
+                
+                // Tạo đạn từ mũi súng (phía trước xe tăng)
+                const offsetDistance = 40;
+                const projectileX = this.player.x + Math.cos(this.player.angle) * offsetDistance;
+                const projectileY = this.player.y + Math.sin(this.player.angle) * offsetDistance;
+                
+                this.createProjectile(this.player.id, false, projectileX, projectileY, this.player.angle);
+                
+                // Hiệu ứng bắn
+                this.createMuzzleFlash(this.player.x, this.player.y, this.player.angle);
+                
+                // Hiệu ứng âm thanh - mô phỏng bằng rung nhẹ
+                this.playSoundEffect('SHOOT');
+            }
+            
+            // Hiệu ứng lóe sáng khi bắn
+            createMuzzleFlash(x, y, angle) {
+                // Tạo sprite flash
+                const flash = new PIXI.Graphics();
+                flash.beginFill(0xFFFF33, 0.8);
+                flash.drawCircle(0, 0, 10);
+                flash.endFill();
+                
+                // Đặt vị trí tại đầu súng
+                const offsetDistance = 50;
+                flash.x = x + Math.cos(angle) * offsetDistance;
+                flash.y = y + Math.sin(angle) * offsetDistance;
+                
+                this.projectileContainer.addChild(flash);
+                
+                // Hiệu ứng mờ dần
+                let alpha = 1;
+                const flashTicker = () => {
+                    alpha -= 0.1;
+                    flash.alpha = alpha;
+                    
+                    if (alpha <= 0) {
+                        this.projectileContainer.removeChild(flash);
+                        this.app.ticker.remove(flashTicker);
+                    }
+                };
+                
+                this.app.ticker.add(flashTicker);
+            }
+            
+            // Xử lý va chạm đạn
+            checkProjectileCollisions() {
+                if (!this.player) return;
+                
+                // Xử lý từng đạn
+                for (let i = this.projectiles.length - 1; i >= 0; i--) {
+                    const projectile = this.projectiles[i];
+                    
+                    if (!projectile.active) {
+                        // Loại bỏ đạn không còn active
+                        if (this.projectileSprites[projectile.id]) {
+                            this.projectileContainer.removeChild(this.projectileSprites[projectile.id].sprite);
+                            delete this.projectileSprites[projectile.id];
+                        }
+                        this.projectiles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Cập nhật vị trí sprite đạn
+                    if (this.projectileSprites[projectile.id]) {
+                        this.projectileSprites[projectile.id].sprite.x = projectile.x;
+                        this.projectileSprites[projectile.id].sprite.y = projectile.y;
+                    }
+                    
+                    // Kiểm tra va chạm với các đối tượng
+                    if (projectile.isEnemy) {
+                        // Đạn của kẻ địch kiểm tra va chạm với người chơi
+                        if (!this.player.isRespawning) {
+                            const dx = this.player.x - projectile.x;
+                            const dy = this.player.y - projectile.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance < 25) { // Người chơi bị trúng đạn
+                                projectile.active = false;
+                                
+                                // Người chơi nhận sát thương
+                                const isDead = this.player.takeDamage(projectile.damage);
+                                
+                                // Cập nhật thanh máu
+                                this.updateHealthBar();
+                                
+                                // Hiệu ứng trúng đạn
+                                this.createHitEffect(this.player.x, this.player.y);
+                                
+                                // Nếu chết
+                                if (isDead) {
+                                    this.handlePlayerDeath();
+                                }
+                            }
+                        }
+                    } else {
+                        // Đạn của người chơi kiểm tra va chạm với kẻ địch
+                        
+                        // Kiểm tra va chạm với tanks địch
+                        for (let j = this.enemies.length - 1; j >= 0; j--) {
+                            const enemy = this.enemies[j];
+                            
+                            if (!enemy.active) continue;
+                            
+                            const dx = enemy.x - projectile.x;
+                            const dy = enemy.y - projectile.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance < 25) { // Kẻ địch bị trúng đạn
+                                projectile.active = false;
+                                
+                                // Kẻ địch nhận sát thương
+                                const isDead = enemy.takeDamage(projectile.damage);
+                                
+                                // Cập nhật thanh máu
+                                if (this.enemySprites[enemy.id]) {
+                                    const healthPercent = enemy.health / enemy.maxHealth;
+                                    this.enemySprites[enemy.id].healthBar.clear();
+                                    this.enemySprites[enemy.id].healthBar.beginFill(0xFF0000);
+                                    this.enemySprites[enemy.id].healthBar.drawRect(-20, -40, 40 * healthPercent, 6);
+                                    this.enemySprites[enemy.id].healthBar.endFill();
+                                }
+                                
+                                // Hiệu ứng trúng đạn
+                                this.createHitEffect(enemy.x, enemy.y);
+                                
+                                // Nếu kẻ địch chết
+                                if (isDead) {
+                                    this.handleEnemyDeath(enemy);
+                                }
+                                
+                                break; // Đạn đã trúng mục tiêu, dừng kiểm tra thêm
+                            }
+                        }
+                        
+                        // Kiểm tra va chạm với động vật
+                        if (projectile.active) {
+                            for (let j = this.animals.length - 1; j >= 0; j--) {
+                                const animal = this.animals[j];
+                                
+                                if (!animal.active) continue;
+                                
+                                const dx = animal.x - projectile.x;
+                                const dy = animal.y - projectile.y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                
+                                if (distance < 20) { // Động vật bị trúng đạn
+                                    projectile.active = false;
+                                    
+                                    // Động vật nhận sát thương
+                                    const isDead = animal.takeDamage(projectile.damage);
+                                    
+                                    // Cập nhật thanh máu
+                                    if (this.animalSprites[animal.id]) {
+                                        const healthPercent = animal.health / animal.maxHealth;
+                                        this.animalSprites[animal.id].healthBar.clear();
+                                        this.animalSprites[animal.id].healthBar.beginFill(0xFF0000);
+                                        this.animalSprites[animal.id].healthBar.drawRect(-15, -30, 30 * healthPercent, 4);
+                                        this.animalSprites[animal.id].healthBar.endFill();
+                                    }
+                                    
+                                    // Hiệu ứng trúng đạn
+                                    this.createHitEffect(animal.x, animal.y);
+                                    
+                                    // Nếu động vật chết
+                                    if (isDead) {
+                                        this.handleAnimalDeath(animal);
+                                    }
+                                    
+                                    break; // Đạn đã trúng mục tiêu, dừng kiểm tra thêm
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Hiệu ứng trúng đạn
+            createHitEffect(x, y) {
+                // Tạo sprite flash
+                const hit = new PIXI.Graphics();
+                hit.beginFill(0xFF3300, 0.8);
+                hit.drawCircle(0, 0, 15);
+                hit.endFill();
+                
+                hit.x = x;
+                hit.y = y;
+                
+                this.projectileContainer.addChild(hit);
+                
+                // Hiệu ứng mờ dần và phóng to
+                let alpha = 1;
+                let scale = 1;
+                const hitTicker = () => {
+                    alpha -= 0.1;
+                    scale += 0.1;
+                    hit.alpha = alpha;
+                    hit.scale.set(scale);
+                    
+                    if (alpha <= 0) {
+                        this.projectileContainer.removeChild(hit);
+                        this.app.ticker.remove(hitTicker);
+                    }
+                };
+                
+                this.app.ticker.add(hitTicker);
+            }
+            
+            // Xử lý khi người chơi chết
+            handlePlayerDeath() {
+                // Hiển thị hiệu ứng
+                this.createExplosion(this.player.x, this.player.y, 0xFF0000);
+                
+                // Thông báo
+                this.showGameMessage("Bạn đã bị tiêu diệt! Mất 1 lá cờ!", 3000);
+                
+                // Hồi sinh
+                this.player.respawn();
+                
+                // Hiệu ứng nhấp nháy hồi sinh
+                let alpha = 0.5;
+                let increasing = true;
+                
+                const respawnTicker = () => {
+                    if (!this.player.isRespawning) {
+                        // Hết hồi sinh, dừng hiệu ứng
+                        if (this.playerSprites[this.player.id]) {
+                            this.playerSprites[this.player.id].sprite.alpha = 1;
+                        }
+                        this.app.ticker.remove(respawnTicker);
+                        return;
+                    }
+                    
+                    if (increasing) {
+                        alpha += 0.05;
+                        if (alpha >= 1) {
+                            alpha = 1;
+                            increasing = false;
+                        }
+                    } else {
+                        alpha -= 0.05;
+                        if (alpha <= 0.5) {
+                            alpha = 0.5;
+                            increasing = true;
+                        }
+                    }
+                    
+                    if (this.playerSprites[this.player.id]) {
+                        this.playerSprites[this.player.id].sprite.alpha = alpha;
+                    }
+                };
+                
+                this.app.ticker.add(respawnTicker);
+            }
+            
+            // Xử lý khi kẻ địch chết
+            handleEnemyDeath(enemy) {
+                // Hiển thị hiệu ứng
+                this.createExplosion(enemy.x, enemy.y);
+                
+                // Loại bỏ sprite
+                if (this.enemySprites[enemy.id]) {
+                    this.enemyContainer.removeChild(this.enemySprites[enemy.id].sprite);
+                    delete this.enemySprites[enemy.id];
+                }
+                
+                // Phát sinh các vật phẩm rơi ra
+                const itemCount = 3 + Math.floor(Math.random() * 3); // 3-5 items
+                this.spawnRandomItems(enemy.x, enemy.y, itemCount);
+                
+                // Cơ hội rơi lá cờ (30%)
+                if (Math.random() < 0.3) {
+                    this.createItem('FLAG', enemy.x, enemy.y);
+                }
+                
+                // Loại bỏ kẻ địch khỏi danh sách
+                for (let i = 0; i < this.enemies.length; i++) {
+                    if (this.enemies[i].id === enemy.id) {
+                        this.enemies.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+            
+            // Xử lý khi động vật chết
+            handleAnimalDeath(animal) {
+                // Hiển thị hiệu ứng nhỏ hơn
+                this.createSmallExplosion(animal.x, animal.y);
+                
+                // Loại bỏ sprite
+                if (this.animalSprites[animal.id]) {
+                    this.animalContainer.removeChild(this.animalSprites[animal.id].sprite);
+                    delete this.animalSprites[animal.id];
+                }
+                
+                // Phát sinh các vật phẩm rơi ra (ít hơn so với kẻ địch)
+                const itemCount = 1 + Math.floor(Math.random() * 2); // 1-2 items
+                this.spawnRandomItems(animal.x, animal.y, itemCount);
+                
+                // Cơ hội rơi lá cờ (5% - rất hiếm) cho một số loại động vật
+                if (['BOAR', 'BIRD'].includes(animal.type) && Math.random() < 0.05) {
+                    this.createItem('FLAG', animal.x, animal.y);
+                }
+                
+                // Loại bỏ động vật khỏi danh sách
+                for (let i = 0; i < this.animals.length; i++) {
+                    if (this.animals[i].id === animal.id) {
+                        this.animals.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+            
+            // Tạo hiệu ứng nổ lớn
+            createExplosion(x, y, color = 0xFF5500) {
+                // Vòng tròn nổ
+                const explosion = new PIXI.Graphics();
+                explosion.beginFill(color, 0.7);
+                explosion.drawCircle(0, 0, 20);
+                explosion.endFill();
+                
+                explosion.x = x;
+                explosion.y = y;
+                
+                this.projectileContainer.addChild(explosion);
+                
+                // Hiệu ứng phóng to rồi mờ dần
+                let size = 20;
+                const maxSize = 100;
+                const speed = 5;
+                
+                const explosionTicker = () => {
+                    size += speed;
+                    explosion.clear();
+                    explosion.beginFill(color, 0.7 * (1 - size/maxSize));
+                    explosion.drawCircle(0, 0, size);
+                    explosion.endFill();
+                    
+                    if (size >= maxSize) {
+                        this.projectileContainer.removeChild(explosion);
+                        this.app.ticker.remove(explosionTicker);
+                    }
+                };
+                
+                this.app.ticker.add(explosionTicker);
+                
+                // Tạo thêm các mảnh vỡ
+                for (let i = 0; i < 20; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 4;
+                    const size = 2 + Math.random() * 4;
+                    const lifespan = 500 + Math.random() * 500;
+                    
+                    const particle = new PIXI.Graphics();
+                    particle.beginFill(color);
+                    particle.drawCircle(0, 0, size);
+                    particle.endFill();
+                    
+                    particle.x = x;
+                    particle.y = y;
+                    particle.vx = Math.cos(angle) * speed;
+                    particle.vy = Math.sin(angle) * speed;
+                    particle.alpha = 1;
+                    particle.createdAt = Date.now();
+                    particle.lifespan = lifespan;
+                    
+                    this.projectileContainer.addChild(particle);
+                    
+                    const particleTicker = () => {
+                        const age = Date.now() - particle.createdAt;
+                        if (age >= particle.lifespan) {
+                            this.projectileContainer.removeChild(particle);
+                            this.app.ticker.remove(particleTicker);
+                        } else {
+                            particle.x += particle.vx;
+                            particle.y += particle.vy;
+                            particle.alpha = 1 - (age / particle.lifespan);
+                        }
+                    };
+                    
+                    this.app.ticker.add(particleTicker);
+                }
+            }
+            
+            // Tạo hiệu ứng nổ nhỏ
+            createSmallExplosion(x, y) {
+                // Vòng tròn nổ
+                const explosion = new PIXI.Graphics();
+                explosion.beginFill(0xFF5500, 0.7);
+                explosion.drawCircle(0, 0, 10);
+                explosion.endFill();
+                
+                explosion.x = x;
+                explosion.y = y;
+                
+                this.projectileContainer.addChild(explosion);
+                
+                // Hiệu ứng phóng to rồi mờ dần
+                let size = 10;
+                const maxSize = 50;
+                const speed = 3;
+                
+                const explosionTicker = () => {
+                    size += speed;
+                    explosion.clear();
+                    explosion.beginFill(0xFF5500, 0.7 * (1 - size/maxSize));
+                    explosion.drawCircle(0, 0, size);
+                    explosion.endFill();
+                    
+                    if (size >= maxSize) {
+                        this.projectileContainer.removeChild(explosion);
+                        this.app.ticker.remove(explosionTicker);
+                    }
+                };
+                
+                this.app.ticker.add(explosionTicker);
+                
+                // Tạo thêm các mảnh vỡ nhỏ hơn
+                for (let i = 0; i < 10; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1 + Math.random() * 2;
+                    const size = 1 + Math.random() * 2;
+                    const lifespan = 300 + Math.random() * 300;
+                    
+                    const particle = new PIXI.Graphics();
+                    particle.beginFill(0xFF5500);
+                    particle.drawCircle(0, 0, size);
+                    particle.endFill();
+                    
+                    particle.x = x;
+                    particle.y = y;
+                    particle.vx = Math.cos(angle) * speed;
+                    particle.vy = Math.sin(angle) * speed;
+                    particle.alpha = 1;
+                    particle.createdAt = Date.now();
+                    particle.lifespan = lifespan;
+                    
+                    this.projectileContainer.addChild(particle);
+                    
+                    const particleTicker = () => {
+                        const age = Date.now() - particle.createdAt;
+                        if (age >= particle.lifespan) {
+                            this.projectileContainer.removeChild(particle);
+                            this.app.ticker.remove(particleTicker);
+                        } else {
+                            particle.x += particle.vx;
+                            particle.y += particle.vy;
+                            particle.alpha = 1 - (age / particle.lifespan);
+                        }
+                    };
+                    
+                    this.app.ticker.add(particleTicker);
+                }
             }
             
             // Cập nhật kẻ thù
@@ -1613,7 +2803,7 @@
                     }
                     
                     // Cập nhật vị trí kẻ thù
-                    enemy.update(delta);
+                    enemy.update(delta, this.player.x, this.player.y);
                     
                     // Cập nhật sprite kẻ thù
                     if (this.enemySprites[enemy.id]) {
@@ -1622,28 +2812,98 @@
                         this.enemySprites[enemy.id].tank.rotation = enemy.angle + GAME_CONFIG.TANK_ROTATION_OFFSET;
                         
                         // Cập nhật thanh máu
-                        const healthBar = this.enemySprites[enemy.id].healthBar;
-                        healthBar.clear();
-                        healthBar.beginFill(0xFF0000);
-                        healthBar.drawRect(-15, -40, 30 * (enemy.health / 100), 5);
-                        healthBar.endFill();
+                        const healthPercent = enemy.health / enemy.maxHealth;
+                        this.enemySprites[enemy.id].healthBar.clear();
+                        this.enemySprites[enemy.id].healthBar.beginFill(0xFF0000);
+                        this.enemySprites[enemy.id].healthBar.drawRect(-20, -40, 40 * healthPercent, 6);
+                        this.enemySprites[enemy.id].healthBar.endFill();
                     }
                     
-                    // Kiểm tra va chạm với đạn (bomb)
-                    if (this.player.usedBomb) {
-                        const dx = enemy.x - this.player.x;
-                        const dy = enemy.y - this.player.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
+                    // Kiểm tra xem kẻ thù có thể bắn không
+                    if (enemy.tryShoot()) {
+                        // Tạo đạn từ kẻ thù
+                        const offsetDistance = 40;
+                        const projectileX = enemy.x + Math.cos(enemy.angle) * offsetDistance;
+                        const projectileY = enemy.y + Math.sin(enemy.angle) * offsetDistance;
                         
-                        if (dist < 200) { // Bán kính nổ của bom
-                            if (enemy.takeDamage(100)) { // Bom gây 100 đơn vị sát thương
-                                this.showGameMessage("Đã tiêu diệt kẻ cướp!");
-                            }
-                        }
+                        this.createProjectile(enemy.id, true, projectileX, projectileY, enemy.angle);
                         
-                        // Reset trạng thái sử dụng bom
-                        this.player.usedBomb = false;
+                        // Hiệu ứng bắn
+                        this.createMuzzleFlash(enemy.x, enemy.y, enemy.angle);
                     }
+                }
+            }
+            
+            // Cập nhật động vật
+            updateAnimals(delta) {
+                if (!this.player) return;
+                
+                // Kiểm tra thời gian tạo động vật mới
+                const now = Date.now();
+                if (now - this.lastAnimalSpawn > GAME_CONFIG.ANIMAL_SPAWN_INTERVAL &&
+                    this.animals.length < GAME_CONFIG.MAX_ANIMALS) {
+                    this.lastAnimalSpawn = now;
+                    
+                    // Tạo một số động vật mới
+                    for (let i = 0; i < GAME_CONFIG.ANIMAL_SPAWN_PER_INTERVAL; i++) {
+                        this.createAnimal();
+                    }
+                }
+                
+                // Cập nhật từng động vật
+                for (let i = this.animals.length - 1; i >= 0; i--) {
+                    const animal = this.animals[i];
+                    
+                    // Nếu động vật không hoạt động, loại bỏ
+                    if (!animal.active) {
+                        if (this.animalSprites[animal.id]) {
+                            this.animalContainer.removeChild(this.animalSprites[animal.id].sprite);
+                            delete this.animalSprites[animal.id];
+                        }
+                        this.animals.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Cập nhật vị trí động vật
+                    animal.update(delta, this.player.x, this.player.y);
+                    
+                    // Cập nhật sprite động vật
+                    if (this.animalSprites[animal.id]) {
+                        this.animalSprites[animal.id].sprite.x = animal.x;
+                        this.animalSprites[animal.id].sprite.y = animal.y;
+                        // Cập nhật hướng nhìn
+                        this.animalSprites[animal.id].animalSprite.scale.x = (animal.angle > -Math.PI/2 && animal.angle < Math.PI/2) ? 1 : -1;
+                    }
+                    
+                    // Kiểm tra xem động vật có thể tấn công không
+                    if (animal.canAttack() && animal.tryShoot()) {
+                        // Chỉ một số động vật tấn công từ xa
+                        if (['HEDGEHOG', 'BIRD'].includes(animal.type)) {
+                            // Tạo đạn từ động vật
+                            const offsetDistance = 20;
+                            const projectileX = animal.x + Math.cos(animal.angle) * offsetDistance;
+                            const projectileY = animal.y + Math.sin(animal.angle) * offsetDistance;
+                            
+                            this.createProjectile(animal.id, true, projectileX, projectileY, animal.angle);
+                        }
+                    }
+                }
+            }
+            
+            // Kiểm tra và hồi phục máu và mana
+            regenerateStats(delta) {
+                if (!this.player) return;
+                
+                // Hồi mana tự nhiên (0.5 mỗi frame)
+                this.player.mana = Math.min(this.player.mana + 0.5 * delta, GAME_CONFIG.PLAYER_MAX_MANA);
+                
+                // Hồi máu tự nhiên (rất chậm - 0.1 mỗi frame)
+                this.player.health = Math.min(this.player.health + 0.1 * delta, GAME_CONFIG.PLAYER_MAX_HEALTH);
+                
+                // Cập nhật thanh máu và mana mỗi 60 frame (khoảng 1 giây)
+                if (Math.floor(this.app.ticker.lastTime / 1000) % 3 === 0) {
+                    this.updateHealthBar();
+                    this.updateManaBar();
                 }
             }
 
@@ -1775,12 +3035,31 @@
                 // Kiểm tra và cập nhật các chunk khi người chơi di chuyển
                 this.updateActiveChunks();
                 
-                // Kiểm tra và tạo item mới khi người chơi di chuyển
-                this.checkItemGeneration();
+                // Kiểm tra autoCollect
+                if (this.autoCollectEnabled) {
+                    this.autoCollectItems();
+                }
                 
                 // Kiểm tra hiệu ứng nam châm
                 if (this.magnetActive) {
                     this.applyMagnetEffect();
+                }
+            }
+            
+            // Tự động nhặt item khi đến gần
+            autoCollectItems() {
+                if (!this.player) return;
+                
+                for (const item of this.items) {
+                    if (item.collected) continue;
+                    
+                    const dx = this.player.x - item.x;
+                    const dy = this.player.y - item.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist <= GAME_CONFIG.ITEM_AUTO_COLLECT_RANGE) {
+                        this.collectItem(item);
+                    }
                 }
             }
             
@@ -1820,23 +3099,6 @@
                 }
             }
 
-            // Kiểm tra va chạm với item
-            checkItemCollision(x, y, distance = GAME_CONFIG.COLLECT_DISTANCE) {
-                for (const item of this.items) {
-                    if (!item.collected) {
-                        const dx = item.x - x;
-                        const dy = item.y - y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (dist <= distance) {
-                            return item;
-                        }
-                    }
-                }
-                
-                return null;
-            }
-            
             // Thu thập item
             collectItem(item) {
                 if (!this.player || item.collected) return;
@@ -1849,7 +3111,7 @@
                 switch (item.type) {
                     case 'FLAG':
                         // Cờ: +1 điểm và hiệu ứng pháo hoa
-                        this.player.score += GAME_CONFIG.ITEM_VALUE.FLAG;
+                        this.player.score += 1;
                         this.createFireworks(item.x, item.y);
                         this.showGameMessage("Đã nhặt được 1 lá cờ! +1 điểm");
                         break;
@@ -1871,11 +3133,24 @@
                         this.player.inventory.SHIELD += 1;
                         this.showGameMessage("Đã nhặt được 1 khiên bảo vệ!");
                         break;
+                        
+                    case 'HEALTH_POTION':
+                        // Thêm lọ máu vào túi đồ
+                        this.player.inventory.HEALTH_POTION += 1;
+                        this.showGameMessage("Đã nhặt được 1 lọ máu!");
+                        break;
+                        
+                    case 'MANA_POTION':
+                        // Thêm lọ mana vào túi đồ
+                        this.player.inventory.MANA_POTION += 1;
+                        this.showGameMessage("Đã nhặt được 1 lọ mana!");
+                        break;
                 }
                 
-                // Cập nhật điểm số hiển thị
+                // Cập nhật UI
                 document.getElementById('scoreValue').textContent = this.player.score;
                 document.getElementById('goldValue').textContent = this.player.gold;
+                this.updateInventory();
                 
                 // Cập nhật điểm cao nếu cần
                 if (this.player.score > this.highScore) {
@@ -1893,72 +3168,6 @@
                 
                 // Hiệu ứng âm thanh hoặc hình ảnh khi nhặt item
                 this.playSoundEffect(item.type);
-            }
-
-            // Thử nhặt item
-            tryCollectItem() {
-                if (!this.player || this.collectCooldown) return;
-                
-                const nearbyItem = this.checkItemCollision(
-                    this.player.x,
-                    this.player.y
-                );
-                
-                if (nearbyItem) {
-                    this.collectItem(nearbyItem);
-                    
-                    // Hiệu ứng cooldown
-                    this.collectCooldown = true;
-                    document.getElementById('collectButton').style.opacity = '0.5';
-                    
-                    setTimeout(() => {
-                        this.collectCooldown = false;
-                        document.getElementById('collectButton').style.opacity = '1';
-                    }, 500);
-                }
-            }
-            
-            // Hiệu ứng âm thanh (giả lập bằng hiệu ứng rung)
-            playSoundEffect(itemType) {
-                // Rung nhẹ game container
-                const gameContainer = document.getElementById('gameContainer');
-                gameContainer.style.transition = 'none';
-                
-                switch (itemType) {
-                    case 'FLAG':
-                        gameContainer.style.transform = 'translate(2px, 2px)';
-                        setTimeout(() => {
-                            gameContainer.style.transform = 'translate(-2px, -2px)';
-                            setTimeout(() => {
-                                gameContainer.style.transform = 'translate(0, 0)';
-                                gameContainer.style.transition = 'transform 0.3s';
-                            }, 50);
-                        }, 50);
-                        break;
-                        
-                    case 'GOLD':
-                        gameContainer.style.transform = 'translate(1px, 1px)';
-                        setTimeout(() => {
-                            gameContainer.style.transform = 'translate(-1px, -1px)';
-                            setTimeout(() => {
-                                gameContainer.style.transform = 'translate(0, 0)';
-                                gameContainer.style.transition = 'transform 0.3s';
-                            }, 30);
-                        }, 30);
-                        break;
-                        
-                    case 'BOMB':
-                    case 'SHIELD':
-                        gameContainer.style.transform = 'translate(3px, 3px)';
-                        setTimeout(() => {
-                            gameContainer.style.transform = 'translate(-3px, -3px)';
-                            setTimeout(() => {
-                                gameContainer.style.transform = 'translate(0, 0)';
-                                gameContainer.style.transition = 'transform 0.3s';
-                            }, 70);
-                        }, 70);
-                        break;
-                }
             }
 
             // Mua item từ shop
@@ -1987,6 +3196,16 @@
                         this.showGameMessage("Đã mua 1 khiên bảo vệ!", 2000);
                         break;
                         
+                    case 'HEALTH_POTION':
+                        this.player.inventory.HEALTH_POTION += 1;
+                        this.showGameMessage("Đã mua 1 lọ máu!", 2000);
+                        break;
+                        
+                    case 'MANA_POTION':
+                        this.player.inventory.MANA_POTION += 1;
+                        this.showGameMessage("Đã mua 1 lọ mana!", 2000);
+                        break;
+                        
                     case 'SPEED':
                         // Kích hoạt tăng tốc
                         this.speedBoostActive = true;
@@ -2002,8 +3221,9 @@
                         break;
                 }
                 
-                // Cập nhật hiển thị vàng
+                // Cập nhật hiển thị vàng và túi đồ
                 document.getElementById('goldValue').textContent = this.player.gold;
+                this.updateInventory();
                 
                 // Lưu trạng thái game
                 this.saveGameState();
@@ -2013,14 +3233,17 @@
             
             // Kích hoạt khiên
             activateShield() {
-                if (!this.player || this.player.inventory.SHIELD <= 0) return false;
+                if (!this.player || this.player.inventory.SHIELD <= 0) {
+                    this.showGameMessage("Không có khiên để sử dụng!", 2000);
+                    return false;
+                }
                 
                 // Trừ khiên trong túi đồ
                 this.player.inventory.SHIELD -= 1;
                 
                 // Kích hoạt khiên
                 this.shieldActive = true;
-                this.shieldEndTime = Date.now() + 30000; // 30 giây
+                this.shieldEndTime = Date.now() + GAME_CONFIG.SHIELD_DURATION; // 30 giây
                 
                 // Hiển thị hiệu ứng khiên
                 if (this.playerSprites[this.player.id]) {
@@ -2033,6 +3256,9 @@
                 
                 this.showGameMessage("Đã kích hoạt khiên bảo vệ! (30 giây)");
                 
+                // Cập nhật túi đồ
+                this.updateInventory();
+                
                 // Lưu trạng thái game
                 this.saveGameState();
                 
@@ -2041,7 +3267,10 @@
             
             // Sử dụng bom
             useBomb() {
-                if (!this.player || this.player.inventory.BOMB <= 0) return false;
+                if (!this.player || this.player.inventory.BOMB <= 0) {
+                    this.showGameMessage("Không có bom để sử dụng!", 2000);
+                    return false;
+                }
                 
                 // Trừ bom trong túi đồ
                 this.player.inventory.BOMB -= 1;
@@ -2054,81 +3283,61 @@
                 
                 this.showGameMessage("Đã sử dụng bom!");
                 
+                // Cập nhật túi đồ
+                this.updateInventory();
+                
                 // Lưu trạng thái game
                 this.saveGameState();
                 
                 return true;
             }
             
-            // Tạo hiệu ứng nổ
-            createExplosion(x, y) {
-                // Vòng tròn nổ
-                const explosion = new PIXI.Graphics();
-                explosion.beginFill(0xFF5500, 0.7);
-                explosion.drawCircle(0, 0, 20);
-                explosion.endFill();
-                
-                explosion.x = x;
-                explosion.y = y;
-                
-                this.mapContainer.addChild(explosion);
-                
-                // Hiệu ứng phóng to rồi mờ dần
-                let size = 20;
-                const maxSize = 200;
-                const speed = 10;
-                
-                const explosionTicker = () => {
-                    size += speed;
-                    explosion.clear();
-                    explosion.beginFill(0xFF5500, 0.7 * (1 - size/maxSize));
-                    explosion.drawCircle(0, 0, size);
-                    explosion.endFill();
-                    
-                    if (size >= maxSize) {
-                        this.mapContainer.removeChild(explosion);
-                        this.app.ticker.remove(explosionTicker);
-                    }
-                };
-                
-                this.app.ticker.add(explosionTicker);
-                
-                // Tạo thêm các mảnh vỡ
-                for (let i = 0; i < 20; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = 2 + Math.random() * 4;
-                    const size = 2 + Math.random() * 4;
-                    const lifespan = 500 + Math.random() * 500;
-                    
-                    const particle = new PIXI.Graphics();
-                    particle.beginFill(0xFF5500);
-                    particle.drawCircle(0, 0, size);
-                    particle.endFill();
-                    
-                    particle.x = x;
-                    particle.y = y;
-                    particle.vx = Math.cos(angle) * speed;
-                    particle.vy = Math.sin(angle) * speed;
-                    particle.alpha = 1;
-                    particle.createdAt = Date.now();
-                    particle.lifespan = lifespan;
-                    
-                    this.mapContainer.addChild(particle);
-                    
-                    const particleTicker = () => {
-                        const age = Date.now() - particle.createdAt;
-                        if (age >= particle.lifespan) {
-                            this.mapContainer.removeChild(particle);
-                            this.app.ticker.remove(particleTicker);
-                        } else {
-                            particle.x += particle.vx;
-                            particle.y += particle.vy;
-                            particle.alpha = 1 - (age / particle.lifespan);
-                        }
-                    };
-                    
-                    this.app.ticker.add(particleTicker);
+            // Sử dụng lọ máu
+            useHealthPotion() {
+                if (!this.player || this.player.inventory.HEALTH_POTION <= 0) {
+                    this.showGameMessage("Không có lọ máu để sử dụng!", 2000);
+                    return false;
                 }
+                
+                // Trừ lọ máu trong túi đồ
+                this.player.inventory.HEALTH_POTION -= 1;
+                
+                // Hồi máu
+                this.player.heal(GAME_CONFIG.HEALTH_POTION_HEAL);
+                
+                this.showGameMessage(`Đã hồi ${GAME_CONFIG.HEALTH_POTION_HEAL} máu!`);
+                
+                // Cập nhật túi đồ
+                this.updateInventory();
+                
+                // Lưu trạng thái game
+                this.saveGameState();
+                
+                return true;
+            }
+            
+            // Sử dụng lọ mana
+            useManaPotion() {
+                if (!this.player || this.player.inventory.MANA_POTION <= 0) {
+                    this.showGameMessage("Không có lọ mana để sử dụng!", 2000);
+                    return false;
+                }
+                
+                // Trừ lọ mana trong túi đồ
+                this.player.inventory.MANA_POTION -= 1;
+                
+                // Hồi mana
+                this.player.restoreMana(GAME_CONFIG.MANA_POTION_RESTORE);
+                
+                this.showGameMessage(`Đã hồi ${GAME_CONFIG.MANA_POTION_RESTORE} mana!`);
+                
+                // Cập nhật túi đồ
+                this.updateInventory();
+                
+                // Lưu trạng thái game
+                this.saveGameState();
+                
+                return true;
             }
 
             // Cập nhật trạng thái khiên bảo vệ
@@ -2180,31 +3389,75 @@
             initControls() {
                 const joystickBase = document.getElementById('joystickBase');
                 const joystickKnob = document.getElementById('joystickKnob');
-                const collectButton = document.getElementById('collectButton');
+                const fireButton = document.getElementById('fireButton');
+                const bombButton = document.getElementById('bombButton');
+                const shieldButton = document.getElementById('shieldButton');
+                const healButton = document.getElementById('healButton');
                 
                 // Xử lý joystick cho di chuyển
                 this.setupJoystick(joystickBase, joystickKnob);
                 
-                // Xử lý nút nhặt cờ
-                collectButton.addEventListener('touchstart', (e) => {
+                // Xử lý nút bắn
+                fireButton.addEventListener('touchstart', (e) => {
                     e.preventDefault();
-                    if (!this.collectCooldown) {
-                        this.collectButtonActive = true;
-                        this.tryCollectItem();
-                    }
+                    this.shootingActive = true;
+                    this.shoot();
+                    
+                    // Bắn liên tục khi giữ nút
+                    this.shootingInterval = setInterval(() => {
+                        this.shoot();
+                    }, GAME_CONFIG.PLAYER_SHOT_COOLDOWN);
                 });
-                collectButton.addEventListener('touchend', (e) => {
+                
+                fireButton.addEventListener('touchend', (e) => {
                     e.preventDefault();
-                    this.collectButtonActive = false;
+                    this.shootingActive = false;
+                    clearInterval(this.shootingInterval);
                 });
-                collectButton.addEventListener('mousedown', (e) => {
-                    if (!this.collectCooldown) {
-                        this.collectButtonActive = true;
-                        this.tryCollectItem();
-                    }
+                
+                fireButton.addEventListener('mousedown', () => {
+                    this.shootingActive = true;
+                    this.shoot();
+                    
+                    // Bắn liên tục khi giữ nút
+                    this.shootingInterval = setInterval(() => {
+                        this.shoot();
+                    }, GAME_CONFIG.PLAYER_SHOT_COOLDOWN);
                 });
-                collectButton.addEventListener('mouseup', () => {
-                    this.collectButtonActive = false;
+                
+                fireButton.addEventListener('mouseup', () => {
+                    this.shootingActive = false;
+                    clearInterval(this.shootingInterval);
+                });
+                
+                // Xử lý nút bom
+                bombButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.useBomb();
+                });
+                
+                bombButton.addEventListener('mousedown', () => {
+                    this.useBomb();
+                });
+                
+                // Xử lý nút khiên
+                shieldButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.activateShield();
+                });
+                
+                shieldButton.addEventListener('mousedown', () => {
+                    this.activateShield();
+                });
+                
+                // Xử lý nút hồi máu/mana
+                healButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.showHealMenu();
+                });
+                
+                healButton.addEventListener('mousedown', () => {
+                    this.showHealMenu();
                 });
                 
                 // Xử lý phím tắt
@@ -2212,12 +3465,25 @@
                     if (!this.gameStarted || !this.player) return;
                     
                     switch (e.key) {
+                        case ' ': // Space để bắn
+                        case 'f': // f để bắn
+                            this.shoot();
+                            break;
+                            
                         case 'b': // Sử dụng bom
                             this.useBomb();
                             break;
                             
                         case 's': // Kích hoạt khiên
                             this.activateShield();
+                            break;
+                            
+                        case 'h': // Sử dụng lọ máu
+                            this.useHealthPotion();
+                            break;
+                            
+                        case 'm': // Sử dụng lọ mana
+                            this.useManaPotion();
                             break;
                             
                         case 'Escape': // Đóng shop/bảng xếp hạng
@@ -2229,6 +3495,69 @@
                             break;
                     }
                 });
+            }
+            
+            // Hiển thị menu hồi máu/mana
+            showHealMenu() {
+                // Tạo overlay menu lựa chọn
+                const healMenu = document.createElement('div');
+                healMenu.style.position = 'absolute';
+                healMenu.style.bottom = '250px';
+                healMenu.style.right = '100px';
+                healMenu.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                healMenu.style.borderRadius = '10px';
+                healMenu.style.padding = '10px';
+                healMenu.style.zIndex = '25';
+                healMenu.style.pointerEvents = 'auto';
+                
+                // Nút hồi máu
+                const healthBtn = document.createElement('button');
+                healthBtn.textContent = `Hồi máu (${this.player ? this.player.inventory.HEALTH_POTION : 0})`;
+                healthBtn.style.display = 'block';
+                healthBtn.style.margin = '5px';
+                healthBtn.style.padding = '8px 15px';
+                healthBtn.style.backgroundColor = '#ff3232';
+                healthBtn.style.color = 'white';
+                healthBtn.style.border = 'none';
+                healthBtn.style.borderRadius = '5px';
+                healthBtn.style.cursor = 'pointer';
+                
+                // Nút hồi mana
+                const manaBtn = document.createElement('button');
+                manaBtn.textContent = `Hồi mana (${this.player ? this.player.inventory.MANA_POTION : 0})`;
+                manaBtn.style.display = 'block';
+                manaBtn.style.margin = '5px';
+                manaBtn.style.padding = '8px 15px';
+                manaBtn.style.backgroundColor = '#3264ff';
+                manaBtn.style.color = 'white';
+                manaBtn.style.border = 'none';
+                manaBtn.style.borderRadius = '5px';
+                manaBtn.style.cursor = 'pointer';
+                
+                // Thêm vào menu
+                healMenu.appendChild(healthBtn);
+                healMenu.appendChild(manaBtn);
+                
+                // Thêm vào UI
+                document.getElementById('gameUI').appendChild(healMenu);
+                
+                // Sự kiện nút
+                healthBtn.addEventListener('click', () => {
+                    this.useHealthPotion();
+                    document.getElementById('gameUI').removeChild(healMenu);
+                });
+                
+                manaBtn.addEventListener('click', () => {
+                    this.useManaPotion();
+                    document.getElementById('gameUI').removeChild(healMenu);
+                });
+                
+                // Tự động đóng sau 3 giây
+                setTimeout(() => {
+                    if (document.getElementById('gameUI').contains(healMenu)) {
+                        document.getElementById('gameUI').removeChild(healMenu);
+                    }
+                }, 3000);
             }
 
             // Thiết lập joystick
@@ -2380,6 +3709,13 @@
                         let y = playerY;
                         let score = 0;
                         let gold = 0;
+                        let health = GAME_CONFIG.PLAYER_MAX_HEALTH;
+                        let mana = GAME_CONFIG.PLAYER_MAX_MANA;
+                        let inventory = {
+                            BOMB: 3, // Bắt đầu với 3 quả bom
+                            HEALTH_POTION: 2, // 2 lọ máu
+                            MANA_POTION: 2 // 2 lọ mana
+                        };
                         
                         try {
                             const savedPlayerData = localStorage.getItem('playerData');
@@ -2389,10 +3725,14 @@
                                 y = savedPlayer.y || playerY;
                                 score = savedPlayer.score || 0;
                                 gold = savedPlayer.gold || 0;
+                                health = savedPlayer.health || GAME_CONFIG.PLAYER_MAX_HEALTH;
+                                mana = savedPlayer.mana || GAME_CONFIG.PLAYER_MAX_MANA;
+                                if (savedPlayer.inventory) {
+                                    inventory = savedPlayer.inventory;
+                                }
                             }
                         } catch (e) {
                             console.log("Could not load saved player data", e);
-                            // Use defaults
                         }
                         
                         // Make sure we have a valid texture before creating the player
@@ -2408,16 +3748,22 @@
                         game.player = game.createPlayer(playerId, playerName, x, y);
                         game.player.score = score;
                         game.player.gold = gold;
+                        game.player.health = health;
+                        game.player.mana = mana;
+                        game.player.inventory = inventory;
                         
-                        // Cập nhật điểm số hiển thị
+                        // Cập nhật UI
                         document.getElementById('scoreValue').textContent = score;
                         document.getElementById('goldValue').textContent = gold;
                         game.playerSprites[playerId].scoreText.text = score.toString();
+                        game.updateHealthBar();
+                        game.updateManaBar();
+                        game.updateInventory();
                         
                         // Ẩn màn hình giới thiệu
                         document.getElementById('introScreen').style.display = 'none';
                         
-                        // Khôi phục trạng thái các item và khiên
+                        // Khôi phục trạng thái game
                         try {
                             game.restoreGameState();
                         } catch (e) {
@@ -2458,6 +3804,7 @@
                         const itemType = item.getAttribute('data-item');
                         if (itemType) {
                             this.buyItem(itemType);
+                            this.updateShopButtons();
                         }
                     });
                 });
@@ -2606,14 +3953,14 @@
                     particle.createdAt = Date.now();
                     particle.lifespan = lifespan;
                     
-                    this.mapContainer.addChild(particle);
+                    this.projectileContainer.addChild(particle);
                     
                     // Thêm vào ticker để cập nhật vị trí
                     const tickerCallback = () => {
                         const age = Date.now() - particle.createdAt;
                         if (age >= particle.lifespan) {
                             // Xóa particle sau khi hết thời gian
-                            this.mapContainer.removeChild(particle);
+                            this.projectileContainer.removeChild(particle);
                             this.app.ticker.remove(tickerCallback);
                         } else {
                             // Cập nhật vị trí và độ trong suốt
@@ -2640,6 +3987,62 @@
                 this.messageTimeout = setTimeout(() => {
                     messageElement.style.opacity = '0';
                 }, duration);
+            }
+            
+            // Hiệu ứng âm thanh (giả lập bằng hiệu ứng rung)
+            playSoundEffect(soundType) {
+                // Rung nhẹ game container
+                const gameContainer = document.getElementById('gameContainer');
+                gameContainer.style.transition = 'none';
+                
+                switch (soundType) {
+                    case 'FLAG':
+                        gameContainer.style.transform = 'translate(2px, 2px)';
+                        setTimeout(() => {
+                            gameContainer.style.transform = 'translate(-2px, -2px)';
+                            setTimeout(() => {
+                                gameContainer.style.transform = 'translate(0, 0)';
+                                gameContainer.style.transition = 'transform 0.3s';
+                            }, 50);
+                        }, 50);
+                        break;
+                        
+                    case 'GOLD':
+                        gameContainer.style.transform = 'translate(1px, 1px)';
+                        setTimeout(() => {
+                            gameContainer.style.transform = 'translate(-1px, -1px)';
+                            setTimeout(() => {
+                                gameContainer.style.transform = 'translate(0, 0)';
+                                gameContainer.style.transition = 'transform 0.3s';
+                            }, 30);
+                        }, 30);
+                        break;
+                        
+                    case 'BOMB':
+                    case 'SHIELD':
+                    case 'HEALTH_POTION':
+                    case 'MANA_POTION':
+                        gameContainer.style.transform = 'translate(3px, 3px)';
+                        setTimeout(() => {
+                            gameContainer.style.transform = 'translate(-3px, -3px)';
+                            setTimeout(() => {
+                                gameContainer.style.transform = 'translate(0, 0)';
+                                gameContainer.style.transition = 'transform 0.3s';
+                            }, 70);
+                        }, 70);
+                        break;
+                        
+                    case 'SHOOT':
+                        gameContainer.style.transform = 'translate(1px, 0px)';
+                        setTimeout(() => {
+                            gameContainer.style.transform = 'translate(-1px, 0px)';
+                            setTimeout(() => {
+                                gameContainer.style.transform = 'translate(0, 0)';
+                                gameContainer.style.transition = 'transform 0.3s';
+                            }, 20);
+                        }, 20);
+                        break;
+                }
             }
 
             // Vòng lặp game chính
@@ -2683,8 +4086,22 @@
                 // Cập nhật sprite người chơi
                 this.updatePlayer(this.player);
                 
+                // Cập nhật các đạn
+                for (const projectile of this.projectiles) {
+                    projectile.update(delta);
+                }
+                
+                // Kiểm tra va chạm đạn
+                this.checkProjectileCollisions();
+                
                 // Cập nhật kẻ thù
                 this.updateEnemies(delta);
+                
+                // Cập nhật động vật
+                this.updateAnimals(delta);
+                
+                // Hồi phục máu và mana tự nhiên
+                this.regenerateStats(delta);
                 
                 // Lưu trạng thái game định kỳ
                 const now = Date.now();
@@ -2724,6 +4141,8 @@
                     y: this.player.y,
                     score: this.player.score,
                     gold: this.player.gold,
+                    health: this.player.health,
+                    mana: this.player.mana,
                     inventory: this.player.inventory
                 };
                 
@@ -2876,6 +4295,7 @@
                         const saved = JSON.parse(playerData);
                         if (saved.inventory) {
                             this.player.inventory = saved.inventory;
+                            this.updateInventory();
                         }
                     }
                     
@@ -2907,6 +4327,14 @@
                             this.magnetEndTime = effects.magnet.endTime;
                         }
                     }
+                    
+                    // Tạo sẵn một số động vật
+                    for (let i = 0; i < 5; i++) {
+                        this.createAnimal();
+                    }
+                    
+                    // Tạo sẵn một kẻ thù
+                    this.createEnemy();
                 } catch (error) {
                     console.error("Error restoring game state:", error);
                 }
