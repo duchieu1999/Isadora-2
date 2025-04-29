@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bánh Xe Hiếu Gà - Quay Là Có Quà!</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Anton&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    <!-- MongoDB Atlas SDK -->
+    <script src="https://unpkg.com/realm-web@1.7.0/dist/bundle.iife.js"></script>
+    <!-- Anime.js for better animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <!-- Howler.js for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
     <style>
         :root {
             --primary-color: #d82f2f;
@@ -43,6 +49,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: relative;
         }
         
         /* Header styles */
@@ -276,21 +283,22 @@
         
         .wheel-section-content {
             position: absolute;
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             top: 10px;
-            left: 5px;
+            left: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             transform: rotate(45deg);
-            overflow: hidden;
+            overflow: visible;
         }
         
         .wheel-section-icon {
-            font-size: 22px;
-            margin-bottom: 4px;
+            font-size: 24px;
+            margin-bottom: 5px;
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
         }
         
         .wheel-section-text {
@@ -301,9 +309,9 @@
             width: 100%;
             line-height: 1;
             word-wrap: break-word;
-            max-height: 16px;
-            overflow: hidden;
+            overflow: visible;
             padding: 0 2px;
+            text-shadow: 0 0 2px white;
         }
         
         .wheel-dots {
@@ -349,12 +357,12 @@
         
         .wheel-pointer-container {
             position: absolute;
-            top: -5px;
+            top: -10px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 6;
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
         }
         
         .wheel-pointer {
@@ -364,6 +372,7 @@
             clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
             border: 2px solid var(--secondary-color);
             border-bottom: none;
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.3));
         }
         
         /* Stats */
@@ -424,6 +433,8 @@
             text-transform: uppercase;
             width: 100%;
             max-width: 300px;
+            position: relative;
+            overflow: hidden;
         }
         
         .btn:hover {
@@ -441,6 +452,23 @@
             opacity: 0.7;
             transform: none;
             box-shadow: none;
+        }
+        
+        .btn-shine {
+            position: absolute;
+            top: 0;
+            left: -50px;
+            width: 30px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: skewX(-20deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { left: -50px; }
+            20% { left: 120%; }
+            100% { left: 120%; }
         }
         
         .btn-spin::before {
@@ -471,6 +499,8 @@
             justify-content: center;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             border: 2px solid var(--primary-color);
+            position: relative;
+            overflow: hidden;
         }
         
         .result-title {
@@ -487,8 +517,27 @@
         }
         
         .result-icon {
-            font-size: 24px;
+            font-size: 32px;
             margin: 5px 0;
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.2));
+            animation: iconPulse 1s infinite alternate;
+        }
+        
+        @keyframes iconPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.2); }
+        }
+        
+        .result-container.highlight {
+            background: linear-gradient(135deg, #fff9c4, #ffffff, #ffecb3);
+            background-size: 200% 200%;
+            animation: gradientBg 2s ease infinite;
+        }
+        
+        @keyframes gradientBg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
         /* Redeem section */
@@ -532,11 +581,13 @@
         .redeem-option:hover {
             background-color: #e0e0e0;
             transform: translateY(-2px);
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
         }
         
         .redeem-option.selected {
             background-color: #d5f5d5;
             border-color: #4CAF50;
+            box-shadow: 0 0 0 2px #4CAF50;
         }
         
         .redeem-option-amount {
@@ -565,11 +616,15 @@
         
         .redeem-confirm-btn:hover {
             background-color: #388E3C;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         
         .redeem-confirm-btn:disabled {
             background-color: #888;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         
         /* Reward card */
@@ -585,6 +640,23 @@
             overflow: hidden;
             display: none;
             margin: 10px 0;
+        }
+        
+        .reward-card::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 235, 59, 0.05) 10px,
+                rgba(255, 235, 59, 0.05) 20px
+            );
+            z-index: -1;
         }
         
         .reward-header {
@@ -606,12 +678,15 @@
             color: var(--secondary-color);
             font-size: 24px;
             font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
         }
         
         .reward-title {
             font-size: 18px;
             color: var(--primary-dark);
             text-align: left;
+            font-weight: bold;
+            letter-spacing: 0.5px;
         }
         
         .reward-subtitle {
@@ -621,11 +696,15 @@
         }
         
         .reward-value {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
             color: var(--primary-dark);
-            margin: 15px 0;
+            margin: 20px 0;
             text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+            padding: 10px;
+            background: linear-gradient(135deg, rgba(255,235,59,0.2), rgba(255,255,255,0.1));
+            border-radius: 5px;
+            display: inline-block;
         }
         
         .reward-info {
@@ -642,6 +721,21 @@
             font-size: 16px;
             margin: 10px 0;
             border: 1px dashed #999;
+            position: relative;
+            letter-spacing: 1px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .reward-code::before {
+            content: 'MÃ:';
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background-color: white;
+            padding: 0 5px;
+            font-size: 10px;
+            color: #666;
+            border-radius: 3px;
         }
         
         .reward-footer {
@@ -678,10 +772,33 @@
             font-size: 14px;
             font-weight: bold;
             width: 100%;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
         }
         
         .save-btn:hover {
             background-color: #388E3C;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .save-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(30deg);
+            animation: saveButtonShine 3s infinite;
+        }
+        
+        @keyframes saveButtonShine {
+            0% { left: -60%; }
+            20% { left: 130%; }
+            100% { left: 130%; }
         }
         
         /* Leaderboard */
@@ -719,6 +836,12 @@
             align-items: center;
             padding: 8px 5px;
             border-bottom: 1px solid #eee;
+            transition: transform 0.2s;
+        }
+        
+        .leaderboard-item:hover {
+            background-color: rgba(255, 235, 59, 0.1);
+            transform: translateX(2px);
         }
         
         .leaderboard-item:last-child {
@@ -742,6 +865,7 @@
         .leaderboard-item:nth-child(1) .leaderboard-rank {
             background-color: gold;
             color: black;
+            box-shadow: 0 0 10px gold;
         }
         
         .leaderboard-item:nth-child(2) .leaderboard-rank {
@@ -770,6 +894,14 @@
             font-size: 14px;
             font-weight: bold;
             color: var(--primary-dark);
+        }
+        
+        .leaderboard-status {
+            height: 16px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
         }
         
         .name-input {
@@ -805,6 +937,21 @@
             display: none;
         }
         
+        /* Loading spinner */
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 0.8s infinite linear;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
         /* Footer */
         .footer {
             text-align: center;
@@ -820,37 +967,113 @@
             margin: 3px 0;
         }
         
-        /* Animations */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* Special effects and animations */
+        .glow {
+            animation: glow 2s infinite alternate;
         }
         
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-20px); }
-            60% { transform: translateY(-10px); }
+        @keyframes glow {
+            from { box-shadow: 0 0 10px -5px rgba(255, 235, 59, 0.5); }
+            to { box-shadow: 0 0 20px 5px rgba(255, 235, 59, 0.8); }
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
         }
         
-        .bounce {
-            animation: bounce 1s;
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
         
-        .fade-in {
-            animation: fadeIn 0.5s;
+        .pulse {
+            animation: pulse 2s infinite;
         }
         
-        /* Confetti animation */
-        @keyframes confettiFall {
-            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* Jackpot effect */
+        .jackpot-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .jackpot-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 90%;
+            border: 5px solid var(--primary-color);
+            box-shadow: 0 0 30px gold;
+            transform: scale(0.8);
+            transition: transform 0.5s;
+        }
+        
+        .jackpot-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .jackpot-overlay.show .jackpot-content {
+            transform: scale(1);
+        }
+        
+        .jackpot-title {
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .jackpot-points {
+            font-size: 36px;
+            color: gold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .jackpot-close {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        
+        /* Confetti */
         .confetti {
             position: absolute;
             width: 10px;
@@ -858,6 +1081,38 @@
             pointer-events: none;
             opacity: 0;
             z-index: 100;
+        }
+        
+        /* Reset spinner animation */
+        @keyframes resetSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .reset-icon {
+            display: inline-block;
+            animation: resetSpin 1s linear infinite;
+            margin-right: 5px;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease-out;
+            font-size: 14px;
+            max-width: 300px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
         }
         
         /* Responsive adjustments */
@@ -970,13 +1225,16 @@
                 <div class="stat-label">Lượt quay còn lại</div>
             </div>
             <div class="stat">
-                <div class="stat-value" id="timer-value">59:59</div>
+                <div class="stat-value" id="timer-value">29:59</div>
                 <div class="stat-label">Làm mới lượt</div>
             </div>
         </div>
         
         <div class="controls">
-            <button class="btn btn-spin" id="spin-btn">QUAY NGAY</button>
+            <button class="btn btn-spin" id="spin-btn">
+                <div class="btn-shine"></div>
+                QUAY NGAY
+            </button>
         </div>
         
         <div class="result-container" id="result">
@@ -1033,7 +1291,11 @@
             <div class="leaderboard-title">Bảng xếp hạng</div>
             <ul class="leaderboard-list" id="leaderboard-list">
                 <!-- Leaderboard items will be added dynamically -->
+                <li class="leaderboard-item">
+                    <div class="spinner"></div>
+                </li>
             </ul>
+            <div class="leaderboard-status" id="leaderboard-status">Đang tải dữ liệu...</div>
             <div class="name-input">
                 <input type="text" id="player-name" placeholder="Nhập tên của bạn">
                 <button id="save-name-btn">Lưu</button>
@@ -1047,7 +1309,52 @@
         <p>Chào mừng ngày Giải phóng miền Nam 30/4</p>
     </div>
     
+    <!-- Jackpot overlay -->
+    <div class="jackpot-overlay" id="jackpot-overlay">
+        <div class="jackpot-content">
+            <div class="jackpot-title">🎉 JACKPOT! 🎉</div>
+            <div>Bạn đã trúng JACKPOT đặc biệt!</div>
+            <div class="jackpot-points" id="jackpot-points">+1000 điểm</div>
+            <button class="jackpot-close" id="jackpot-close">TUYỆT VỜI!</button>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
     <script>
+        // MongoDB Atlas 
+        const MONGODB_URI = "mongodb+srv://duchieufaryoung0:80E9gUahdOXmGKuy@cluster0.6nlv1cv.mongodb.net/telegram_bot_db";
+        const APP_ID = "application-0-ypohb"; // This would be your actual Realm app ID
+        
+        // Sound effects
+        const SOUNDS = {
+            spin: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-slot-machine-spin-1925.mp3'],
+                volume: 0.5
+            }),
+            win: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3'],
+                volume: 0.5
+            }),
+            jackpot: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-casino-win-notification-1980.mp3'],
+                volume: 0.7
+            }),
+            lose: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-losing-bleeps-2026.mp3'],
+                volume: 0.4
+            }),
+            click: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-simple-click-tone-1112.mp3'],
+                volume: 0.3
+            }),
+            reward: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3'],
+                volume: 0.5
+            })
+        };
+        
         // Game config
         const wheelSections = [
             { name: "Thắng lợi vẻ vang", icon: "🏆", points: 40, probability: 0.05 },
@@ -1061,7 +1368,10 @@
             { name: "Lá cờ giải phóng", icon: "🚩", points: 80, probability: 0.04 },
             { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -10, probability: 0.10 },
             { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -15, probability: 0.08 },
-            { name: "Nhận đôi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 }
+            { name: "Nhận đôi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 },
+            // Thêm phần thưởng jackpot với tỉ lệ rất thấp
+            { name: "JACKPOT ĐẶC BIỆT", icon: "💰", points: 1000, jackpot: true, probability: 0.001 },
+            { name: "JACKPOT LỚN", icon: "💎", points: 2000, jackpot: true, probability: 0.0005 }
         ];
 
         // DOM elements
@@ -1081,9 +1391,14 @@
         const rewardDate = document.getElementById('reward-date');
         const saveRewardBtn = document.getElementById('save-reward-btn');
         const leaderboardList = document.getElementById('leaderboard-list');
+        const leaderboardStatus = document.getElementById('leaderboard-status');
         const playerNameInput = document.getElementById('player-name');
         const saveNameBtn = document.getElementById('save-name-btn');
         const userIdContainer = document.getElementById('user-id-container');
+        const jackpotOverlay = document.getElementById('jackpot-overlay');
+        const jackpotPoints = document.getElementById('jackpot-points');
+        const jackpotClose = document.getElementById('jackpot-close');
+        const notification = document.getElementById('notification');
         
         // Countdown elements
         const daysValue = document.getElementById('days-value');
@@ -1103,26 +1418,83 @@
         let isEventEnded = false;
         let userId = '';
         let lastWheelRotation = 0;
+        let mongoClient = null;
+        let mongoDb = null;
+        let leaderboardCollection = null;
 
         // Initialize the game
-        function initGame() {
-            createWheel();
-            setupUserId();
-            loadGameState();
-            startRefreshTimer();
-            startEventCountdown();
-            updateStats();
-            loadLeaderboard();
-            
-            // Check if player name is saved
-            const savedName = localStorage.getItem('playerName');
-            if (savedName) {
-                playerName = savedName;
-                playerNameInput.value = savedName;
+        async function initGame() {
+            try {
+                await setupMongoDB();
+                createWheel();
+                setupUserId();
+                await loadGameState();
+                startRefreshTimer();
+                startEventCountdown();
+                updateStats();
+                await loadLeaderboard();
+                
+                // Check if player name is saved
+                const savedName = localStorage.getItem('playerName');
+                if (savedName) {
+                    playerName = savedName;
+                    playerNameInput.value = savedName;
+                }
+                
+                // Setup redeem options
+                setupRedeemOptions();
+                
+                // Setup jackpot close
+                jackpotClose.addEventListener('click', () => {
+                    jackpotOverlay.classList.remove('show');
+                });
+                
+                // Setup sound effect preloading
+                Object.values(SOUNDS).forEach(sound => {
+                    sound.load();
+                });
+                
+                showNotification("Đã kết nối cơ sở dữ liệu thành công!");
+            } catch (error) {
+                console.error("Error initializing game:", error);
+                leaderboardStatus.textContent = "Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.";
+                showNotification("Lỗi kết nối cơ sở dữ liệu. Sử dụng dữ liệu offline.");
             }
+        }
+
+        // Setup MongoDB Atlas connection
+        async function setupMongoDB() {
+            try {
+                // Initialize the App Client
+                const app = new Realm.App({ id: APP_ID });
+                
+                // Authenticate anonymously
+                const credentials = Realm.Credentials.anonymous();
+                const user = await app.logIn(credentials);
+                
+                // Get a reference to the database
+                mongoClient = user.mongoClient("mongodb-atlas");
+                mongoDb = mongoClient.db("telegram_bot_db");
+                
+                // Get a reference to the collection
+                leaderboardCollection = mongoDb.collection("wheel_game_leaderboard");
+                
+                console.log("MongoDB Atlas connection established!");
+                return true;
+            } catch (err) {
+                console.error("Failed to connect to MongoDB Atlas", err);
+                return false;
+            }
+        }
+
+        // Show notification
+        function showNotification(message, duration = 3000) {
+            notification.textContent = message;
+            notification.classList.add('show');
             
-            // Setup redeem options
-            setupRedeemOptions();
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
         }
 
         // Setup unique user ID
@@ -1149,9 +1521,38 @@
             wheel.innerHTML = '';
             wheelDots.innerHTML = '';
             
-            // Select sections for the wheel (always use all 12 sections)
-            const sectionsToUse = wheelSections;
-            const numSections = sectionsToUse.length;
+            // Use only 12 sections for the wheel (keep the original structure)
+            // But we'll select from all available sections including jackpot
+            const sectionsPool = wheelSections.slice(); // Clone the array
+            const numSections = 12; // Fixed number of sections
+            
+            // Initialize the wheel sections array
+            let sectionsToUse = [];
+            
+            // Calculate total probability for normalization
+            const totalProbability = sectionsPool.reduce((sum, section) => sum + section.probability, 0);
+            
+            // First, let's select the sections weighted by their probability
+            for (let i = 0; i < numSections; i++) {
+                // Normalize probabilities for the remaining pool
+                const remainingTotal = sectionsPool.reduce((sum, section) => sum + section.probability, 0);
+                
+                let random = Math.random() * remainingTotal;
+                let cumulativeProbability = 0;
+                let selectedIndex = 0;
+                
+                for (let j = 0; j < sectionsPool.length; j++) {
+                    cumulativeProbability += sectionsPool[j].probability;
+                    if (random <= cumulativeProbability) {
+                        selectedIndex = j;
+                        break;
+                    }
+                }
+                
+                // Add the selected section to our wheel and remove from the pool
+                sectionsToUse.push(sectionsPool[selectedIndex]);
+                sectionsPool.splice(selectedIndex, 1);
+            }
             
             // Create wheel sections
             for (let i = 0; i < numSections; i++) {
@@ -1171,6 +1572,13 @@
                 const iconElement = document.createElement('div');
                 iconElement.className = 'wheel-section-icon';
                 iconElement.textContent = section.icon;
+                
+                // Highlight jackpot sections with glow effect
+                if (section.jackpot) {
+                    iconElement.style.fontSize = '28px';
+                    iconElement.style.filter = 'drop-shadow(0 0 5px gold)';
+                    sectionElement.style.background = 'linear-gradient(135deg, #fff9c4 0%, #f0d6a3 100%)';
+                }
                 
                 // Create text
                 const textElement = document.createElement('div');
@@ -1208,6 +1616,8 @@
         function spinWheel() {
             if (isSpinning || spinsLeft <= 0 || isEventEnded) return;
             
+            SOUNDS.spin.play();
+            
             isSpinning = true;
             spinsLeft--;
             updateStats();
@@ -1238,7 +1648,7 @@
             
             // Ensure a full rotation (at least 2 times) plus the target angle
             // and adjust for previous position
-            const fullRotations = 2 * 360; // 2 full rotations (reduced from 5)
+            const fullRotations = 2 * 360; // 2 full rotations
             const destinationAngle = fullRotations + targetAngle;
             
             // Remove any existing transition
@@ -1252,9 +1662,25 @@
             wheel.offsetHeight;
             
             // Now add the transition and spin to the destination
-            // Reduced from 8s to 3s as requested
             wheel.style.transition = 'transform 3s cubic-bezier(0.17, 0.89, 0.24, 1.0)';
             wheel.style.transform = `rotate(${destinationAngle}deg)`;
+            
+            // Add some visual effects during spinning
+            anime({
+                targets: '.wheel-center',
+                scale: [1, 1.1, 1],
+                duration: 3000,
+                easing: 'easeInOutQuad'
+            });
+            
+            // Pulsate the wheel pointer
+            anime({
+                targets: '.wheel-pointer',
+                scale: [1, 1.2, 1, 1.2, 1],
+                opacity: [1, 0.8, 1, 0.8, 1],
+                duration: 3000,
+                easing: 'easeInOutQuad'
+            });
             
             // Save the current rotation for next spin
             lastWheelRotation = destinationAngle % 360;
@@ -1268,13 +1694,14 @@
                 spinBtn.disabled = false;
                 processResult(winningSection);
                 saveGameState();
-            }, 3000); // Reduced from 8000 to 3000 as requested
+            }, 3000);
         }
 
         // Process the result after spinning
         function processResult(section) {
             let pointsEarned = section.points;
             let message = '';
+            let isJackpot = false;
             
             // Apply double if applicable
             if (nextSpinDouble) {
@@ -1284,29 +1711,44 @@
             }
             
             // Process special effects
-            if (section.extraSpin) {
+            if (section.jackpot) {
+                isJackpot = true;
+                message += `<strong>JACKPOT ĐẶC BIỆT!</strong> Bạn nhận được ${pointsEarned} điểm! `;
+                SOUNDS.jackpot.play();
+                
+                // Show jackpot overlay
+                jackpotPoints.textContent = `+${pointsEarned} điểm`;
+                setTimeout(() => {
+                    jackpotOverlay.classList.add('show');
+                }, 500);
+            } else if (section.extraSpin) {
                 spinsLeft++;
                 updateStats();
                 message += `<strong>${section.name}!</strong> Bạn nhận được thêm 1 lượt quay! `;
-            }
-            
-            if (section.loseTurn) {
+                SOUNDS.win.play();
+            } else if (section.loseTurn) {
                 message += `<strong>${section.name}!</strong> Thật tiếc, bạn mất lượt này. `;
+                SOUNDS.lose.play();
             } else if (section.randomCard) {
-                // Random card gives points between 5-50
-                const randomPoints = Math.floor(Math.random() * 46) + 5;
+                // Random card gives points between 10-200 (increased range)
+                const randomPoints = Math.floor(Math.random() * 191) + 10;
                 pointsEarned = randomPoints;
                 message += `<strong>${section.name}!</strong> Bạn nhận được ${pointsEarned} điểm! `;
+                SOUNDS.win.play();
             } else if (section.doubleNext) {
                 nextSpinDouble = true;
                 message += `<strong>${section.name}!</strong> Lượt quay tiếp theo sẽ được nhân đôi điểm! `;
+                SOUNDS.win.play();
             } else {
                 if (pointsEarned > 0) {
                     message += `<strong>${section.name}!</strong> Bạn nhận được ${pointsEarned} điểm! `;
+                    SOUNDS.win.play();
                 } else if (pointsEarned < 0) {
                     message += `<strong>${section.name}!</strong> Bạn mất ${Math.abs(pointsEarned)} điểm! `;
+                    SOUNDS.lose.play();
                 } else {
                     message += `<strong>${section.name}!</strong> `;
+                    SOUNDS.click.play();
                 }
             }
             
@@ -1315,12 +1757,20 @@
             if (points < 0) points = 0;
             updateStats();
             
-            // Show the result
-            showResult(section.icon, message);
+            // Highlight the points value with animation
+            if (pointsEarned !== 0) {
+                const pointsElement = document.getElementById('points-value');
+                pointsElement.classList.remove('pulse');
+                void pointsElement.offsetWidth; // Force reflow
+                pointsElement.classList.add('pulse');
+            }
+            
+            // Show the result with enhanced effects
+            showResult(section.icon, message, pointsEarned, isJackpot);
             
             // Show celebration for big wins
-            if (pointsEarned >= 60) {
-                createConfetti();
+            if (pointsEarned >= 60 || isJackpot) {
+                createConfetti(pointsEarned >= 500 ? 200 : 50);
             }
             
             // Update leaderboard
@@ -1330,41 +1780,82 @@
             updateRedeemButtonState();
         }
 
-        // Show the result message
-        function showResult(icon, message) {
-            resultContainer.innerHTML = `
-                <div class="result-title">Kết quả quay thưởng</div>
+        // Show the result message with enhanced effects
+        function showResult(icon, message, pointsEarned = 0, isJackpot = false) {
+            let resultHtml = `
+                <div class="result-title">${isJackpot ? '🎊 JACKPOT! 🎊' : 'Kết quả quay thưởng'}</div>
                 <div class="result-icon">${icon}</div>
                 <div class="result-message">${message}</div>
             `;
             
-            resultContainer.classList.add('bounce');
-            setTimeout(() => {
-                resultContainer.classList.remove('bounce');
-            }, 1000);
+            resultContainer.innerHTML = resultHtml;
+            resultContainer.classList.remove('bounce', 'highlight');
+            void resultContainer.offsetWidth; // Force reflow
+            
+            // Apply different effects based on result
+            if (isJackpot) {
+                resultContainer.classList.add('highlight');
+                resultContainer.classList.add('bounce');
+            } else if (pointsEarned > 0) {
+                resultContainer.classList.add('highlight');
+            } else if (pointsEarned < 0) {
+                resultContainer.classList.add('shake');
+                setTimeout(() => {
+                    resultContainer.classList.remove('shake');
+                }, 500);
+            } else {
+                resultContainer.classList.add('bounce');
+            }
         }
 
-        // Create confetti effect
-        function createConfetti() {
-            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
+        // Create enhanced confetti effect
+        function createConfetti(count = 50) {
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#fd0'];
             
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < count; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
                 confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.top = `-20px`;
+                confetti.style.width = `${5 + Math.random() * 10}px`;
+                confetti.style.height = `${5 + Math.random() * 10}px`;
                 confetti.style.opacity = '1';
                 document.body.appendChild(confetti);
                 
-                // Animate the confetti
-                confetti.style.animation = `confettiFall ${1 + Math.random() * 2}s forwards`;
+                // Add more variety to confetti
+                if (Math.random() > 0.5) {
+                    confetti.style.borderRadius = '50%';
+                } else {
+                    confetti.style.borderRadius = '0';
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                }
                 
-                // Remove after animation completes
-                setTimeout(() => {
-                    if (document.body.contains(confetti)) {
-                        document.body.removeChild(confetti);
+                // Animate the confetti with more variety
+                const duration = 1 + Math.random() * 3;
+                const delay = Math.random() * 1;
+                
+                // Use anime.js for more complex animation
+                anime({
+                    targets: confetti,
+                    translateY: window.innerHeight + 100,
+                    translateX: [
+                        { value: -50 + Math.random() * 100, duration: duration * 500 },
+                        { value: -100 + Math.random() * 200, duration: duration * 500 }
+                    ],
+                    rotate: Math.random() * 720,
+                    opacity: [
+                        { value: 1, duration: duration * 400 },
+                        { value: 0, duration: duration * 600 }
+                    ],
+                    delay: delay * 1000,
+                    easing: 'easeOutQuad',
+                    complete: function() {
+                        if (document.body.contains(confetti)) {
+                            document.body.removeChild(confetti);
+                        }
                     }
-                }, 3000);
+                });
             }
         }
 
@@ -1373,6 +1864,7 @@
             redeemOptions.forEach(option => {
                 option.addEventListener('click', () => {
                     if (isEventEnded) return;
+                    SOUNDS.click.play();
                     
                     const requiredPoints = parseInt(option.getAttribute('data-points'));
                     
@@ -1388,6 +1880,16 @@
                         redeemConfirmBtn.disabled = false;
                     } else {
                         showResult('⚠️', `Bạn cần ít nhất ${requiredPoints} điểm để đổi phần thưởng này!`);
+                        anime({
+                            targets: option,
+                            translateX: [
+                                { value: -5, duration: 50 },
+                                { value: 5, duration: 50 },
+                                { value: -5, duration: 50 },
+                                { value: 5, duration: 50 },
+                                { value: 0, duration: 50 }
+                            ]
+                        });
                     }
                 });
             });
@@ -1409,12 +1911,15 @@
             if (!selectedRedeemOption && hasEnoughPoints) {
                 redeemConfirmBtn.disabled = false;
                 redeemConfirmBtn.textContent = 'CHỌN MỘT MỨC';
+                redeemConfirmBtn.classList.add('pulse');
             } else if (selectedRedeemOption) {
                 redeemConfirmBtn.disabled = false;
                 redeemConfirmBtn.textContent = 'ĐỔI NGAY';
+                redeemConfirmBtn.classList.remove('pulse');
             } else {
                 redeemConfirmBtn.disabled = true;
                 redeemConfirmBtn.textContent = 'KHÔNG ĐỦ ĐIỂM';
+                redeemConfirmBtn.classList.remove('pulse');
             }
         }
 
@@ -1426,15 +1931,18 @@
 
         // Start the refresh timer for spins
         function startRefreshTimer() {
-            // Get next hour's timestamp
+            // Get next 30-minute timestamp (changed from 1 hour)
             const now = new Date();
-            const nextHour = new Date(now);
-            nextHour.setHours(now.getHours() + 1);
-            nextHour.setMinutes(0);
-            nextHour.setSeconds(0);
-            nextHour.setMilliseconds(0);
+            const minutes = now.getMinutes();
+            const nextRefresh = new Date(now);
             
-            let timeLeft = nextHour - now;
+            if (minutes < 30) {
+                nextRefresh.setMinutes(30, 0, 0);
+            } else {
+                nextRefresh.setHours(now.getHours() + 1, 0, 0, 0);
+            }
+            
+            let timeLeft = nextRefresh - now;
             
             // Update timer display
             function updateTimer() {
@@ -1450,7 +1958,32 @@
                     updateStats();
                     saveGameState();
                     
-                    // Restart timer for next hour
+                    // Show reset notification
+                    showNotification("Lượt quay đã được làm mới!");
+                    
+                    // Add special reset effect
+                    const resetIcon = document.createElement('span');
+                    resetIcon.className = 'reset-icon';
+                    resetIcon.textContent = '🔄';
+                    spinsValue.prepend(resetIcon);
+                    
+                    anime({
+                        targets: '#spins-value',
+                        backgroundColor: [
+                            { value: 'rgba(255, 235, 59, 0.5)', duration: 500 },
+                            { value: 'transparent', duration: 500 }
+                        ],
+                        scale: [1, 1.2, 1],
+                        duration: 1000
+                    });
+                    
+                    setTimeout(() => {
+                        if (spinsValue.contains(resetIcon)) {
+                            spinsValue.removeChild(resetIcon);
+                        }
+                    }, 3000);
+                    
+                    // Restart timer for next refresh
                     startRefreshTimer();
                 }
             }
@@ -1495,6 +2028,13 @@
                 hoursValue.textContent = String(hours).padStart(2, '0');
                 minutesValue.textContent = String(minutes).padStart(2, '0');
                 secondsValue.textContent = String(seconds).padStart(2, '0');
+                
+                // Add pulse effect when time is running low (last 24 hours)
+                if (days === 0 && hours < 24) {
+                    document.querySelectorAll('.countdown-value').forEach(el => {
+                        el.classList.add('glow');
+                    });
+                }
             }
             
             // Update immediately and then every second
@@ -1509,6 +2049,8 @@
                 showResult('⚠️', 'Vui lòng chọn một mức quy đổi!');
                 return;
             }
+            
+            SOUNDS.reward.play();
             
             const amount = parseInt(selectedRedeemOption.getAttribute('data-amount'));
             const requiredPoints = parseInt(selectedRedeemOption.getAttribute('data-points'));
@@ -1530,8 +2072,15 @@
             rewardCode.textContent = uniqueCode;
             rewardDate.textContent = new Date().toLocaleDateString('vi-VN');
             
-            // Show reward card
+            // Show reward card with animation
             rewardCard.style.display = 'block';
+            anime({
+                targets: '#reward-card',
+                scale: [0.9, 1],
+                opacity: [0, 1],
+                duration: 500,
+                easing: 'easeOutExpo'
+            });
             
             // Reset selection
             selectedRedeemOption.classList.remove('selected');
@@ -1546,6 +2095,9 @@
             
             // Update redeem button state
             updateRedeemButtonState();
+            
+            // Create mini celebration
+            createConfetti(20);
         }
 
         // Generate a unique code for rewards
@@ -1567,6 +2119,8 @@
 
         // Save reward card as image (or provide download mechanism)
         function saveRewardCard() {
+            SOUNDS.click.play();
+            
             alert('Đã lưu thẻ quà tặng! Hãy gửi mã này cho Hiếu Gà để nhận quà nhé!');
             
             // In a real implementation, this would capture and download the reward card as an image
@@ -1582,8 +2136,8 @@
             */
         }
 
-        // Save game state to localStorage
-        function saveGameState() {
+        // Save game state to localStorage and MongoDB
+        async function saveGameState() {
             const gameState = {
                 points: points,
                 spinsLeft: spinsLeft,
@@ -1592,131 +2146,209 @@
                 wheelRotation: lastWheelRotation
             };
             
+            // Save to localStorage
             localStorage.setItem('wheelGameState', JSON.stringify(gameState));
             
-            // Also save to server (for the leaderboard)
-            saveScoreToServer();
+            // Also save to MongoDB
+            try {
+                if (leaderboardCollection) {
+                    await saveScoreToMongoDB();
+                }
+            } catch (err) {
+                console.error("Error saving to MongoDB:", err);
+            }
         }
 
         // Load game state from localStorage
-        function loadGameState() {
+        async function loadGameState() {
             const savedState = localStorage.getItem('wheelGameState');
             if (savedState) {
                 const gameState = JSON.parse(savedState);
                 
-                // Check if state is from current hour
+                // Check if state is from current 30-minute period
                 const now = new Date();
                 const stateTime = new Date(gameState.lastUpdate);
                 
-                if (now.getHours() === stateTime.getHours() && 
-                    now.getDate() === stateTime.getDate() && 
-                    now.getMonth() === stateTime.getMonth() && 
-                    now.getFullYear() === stateTime.getFullYear()) {
-                    
+                // Calculate if they're in the same 30-minute period
+                const nowPeriod = Math.floor(now.getHours() * 2 + now.getMinutes() / 30);
+                const statePeriod = Math.floor(stateTime.getHours() * 2 + stateTime.getMinutes() / 30);
+                
+                const sameDay = now.getDate() === stateTime.getDate() && 
+                                now.getMonth() === stateTime.getMonth() && 
+                                now.getFullYear() === stateTime.getFullYear();
+                
+                if (sameDay && nowPeriod === statePeriod) {
                     points = gameState.points || 0;
                     spinsLeft = gameState.spinsLeft !== undefined ? gameState.spinsLeft : 50;
                     nextSpinDouble = gameState.nextSpinDouble || false;
                     lastWheelRotation = gameState.wheelRotation || 0;
                 } else {
-                    // Reset spins for new hour but keep points
+                    // Reset spins for new period but keep points
                     points = gameState.points || 0;
                     spinsLeft = 50;
                     nextSpinDouble = false;
                     lastWheelRotation = 0;
                 }
             }
+            
+            // Try to fetch the score from MongoDB (which might be higher)
+            try {
+                if (leaderboardCollection) {
+                    await loadScoreFromMongoDB();
+                }
+            } catch (err) {
+                console.error("Error loading from MongoDB:", err);
+            }
+        }
+
+        // Load score from MongoDB
+        async function loadScoreFromMongoDB() {
+            try {
+                const playerDoc = await leaderboardCollection.findOne({ userId: userId });
+                if (playerDoc && playerDoc.score > points) {
+                    points = playerDoc.score;
+                    updateStats();
+                }
+            } catch (err) {
+                console.error("Error loading score from MongoDB:", err);
+            }
         }
 
         // Save player name
-        function savePlayerName() {
+        async function savePlayerName() {
             const newName = playerNameInput.value.trim();
             if (newName) {
+                SOUNDS.click.play();
+                
                 playerName = newName;
                 localStorage.setItem('playerName', playerName);
                 
-                // Save to server
-                saveScoreToServer();
-                
-                // Update leaderboard display
-                loadLeaderboard();
+                // Save to MongoDB
+                try {
+                    if (leaderboardCollection) {
+                        await saveScoreToMongoDB();
+                        await loadLeaderboard(); // Refresh leaderboard to show new name
+                    }
+                } catch (err) {
+                    console.error("Error saving name to MongoDB:", err);
+                }
                 
                 // Show confirmation
                 showResult('✅', `Tên "${playerName}" đã được lưu thành công!`);
+                showNotification(`Tên đã cập nhật thành "${playerName}"!`);
             }
         }
 
-        // Save score to server (for leaderboard)
-        function saveScoreToServer() {
-            // In a real implementation, this would be an API call to save the score
-            // For this demo, we'll use localStorage to simulate a server
+        // Save score to MongoDB
+        async function saveScoreToMongoDB() {
+            if (!leaderboardCollection) return;
             
-            // Add timestamp to see when it was last updated
-            const scoreData = {
-                userId: userId,
-                name: playerName,
-                score: points,
-                lastUpdate: Date.now()
-            };
-            
-            // Get current leaderboard
-            let leaderboard = localStorage.getItem('globalLeaderboard');
-            if (leaderboard) {
-                leaderboard = JSON.parse(leaderboard);
-            } else {
-                leaderboard = [];
-            }
-            
-            // Update or add the score
-            const existingIndex = leaderboard.findIndex(entry => entry.userId === userId);
-            if (existingIndex !== -1) {
-                leaderboard[existingIndex] = scoreData;
-            } else {
-                leaderboard.push(scoreData);
-            }
-            
-            // Save back to localStorage
-            localStorage.setItem('globalLeaderboard', JSON.stringify(leaderboard));
-        }
-
-        // Load leaderboard from "server"
-        function loadLeaderboard() {
-            // In a real implementation, this would be an API call to get the leaderboard
-            let leaderboard = localStorage.getItem('globalLeaderboard');
-            if (leaderboard) {
-                leaderboard = JSON.parse(leaderboard);
-            } else {
-                // Create sample data if none exists
-                leaderboard = [
-                    { userId: "sample1", name: "Vô Địch", score: 2800, lastUpdate: Date.now() },
-                    { userId: "sample2", name: "Tuấn Anh", score: 2200, lastUpdate: Date.now() },
-                    { userId: "sample3", name: "Mai Phương", score: 1800, lastUpdate: Date.now() },
-                    { userId: "sample4", name: "Bảo Long", score: 1500, lastUpdate: Date.now() },
-                    { userId: "sample5", name: "Thu Hà", score: 1200, lastUpdate: Date.now() }
-                ];
-                localStorage.setItem('globalLeaderboard', JSON.stringify(leaderboard));
-            }
-            
-            // Make sure our current score is in there
-            let currentUserEntry = leaderboard.find(entry => entry.userId === userId);
-            if (!currentUserEntry && points > 0) {
-                currentUserEntry = {
+            try {
+                const playerData = {
                     userId: userId,
                     name: playerName,
                     score: points,
-                    lastUpdate: Date.now()
+                    lastUpdate: new Date()
                 };
-                leaderboard.push(currentUserEntry);
-                localStorage.setItem('globalLeaderboard', JSON.stringify(leaderboard));
+                
+                const filter = { userId: userId };
+                const updateOperation = {
+                    $set: playerData,
+                    $setOnInsert: { createdAt: new Date() }
+                };
+                
+                const options = { upsert: true };
+                
+                await leaderboardCollection.updateOne(filter, updateOperation, options);
+                console.log("Score saved to MongoDB");
+                
+                return true;
+            } catch (err) {
+                console.error("Error saving score to MongoDB:", err);
+                return false;
             }
+        }
+
+        // Load leaderboard from MongoDB
+        async function loadLeaderboard() {
+            leaderboardList.innerHTML = '<li class="leaderboard-item"><div class="spinner"></div></li>';
+            leaderboardStatus.textContent = 'Đang tải dữ liệu...';
             
-            // Sort and update display
-            leaderboard.sort((a, b) => b.score - a.score);
-            updateLeaderboardDisplay(leaderboard);
+            try {
+                if (leaderboardCollection) {
+                    // Find top 10 scores
+                    let leaderboard = await leaderboardCollection.find({})
+                                          .sort({ score: -1 })
+                                          .limit(10)
+                                          .toArray();
+                    
+                    // If there's no data or error, use local data
+                    if (!leaderboard || leaderboard.length === 0) {
+                        throw new Error("No leaderboard data found");
+                    }
+                    
+                    // Make sure our current score is in there
+                    let currentUserInList = leaderboard.some(entry => entry.userId === userId);
+                    if (!currentUserInList && points > 0) {
+                        // Add user's data to MongoDB
+                        await saveScoreToMongoDB();
+                        
+                        // Refresh leaderboard
+                        leaderboard = await leaderboardCollection.find({})
+                                           .sort({ score: -1 })
+                                           .limit(10)
+                                           .toArray();
+                    }
+                    
+                    // Update the leaderboard display
+                    updateLeaderboardDisplay(leaderboard);
+                    leaderboardStatus.textContent = `Cập nhật lúc: ${new Date().toLocaleTimeString()}`;
+                } else {
+                    throw new Error("Leaderboard collection not available");
+                }
+            } catch (err) {
+                console.error("Error loading leaderboard from MongoDB:", err);
+                leaderboardStatus.textContent = 'Không thể tải dữ liệu. Đang sử dụng dữ liệu offline.';
+                
+                // Fallback to local data if MongoDB fails
+                const localLeaderboard = [
+                    { userId: "sample1", name: "Vô Địch", score: 2800 },
+                    { userId: "sample2", name: "Tuấn Anh", score: 2200 },
+                    { userId: "sample3", name: "Mai Phương", score: 1800 },
+                    { userId: "sample4", name: "Bảo Long", score: 1500 },
+                    { userId: "sample5", name: "Thu Hà", score: 1200 }
+                ];
+                
+                // Add current player to local leaderboard if they have points
+                if (points > 0) {
+                    const playerEntry = {
+                        userId: userId,
+                        name: playerName,
+                        score: points
+                    };
+                    
+                    // Add or update player in local leaderboard
+                    const playerIndex = localLeaderboard.findIndex(entry => entry.userId === userId);
+                    if (playerIndex !== -1) {
+                        localLeaderboard[playerIndex] = playerEntry;
+                    } else {
+                        localLeaderboard.push(playerEntry);
+                    }
+                    
+                    // Sort the leaderboard
+                    localLeaderboard.sort((a, b) => b.score - a.score);
+                }
+                
+                updateLeaderboardDisplay(localLeaderboard);
+            }
         }
 
         // Update leaderboard display
         function updateLeaderboardDisplay(leaderboard) {
             leaderboardList.innerHTML = '';
+            
+            // Sort the leaderboard
+            leaderboard.sort((a, b) => b.score - a.score);
             
             // Limit to top 10
             const topScores = leaderboard.slice(0, 10);
@@ -1730,8 +2362,16 @@
                     li.style.backgroundColor = 'rgba(255, 235, 59, 0.2)';
                 }
                 
+                // Add extra effects for top 3 places
+                let specialEffect = '';
+                if (index === 0) {
+                    specialEffect = 'float';
+                } else if (index === 1 || index === 2) {
+                    specialEffect = 'pulse';
+                }
+                
                 li.innerHTML = `
-                    <div class="leaderboard-rank">${index + 1}</div>
+                    <div class="leaderboard-rank ${index < 3 ? specialEffect : ''}">${index + 1}</div>
                     <div class="leaderboard-info">
                         <div class="leaderboard-name">${player.name}${isCurrentPlayer ? ' (Bạn)' : ''}</div>
                     </div>
@@ -1740,12 +2380,28 @@
                 
                 leaderboardList.appendChild(li);
             });
+            
+            // Animation for leaderboard items
+            anime({
+                targets: '.leaderboard-item',
+                translateX: [20, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(100),
+                easing: 'easeOutQuad'
+            });
         }
 
         // Event listeners
         spinBtn.addEventListener('click', spinWheel);
         saveRewardBtn.addEventListener('click', saveRewardCard);
         saveNameBtn.addEventListener('click', savePlayerName);
+
+        // Refresh leaderboard periodically
+        setInterval(async () => {
+            if (leaderboardCollection) {
+                await loadLeaderboard();
+            }
+        }, 60000); // Every minute
 
         // Initialize the game when the page loads
         window.addEventListener('load', initGame);
