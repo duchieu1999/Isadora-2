@@ -1836,7 +1836,7 @@
                 SOUNDS.lose.play();
             } else if (section.randomCard) {
                 // Random card gives points between 10-200 (increased range)
-                const randomPoints = Math.floor(Math.random() * 191) + 10;
+                const randomPoints = Math.floor(Math.random() * 81) + 10;
                 pointsEarned = randomPoints;
                 message += `<strong>${section.name}!</strong> Bạn nhận được ${pointsEarned} điểm! `;
                 SOUNDS.win.play();
