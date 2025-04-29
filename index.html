@@ -309,6 +309,19 @@
             z-index: 100;
         }
         
+        #shieldIndicator {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            background: var(--control-bg);
+            padding: 10px 15px;
+            border-radius: 15px;
+            color: var(--text-color);
+            font-weight: bold;
+            font-size: 16px;
+            display: none;
+        }
+        
         @media (max-width: 767px) {
             #joystickContainer {
                 bottom: 80px;
@@ -356,9 +369,10 @@
                 </svg>
                 <span id="scoreValue">0</span>
             </div>
-            <div id="connectionStatus">Chế độ Offline</div>
+            <div id="connectionStatus">Chế độ Vô Tận</div>
             <div id="leaderboardButton">Thành tích</div>
             <div id="gameMessage"></div>
+            <div id="shieldIndicator">Khiên bảo vệ: <span id="shieldTime">0</span>s</div>
         </div>
         
         <div id="leaderboardPanel">
@@ -390,15 +404,29 @@
 
         // Các thiết lập game
         const GAME_CONFIG = {
-            MAP_WIDTH: 10000,           // Bản đồ rộng hơn (gần như vô tận)
-            MAP_HEIGHT: 10000,          // Bản đồ rộng hơn (gần như vô tận)
-            PLAYER_SPEED: 8,            // Tăng tốc độ xe tăng
-            FLAG_COUNT: 100,            // Tăng số lượng cờ
-            COLLECT_DISTANCE: 100,      // Tăng khoảng cách có thể nhặt cờ
+            CHUNK_SIZE: 1000,           // Kích thước mỗi chunk của bản đồ
+            ACTIVE_CHUNKS_RADIUS: 3,    // Số chunk hoạt động xung quanh người chơi
+            PLAYER_SPEED: 12,           // Tăng tốc độ xe tăng
+            COLLECT_DISTANCE: 120,      // Tăng khoảng cách có thể nhặt cờ
             FIREWORK_COUNT: 30,
             SEED: Date.now(),           // Seed cho việc tạo vị trí ngẫu nhiên giống nhau
-            TANK_SCALE: 0.4,            // Tăng kích thước xe tăng
-            FLAG_SCALE: 0.7,            // Tỉ lệ kích thước lá cờ (nhỏ hơn)
+            TANK_SCALE: 0.25,           // Giảm kích thước xe tăng
+            TANK_ROTATION_OFFSET: Math.PI/4, // Xoay tank thêm 45 độ
+            FLAG_SCALE: 0.5,            // Tỉ lệ kích thước lá cờ (nhỏ hơn)
+            ITEM_SPAWN_CHANCE: {        // Tỉ lệ xuất hiện các item
+                FLAG: 0.05,             // Cờ rất hiếm (5%)
+                GOLD: 0.3,              // Vàng phổ biến (30%)
+                BOMB: 0.1,              // Bom ít phổ biến (10%)
+                SHIELD: 0.08            // Khiên hiếm (8%)
+            },
+            ITEM_SPAWN_INTERVAL: 2000,  // Thời gian kiểm tra spawn (2 giây)
+            ITEM_VALUE: {               // Giá trị điểm của các item
+                FLAG: 1,
+                GOLD: 100,
+                BOMB: -50,
+                SHIELD: 0
+            },
+            MAX_ITEMS_PER_CHUNK: 10     // Số lượng item tối đa mỗi chunk
         };
 
         // Class người chơi
@@ -415,33 +443,34 @@
             }
         }
 
-        // Class cờ
-        class Flag {
-            constructor(id, x, y) {
+        // Item class
+        class Item {
+            constructor(id, type, x, y) {
                 this.id = id;
+                this.type = type; // 'FLAG', 'GOLD', 'BOMB', 'SHIELD'
                 this.x = x;
                 this.y = y;
                 this.collected = false;
                 this.collectedBy = null;
             }
         }
-
-        // Lớp quản lý game
+        
         class Game {
             constructor() {
                 this.app = null;
                 this.gameStarted = false;
                 this.player = null;
                 this.players = {};
-                this.flags = [];
+                this.items = [];
                 this.mapContainer = null;
                 this.backgroundContainer = null;
                 this.decorationContainer = null;
                 this.playerContainer = null;
-                this.flagContainer = null;
+                this.itemContainer = null;
                 this.playerSprites = {};
-                this.flagSprites = {};
+                this.itemSprites = {};
                 this.lastTimestamp = 0;
+                this.lastItemGeneration = 0;
                 this.joystickActive = false;
                 this.joystickAngle = 0;
                 this.joystickStrength = 0;
@@ -451,6 +480,11 @@
                 this.randomGenerator = null;
                 this.highScore = 0;
                 this.playerTexture = null;
+                this.activeChunks = new Set();
+                this.chunkDecorations = {};
+                this.nextItemId = 0;
+                this.shieldActive = false;
+                this.shieldEndTime = 0;
             }
 
             // Khởi tạo game
@@ -479,8 +513,8 @@
                 this.mapContainer.addChild(this.decorationContainer);
 
                 // Tạo container cho các lá cờ
-                this.flagContainer = new PIXI.Container();
-                this.mapContainer.addChild(this.flagContainer);
+                this.itemContainer = new PIXI.Container();
+                this.mapContainer.addChild(this.itemContainer);
 
                 // Tạo container cho người chơi - đảm bảo ở trên cùng
                 this.playerContainer = new PIXI.Container();
@@ -511,7 +545,7 @@
                     this.highScore = parseInt(localStorage.getItem('highScore') || '0');
 
                     // Cập nhật trạng thái kết nối
-                    document.getElementById('connectionStatus').textContent = 'Chế độ Offline';
+                    document.getElementById('connectionStatus').textContent = 'Chế độ Vô Tận';
 
                     // Bắt đầu vòng lặp game
                     this.app.ticker.add(this.gameLoop.bind(this));
@@ -574,108 +608,28 @@
                 };
             }
 
-            // Tạo bản đồ game
+            // Tạo bản đồ game vô tận
             createMap() {
-                // Vẽ nền cỏ cho bản đồ
+                // Vẽ nền cỏ cho bản đồ (nền cỏ sẽ được vô hạn)
                 const grass = new PIXI.Graphics();
                 grass.beginFill(0x5EB45E);
-                grass.drawRect(0, 0, GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT);
+                grass.drawRect(-GAME_CONFIG.CHUNK_SIZE * 5, -GAME_CONFIG.CHUNK_SIZE * 5, 
+                               GAME_CONFIG.CHUNK_SIZE * 10, GAME_CONFIG.CHUNK_SIZE * 10);
                 grass.endFill();
                 this.backgroundContainer.addChild(grass);
 
-                // Tạo các yếu tố trang trí trên bản đồ
-                this.createDecorations();
-
-                // Tạo các lá cờ trên bản đồ
-                this.createFlags();
-            }
-
-            // Tạo các yếu tố trang trí trên bản đồ
-            createDecorations() {
-                // Tạo các cây cối
-                for (let i = 0; i < 300; i++) {
-                    const treeSize = this.randomGenerator.nextInt(40, 80);
-                    const treeX = this.randomGenerator.nextInt(100, GAME_CONFIG.MAP_WIDTH - 100);
-                    const treeY = this.randomGenerator.nextInt(100, GAME_CONFIG.MAP_HEIGHT - 100);
-                    
-                    const tree = new PIXI.Graphics();
-                    // Thân cây
-                    tree.beginFill(0x8B4513);
-                    tree.drawRect(treeX - 5, treeY, 10, 25);
-                    tree.endFill();
-                    
-                    // Tán lá
-                    tree.beginFill(0x2E8B57);
-                    tree.drawCircle(treeX, treeY - 20, treeSize / 2);
-                    tree.endFill();
-                    
-                    this.decorationContainer.addChild(tree);
-                }
-                
-                // Tạo các bụi cây nhỏ
-                for (let i = 0; i < 500; i++) {
-                    const bushSize = this.randomGenerator.nextInt(15, 30);
-                    const bushX = this.randomGenerator.nextInt(50, GAME_CONFIG.MAP_WIDTH - 50);
-                    const bushY = this.randomGenerator.nextInt(50, GAME_CONFIG.MAP_HEIGHT - 50);
-                    
-                    const bush = new PIXI.Graphics();
-                    bush.beginFill(0x3CB371);
-                    bush.drawCircle(bushX, bushY, bushSize / 2);
-                    bush.endFill();
-                    
-                    this.decorationContainer.addChild(bush);
-                }
-                
-                // Tạo các hoa
-                for (let i = 0; i < 400; i++) {
-                    const flowerX = this.randomGenerator.nextInt(20, GAME_CONFIG.MAP_WIDTH - 20);
-                    const flowerY = this.randomGenerator.nextInt(20, GAME_CONFIG.MAP_HEIGHT - 20);
-                    const flowerColor = [0xFF69B4, 0xFFFF00, 0xFF6347, 0x9370DB, 0xFF4500][this.randomGenerator.nextInt(0, 4)];
-                    
-                    const flower = new PIXI.Graphics();
-                    flower.beginFill(flowerColor);
-                    flower.drawCircle(flowerX, flowerY, 5);
-                    flower.endFill();
-                    
-                    this.decorationContainer.addChild(flower);
-                }
-                
-                // Tạo các con đường
-                const pathCount = 8;
-                for (let i = 0; i < pathCount; i++) {
-                    const isHorizontal = i % 2 === 0;
-                    const pathWidth = 40;
-                    
-                    const path = new PIXI.Graphics();
-                    path.beginFill(0xDEB887);
-                    
-                    if (isHorizontal) {
-                        const y = this.randomGenerator.nextInt(500, GAME_CONFIG.MAP_HEIGHT - 500);
-                        path.drawRect(0, y - pathWidth/2, GAME_CONFIG.MAP_WIDTH, pathWidth);
-                    } else {
-                        const x = this.randomGenerator.nextInt(500, GAME_CONFIG.MAP_WIDTH - 500);
-                        path.drawRect(x - pathWidth/2, 0, pathWidth, GAME_CONFIG.MAP_HEIGHT);
-                    }
-                    
-                    path.endFill();
-                    this.decorationContainer.addChild(path);
-                }
-
-                // Tạo cờ đỏ sao vàng lớn ở giữa bản đồ
+                // Tạo biểu tượng kỷ niệm 30/4 ở trung tâm (0,0)
                 const centerFlag = new PIXI.Graphics();
-                // Nền đỏ
                 centerFlag.beginFill(0xd22730);
-                centerFlag.drawRect(GAME_CONFIG.MAP_WIDTH/2 - 150, GAME_CONFIG.MAP_HEIGHT/2 - 100, 300, 200);
+                centerFlag.drawRect(-150, -100, 300, 200);
                 centerFlag.endFill();
                 
-                // Ngôi sao vàng
                 centerFlag.beginFill(0xffff00);
-                this.drawStar(centerFlag, GAME_CONFIG.MAP_WIDTH/2, GAME_CONFIG.MAP_HEIGHT/2, 5, 60, 30);
+                this.drawStar(centerFlag, 0, 0, 5, 60, 30);
                 centerFlag.endFill();
                 
                 this.decorationContainer.addChild(centerFlag);
                 
-                // Tạo các biểu tượng kỷ niệm 30/4
                 const memorial = new PIXI.Text("30/4", {
                     fontFamily: "Arial",
                     fontSize: 72,
@@ -685,9 +639,362 @@
                     strokeThickness: 8
                 });
                 memorial.anchor.set(0.5, 0.5);
-                memorial.x = GAME_CONFIG.MAP_WIDTH/2;
-                memorial.y = GAME_CONFIG.MAP_HEIGHT/2 + 150;
+                memorial.x = 0;
+                memorial.y = 150;
                 this.decorationContainer.addChild(memorial);
+                
+                // Cập nhật các chunk ban đầu xung quanh vị trí ban đầu (0,0)
+                this.updateActiveChunks(0, 0);
+            }
+            
+            // Lấy ID của chunk dựa vào tọa độ
+            getChunkId(x, y) {
+                const chunkX = Math.floor(x / GAME_CONFIG.CHUNK_SIZE);
+                const chunkY = Math.floor(y / GAME_CONFIG.CHUNK_SIZE);
+                return `${chunkX},${chunkY}`;
+            }
+            
+            // Tạo nội dung ngẫu nhiên cho một chunk
+            createChunk(chunkId) {
+                if (this.chunkDecorations[chunkId]) return;
+                
+                const [chunkX, chunkY] = chunkId.split(',').map(Number);
+                const startX = chunkX * GAME_CONFIG.CHUNK_SIZE;
+                const startY = chunkY * GAME_CONFIG.CHUNK_SIZE;
+                
+                // Container cho chunk này
+                const chunkContainer = new PIXI.Container();
+                chunkContainer.x = startX;
+                chunkContainer.y = startY;
+                
+                // Tạo seed ngẫu nhiên nhưng ổn định cho chunk này
+                const chunkSeed = this.hashString(`${GAME_CONFIG.SEED}-${chunkId}`);
+                const chunkRandom = this.createRandomGenerator(chunkSeed);
+                
+                // Tạo cây cối và các yếu tố trang trí trong chunk
+                const treeCount = chunkRandom.nextInt(5, 15);
+                const bushCount = chunkRandom.nextInt(10, 20);
+                const flowerCount = chunkRandom.nextInt(15, 30);
+                
+                // Tạo cây
+                for (let i = 0; i < treeCount; i++) {
+                    const treeSize = chunkRandom.nextInt(30, 60);
+                    const treeX = chunkRandom.nextInt(20, GAME_CONFIG.CHUNK_SIZE - 20);
+                    const treeY = chunkRandom.nextInt(20, GAME_CONFIG.CHUNK_SIZE - 20);
+                    
+                    const tree = new PIXI.Graphics();
+                    // Thân cây
+                    tree.beginFill(0x8B4513);
+                    tree.drawRect(-5, 0, 10, 20);
+                    tree.endFill();
+                    
+                    // Tán lá
+                    tree.beginFill(0x2E8B57);
+                    tree.drawCircle(0, -15, treeSize / 2);
+                    tree.endFill();
+                    
+                    tree.x = treeX;
+                    tree.y = treeY;
+                    
+                    chunkContainer.addChild(tree);
+                }
+                
+                // Tạo bụi cây
+                for (let i = 0; i < bushCount; i++) {
+                    const bushSize = chunkRandom.nextInt(15, 25);
+                    const bushX = chunkRandom.nextInt(10, GAME_CONFIG.CHUNK_SIZE - 10);
+                    const bushY = chunkRandom.nextInt(10, GAME_CONFIG.CHUNK_SIZE - 10);
+                    
+                    const bush = new PIXI.Graphics();
+                    bush.beginFill(0x3CB371);
+                    bush.drawCircle(0, 0, bushSize / 2);
+                    bush.endFill();
+                    
+                    bush.x = bushX;
+                    bush.y = bushY;
+                    
+                    chunkContainer.addChild(bush);
+                }
+                
+                // Tạo hoa
+                for (let i = 0; i < flowerCount; i++) {
+                    const flowerX = chunkRandom.nextInt(5, GAME_CONFIG.CHUNK_SIZE - 5);
+                    const flowerY = chunkRandom.nextInt(5, GAME_CONFIG.CHUNK_SIZE - 5);
+                    const flowerColor = [0xFF69B4, 0xFFFF00, 0xFF6347, 0x9370DB, 0xFF4500][chunkRandom.nextInt(0, 4)];
+                    
+                    const flower = new PIXI.Graphics();
+                    flower.beginFill(flowerColor);
+                    flower.drawCircle(0, 0, 3);
+                    flower.endFill();
+                    
+                    flower.x = flowerX;
+                    flower.y = flowerY;
+                    
+                    chunkContainer.addChild(flower);
+                }
+                
+                // Thêm container chunk vào decorationContainer
+                this.decorationContainer.addChild(chunkContainer);
+                
+                // Lưu reference cho chunk này
+                this.chunkDecorations[chunkId] = {
+                    container: chunkContainer,
+                    items: []
+                };
+                
+                // Khả năng tạo đường đi trong chunk (40%)
+                if (chunkRandom.next() < 0.4) {
+                    const isHorizontal = chunkRandom.next() < 0.5;
+                    const pathWidth = 30;
+                    
+                    const path = new PIXI.Graphics();
+                    path.beginFill(0xDEB887);
+                    
+                    if (isHorizontal) {
+                        const y = chunkRandom.nextInt(100, GAME_CONFIG.CHUNK_SIZE - 100);
+                        path.drawRect(0, y - pathWidth/2, GAME_CONFIG.CHUNK_SIZE, pathWidth);
+                    } else {
+                        const x = chunkRandom.nextInt(100, GAME_CONFIG.CHUNK_SIZE - 100);
+                        path.drawRect(x - pathWidth/2, 0, pathWidth, GAME_CONFIG.CHUNK_SIZE);
+                    }
+                    
+                    path.endFill();
+                    chunkContainer.addChild(path);
+                }
+                
+                return chunkId;
+            }
+            
+            // Hash string thành số
+            hashString(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32bit integer
+                }
+                return Math.abs(hash);
+            }
+            
+            // Cập nhật các chunk active khi người chơi di chuyển
+            updateActiveChunks() {
+                if (!this.player) return;
+                
+                const currentChunkId = this.getChunkId(this.player.x, this.player.y);
+                const [currentChunkX, currentChunkY] = currentChunkId.split(',').map(Number);
+                
+                // Tạo set để lưu các chunk mới cần active
+                const newActiveChunks = new Set();
+                
+                // Duyệt qua các chunk xung quanh người chơi
+                for (let dx = -GAME_CONFIG.ACTIVE_CHUNKS_RADIUS; dx <= GAME_CONFIG.ACTIVE_CHUNKS_RADIUS; dx++) {
+                    for (let dy = -GAME_CONFIG.ACTIVE_CHUNKS_RADIUS; dy <= GAME_CONFIG.ACTIVE_CHUNKS_RADIUS; dy++) {
+                        const chunkId = `${currentChunkX + dx},${currentChunkY + dy}`;
+                        newActiveChunks.add(chunkId);
+                        
+                        // Tạo chunk nếu chưa tồn tại
+                        if (!this.chunkDecorations[chunkId]) {
+                            this.createChunk(chunkId);
+                        }
+                    }
+                }
+                
+                // Ẩn các chunk không còn active
+                for (const chunkId of this.activeChunks) {
+                    if (!newActiveChunks.has(chunkId) && this.chunkDecorations[chunkId]) {
+                        this.chunkDecorations[chunkId].container.visible = false;
+                    }
+                }
+                
+                // Hiện các chunk đang active
+                for (const chunkId of newActiveChunks) {
+                    if (this.chunkDecorations[chunkId]) {
+                        this.chunkDecorations[chunkId].container.visible = true;
+                    }
+                }
+                
+                // Cập nhật set active chunks
+                this.activeChunks = newActiveChunks;
+            }
+            
+            // Kiểm tra và tạo các item mới
+            checkItemGeneration() {
+                const now = Date.now();
+                if (now - this.lastItemGeneration < GAME_CONFIG.ITEM_SPAWN_INTERVAL) return;
+                
+                this.lastItemGeneration = now;
+                
+                // Cơ hội tạo item mới khi người chơi di chuyển
+                if (Math.abs(this.player.speedX) < 0.1 && Math.abs(this.player.speedY) < 0.1) return;
+                
+                const currentChunkId = this.getChunkId(this.player.x, this.player.y);
+                
+                // Kiểm tra số lượng item trong chunk hiện tại
+                if (!this.chunkDecorations[currentChunkId]) return;
+                
+                const chunkItems = this.chunkDecorations[currentChunkId].items || [];
+                if (chunkItems.length >= GAME_CONFIG.MAX_ITEMS_PER_CHUNK) return;
+                
+                // Xác định loại item sẽ tạo
+                let itemType = null;
+                const rand = Math.random();
+                
+                if (rand < GAME_CONFIG.ITEM_SPAWN_CHANCE.FLAG) {
+                    itemType = 'FLAG';
+                } else if (rand < GAME_CONFIG.ITEM_SPAWN_CHANCE.FLAG + GAME_CONFIG.ITEM_SPAWN_CHANCE.GOLD) {
+                    itemType = 'GOLD';
+                } else if (rand < GAME_CONFIG.ITEM_SPAWN_CHANCE.FLAG + GAME_CONFIG.ITEM_SPAWN_CHANCE.GOLD + GAME_CONFIG.ITEM_SPAWN_CHANCE.BOMB) {
+                    itemType = 'BOMB';
+                } else if (rand < GAME_CONFIG.ITEM_SPAWN_CHANCE.FLAG + GAME_CONFIG.ITEM_SPAWN_CHANCE.GOLD + GAME_CONFIG.ITEM_SPAWN_CHANCE.BOMB + GAME_CONFIG.ITEM_SPAWN_CHANCE.SHIELD) {
+                    itemType = 'SHIELD';
+                }
+                
+                if (!itemType) return;
+                
+                // Xác định vị trí item trong phạm vi gần người chơi (200-500 đơn vị)
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 200 + Math.random() * 300;
+                const itemX = this.player.x + Math.cos(angle) * distance;
+                const itemY = this.player.y + Math.sin(angle) * distance;
+                
+                // Tạo item mới
+                this.createItem(itemType, itemX, itemY);
+            }
+            
+            // Tạo item mới
+            createItem(type, x, y) {
+                const itemId = 'item_' + this.nextItemId++;
+                const item = new Item(itemId, type, x, y);
+                this.items.push(item);
+                
+                // Tạo sprite cho item
+                const itemGraphic = new PIXI.Container();
+                
+                // Dựa vào loại item, tạo sprite tương ứng
+                let itemSprite;
+                
+                switch (type) {
+                    case 'FLAG':
+                        // Tạo cờ Việt Nam
+                        itemSprite = new PIXI.Graphics();
+                        // Nền đỏ
+                        itemSprite.beginFill(0xd22730);
+                        itemSprite.drawRect(-15 * GAME_CONFIG.FLAG_SCALE, -10 * GAME_CONFIG.FLAG_SCALE, 
+                                     30 * GAME_CONFIG.FLAG_SCALE, 20 * GAME_CONFIG.FLAG_SCALE);
+                        itemSprite.endFill();
+                        
+                        // Ngôi sao vàng
+                        itemSprite.beginFill(0xffff00);
+                        this.drawStar(itemSprite, 0, 0, 5, 8 * GAME_CONFIG.FLAG_SCALE, 4 * GAME_CONFIG.FLAG_SCALE);
+                        itemSprite.endFill();
+                        
+                        // Thêm cột cờ
+                        itemSprite.beginFill(0x8B4513);
+                        itemSprite.drawRect(-17 * GAME_CONFIG.FLAG_SCALE, -10 * GAME_CONFIG.FLAG_SCALE, 
+                                    2 * GAME_CONFIG.FLAG_SCALE, 30 * GAME_CONFIG.FLAG_SCALE);
+                        itemSprite.endFill();
+                        
+                        // Hiệu ứng rung lắc
+                        this.app.ticker.add(() => {
+                            itemSprite.rotation = Math.sin(this.app.ticker.lastTime / 500 + this.nextItemId) * 0.05;
+                        });
+                        break;
+                        
+                    case 'GOLD':
+                        // Tạo đồng tiền vàng
+                        itemSprite = new PIXI.Graphics();
+                        itemSprite.beginFill(0xFFD700);
+                        itemSprite.drawCircle(0, 0, 12);
+                        itemSprite.endFill();
+                        
+                        // Viền
+                        itemSprite.lineStyle(2, 0xFFAA00);
+                        itemSprite.drawCircle(0, 0, 10);
+                        
+                        // Chữ "100"
+                        const valueText = new PIXI.Text("100", {
+                            fontFamily: "Arial",
+                            fontSize: 8,
+                            fill: 0x8B4513,
+                            fontWeight: "bold"
+                        });
+                        valueText.anchor.set(0.5, 0.5);
+                        itemSprite.addChild(valueText);
+                        
+                        // Hiệu ứng nhấp nháy
+                        this.app.ticker.add(() => {
+                            itemSprite.alpha = 0.8 + Math.sin(this.app.ticker.lastTime / 300) * 0.2;
+                        });
+                        break;
+                        
+                    case 'BOMB':
+                        // Tạo quả bom
+                        itemSprite = new PIXI.Graphics();
+                        itemSprite.beginFill(0x000000);
+                        itemSprite.drawCircle(0, 0, 15);
+                        itemSprite.endFill();
+                        
+                        // Ngòi nổ
+                        itemSprite.beginFill(0xDD0000);
+                        itemSprite.drawCircle(0, -15, 5);
+                        itemSprite.endFill();
+                        
+                        // Hiệu ứng nhấp nháy đỏ
+                        this.app.ticker.add(() => {
+                            const red = 0.5 + Math.sin(this.app.ticker.lastTime / 200) * 0.5;
+                            itemSprite.tint = PIXI.utils.rgb2hex([1, red, red]);
+                        });
+                        break;
+                        
+                    case 'SHIELD':
+                        // Tạo khiên bảo vệ
+                        itemSprite = new PIXI.Graphics();
+                        itemSprite.beginFill(0x0088FF, 0.7);
+                        itemSprite.drawCircle(0, 0, 15);
+                        itemSprite.endFill();
+                        
+                        // Viền khiên
+                        itemSprite.lineStyle(3, 0x0055AA);
+                        itemSprite.drawCircle(0, 0, 13);
+                        
+                        // Chữ "S"
+                        const shieldText = new PIXI.Text("S", {
+                            fontFamily: "Arial",
+                            fontSize: 14,
+                            fill: 0xFFFFFF,
+                            fontWeight: "bold"
+                        });
+                        shieldText.anchor.set(0.5, 0.5);
+                        itemSprite.addChild(shieldText);
+                        
+                        // Hiệu ứng nhấp nháy
+                        this.app.ticker.add(() => {
+                            itemSprite.alpha = 0.7 + Math.sin(this.app.ticker.lastTime / 200) * 0.3;
+                        });
+                        break;
+                }
+                
+                itemGraphic.addChild(itemSprite);
+                itemGraphic.x = x;
+                itemGraphic.y = y;
+                
+                this.itemContainer.addChild(itemGraphic);
+                
+                this.itemSprites[itemId] = {
+                    sprite: itemGraphic,
+                    itemSprite
+                };
+                
+                // Thêm item vào chunk tương ứng
+                const chunkId = this.getChunkId(x, y);
+                if (this.chunkDecorations[chunkId]) {
+                    if (!this.chunkDecorations[chunkId].items) {
+                        this.chunkDecorations[chunkId].items = [];
+                    }
+                    this.chunkDecorations[chunkId].items.push(itemId);
+                }
+                
+                return item;
             }
 
             // Vẽ ngôi sao
@@ -712,66 +1019,6 @@
                 
                 // Kết nối lại với điểm đầu tiên
                 graphics.lineTo(firstX, firstY);
-            }
-
-            // Tạo các lá cờ trên bản đồ
-            createFlags() {
-                this.flags = [];
-                
-                // Tạo các lá cờ Việt Nam với vị trí ngẫu nhiên (sử dụng randomGenerator)
-                for (let i = 0; i < GAME_CONFIG.FLAG_COUNT; i++) {
-                    const flagX = this.randomGenerator.nextInt(200, GAME_CONFIG.MAP_WIDTH - 200);
-                    const flagY = this.randomGenerator.nextInt(200, GAME_CONFIG.MAP_HEIGHT - 200);
-                    
-                    const flag = new Flag(i, flagX, flagY);
-                    this.flags.push(flag);
-                    
-                    // Tạo sprite cờ Việt Nam (nền đỏ, sao vàng)
-                    const flagGraphic = new PIXI.Graphics();
-                    
-                    // Nền đỏ
-                    flagGraphic.beginFill(0xd22730);
-                    flagGraphic.drawRect(-15 * GAME_CONFIG.FLAG_SCALE, -10 * GAME_CONFIG.FLAG_SCALE, 
-                                         30 * GAME_CONFIG.FLAG_SCALE, 20 * GAME_CONFIG.FLAG_SCALE);
-                    flagGraphic.endFill();
-                    
-                    // Ngôi sao vàng
-                    flagGraphic.beginFill(0xffff00);
-                    this.drawStar(flagGraphic, 0, 0, 5, 8 * GAME_CONFIG.FLAG_SCALE, 4 * GAME_CONFIG.FLAG_SCALE);
-                    flagGraphic.endFill();
-                    
-                    // Thêm cột cờ
-                    flagGraphic.beginFill(0x8B4513);
-                    flagGraphic.drawRect(-17 * GAME_CONFIG.FLAG_SCALE, -10 * GAME_CONFIG.FLAG_SCALE, 
-                                         2 * GAME_CONFIG.FLAG_SCALE, 30 * GAME_CONFIG.FLAG_SCALE);
-                    flagGraphic.endFill();
-                    
-                    flagGraphic.x = flagX;
-                    flagGraphic.y = flagY;
-                    
-                    // Thêm hiệu ứng rung lắc nhẹ cho lá cờ
-                    this.app.ticker.add(() => {
-                        flagGraphic.rotation = Math.sin(this.app.ticker.lastTime / 500 + i) * 0.05;
-                    });
-                    
-                    // Thêm hiệu ứng sáng
-                    const glow = new PIXI.Graphics();
-                    glow.beginFill(0xffff00, 0.2);
-                    glow.drawCircle(0, 0, 25 * GAME_CONFIG.FLAG_SCALE);
-                    glow.endFill();
-                    glow.x = flagX;
-                    glow.y = flagY;
-                    
-                    // Tạo hiệu ứng nhấp nháy
-                    this.app.ticker.add(() => {
-                        glow.alpha = 0.3 + Math.sin(this.app.ticker.lastTime / 800 + i * 0.5) * 0.2;
-                        glow.scale.set(1 + Math.sin(this.app.ticker.lastTime / 1000 + i * 0.3) * 0.1);
-                    });
-                    
-                    this.flagContainer.addChild(glow);
-                    this.flagContainer.addChild(flagGraphic);
-                    this.flagSprites[i] = { sprite: flagGraphic, glow };
-                }
             }
 
             // Khởi tạo người chơi với hình ảnh xe tăng
@@ -801,7 +1048,7 @@
                     strokeThickness: 3
                 });
                 nameText.anchor.set(0.5, 0.5);
-                nameText.y = -50;
+                nameText.y = -35;
                 
                 playerGraphic.addChild(nameText);
                 
@@ -816,9 +1063,18 @@
                     strokeThickness: 2
                 });
                 scoreText.anchor.set(0.5, 0.5);
-                scoreText.y = 50;
+                scoreText.y = 35;
                 
                 playerGraphic.addChild(scoreText);
+                
+                // Hiệu ứng khiên (ban đầu ẩn)
+                const shield = new PIXI.Graphics();
+                shield.beginFill(0x0088FF, 0.3);
+                shield.drawCircle(0, 0, 40);
+                shield.endFill();
+                shield.visible = false;
+                
+                playerGraphic.addChild(shield);
                 
                 playerGraphic.x = x;
                 playerGraphic.y = y;
@@ -828,7 +1084,8 @@
                 this.playerSprites[id] = {
                     sprite: playerGraphic,
                     scoreText,
-                    tank
+                    tank,
+                    shield
                 };
                 
                 return player;
@@ -847,30 +1104,52 @@
                 
                 playerSprite.x = player.x;
                 playerSprite.y = player.y;
-                tank.rotation = player.angle;
+                // Áp dụng góc xoay với offset để mũi súng luôn chỉ về hướng di chuyển
+                tank.rotation = player.angle + GAME_CONFIG.TANK_ROTATION_OFFSET;
                 scoreText.text = player.score.toString();
                 
                 this.players[player.id] = player;
+                
+                // Kiểm tra và cập nhật các chunk khi người chơi di chuyển
+                this.updateActiveChunks();
+                
+                // Kiểm tra và tạo item mới khi người chơi di chuyển
+                this.checkItemGeneration();
             }
 
-            // Cập nhật trạng thái cờ
-            updateFlag(flag) {
-                if (this.flagSprites[flag.id]) {
-                    const flagSprite = this.flagSprites[flag.id].sprite;
-                    const flagGlow = this.flagSprites[flag.id].glow;
-                    
-                    if (flag.collected && !flagSprite.collected) {
-                        // Ẩn cờ nếu đã được nhặt
-                        flagSprite.visible = false;
-                        flagGlow.visible = false;
-                        flagSprite.collected = true;
+            // Kiểm tra va chạm với item
+            checkItemCollision(x, y, distance = GAME_CONFIG.COLLECT_DISTANCE) {
+                for (const item of this.items) {
+                    if (!item.collected) {
+                        const dx = item.x - x;
+                        const dy = item.y - y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
                         
-                        // Hiệu ứng pháo hoa khi nhặt cờ
-                        if (flag.collectedBy === this.player?.id) {
-                            this.createFireworks(flag.x, flag.y);
-                            this.showGameMessage("Đã nhặt được 1 lá cờ! +1 điểm");
+                        if (dist <= distance) {
+                            return item;
                         }
                     }
+                }
+                
+                return null;
+            }
+
+            // Cập nhật trạng thái khiên bảo vệ
+            updateShieldStatus() {
+                if (!this.shieldActive) return;
+                
+                const now = Date.now();
+                if (now >= this.shieldEndTime) {
+                    // Kết thúc hiệu ứng khiên
+                    this.shieldActive = false;
+                    if (this.playerSprites[this.player.id]) {
+                        this.playerSprites[this.player.id].shield.visible = false;
+                    }
+                    document.getElementById('shieldIndicator').style.display = 'none';
+                } else {
+                    // Cập nhật thời gian còn lại
+                    const secondsLeft = Math.ceil((this.shieldEndTime - now) / 1000);
+                    document.getElementById('shieldTime').textContent = secondsLeft;
                 }
             }
 
@@ -894,7 +1173,7 @@
                     e.preventDefault();
                     if (!this.collectCooldown) {
                         this.collectButtonActive = true;
-                        this.tryCollectFlag();
+                        this.tryCollectItem();
                     }
                 });
                 collectButton.addEventListener('touchend', (e) => {
@@ -904,7 +1183,7 @@
                 collectButton.addEventListener('mousedown', (e) => {
                     if (!this.collectCooldown) {
                         this.collectButtonActive = true;
-                        this.tryCollectFlag();
+                        this.tryCollectItem();
                     }
                 });
                 collectButton.addEventListener('mouseup', () => {
@@ -1047,9 +1326,9 @@
                             console.log("Could not save player name to localStorage");
                         }
                         
-                        // Khởi tạo người chơi
-                        const playerX = GAME_CONFIG.MAP_WIDTH / 2;
-                        const playerY = GAME_CONFIG.MAP_HEIGHT / 2;
+                        // Khởi tạo người chơi ở trung tâm bản đồ (0,0)
+                        const playerX = 0;
+                        const playerY = 0;
                         
                         // Tạo ID cho người chơi
                         const playerId = 'player_' + Date.now();
@@ -1092,12 +1371,12 @@
                         // Ẩn màn hình giới thiệu
                         document.getElementById('introScreen').style.display = 'none';
                         
-                        // Khôi phục trạng thái các lá cờ
+                        // Khôi phục trạng thái các item
                         try {
-                            game.restoreFlagsState();
+                            game.restoreItemsState();
                         } catch (e) {
-                            console.log("Could not restore flags state", e);
-                            // Continue with new flags
+                            console.log("Could not restore items state", e);
+                            // Continue with new items
                         }
                         
                         // Bắt đầu game
@@ -1110,7 +1389,7 @@
                         
                         if (!game.player) {
                             const playerId = 'player_emergency_' + Date.now();
-                            game.player = game.createPlayer(playerId, "Player", GAME_CONFIG.MAP_WIDTH / 2, GAME_CONFIG.MAP_HEIGHT / 2);
+                            game.player = game.createPlayer(playerId, "Player", 0, 0);
                         }
                         
                         game.gameStarted = true;
@@ -1196,39 +1475,64 @@
                 }
             }
 
-            // Kiểm tra va chạm với cờ
-            checkFlagCollision(x, y, distance = GAME_CONFIG.COLLECT_DISTANCE) {
-                for (const flag of this.flags) {
-                    if (!flag.collected) {
-                        const dx = flag.x - x;
-                        const dy = flag.y - y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (dist <= distance) {
-                            return flag;
-                        }
-                    }
-                }
-                
-                return null;
-            }
-
-            // Thử nhặt cờ
-            tryCollectFlag() {
+            // Thử nhặt item
+            tryCollectItem() {
                 if (!this.player || this.collectCooldown) return;
                 
-                const nearbyFlag = this.checkFlagCollision(
+                const nearbyItem = this.checkItemCollision(
                     this.player.x,
                     this.player.y
                 );
                 
-                if (nearbyFlag) {
-                    // Đánh dấu cờ đã được nhặt
-                    nearbyFlag.collected = true;
-                    nearbyFlag.collectedBy = this.player.id;
+                if (nearbyItem) {
+                    // Đánh dấu item đã được nhặt
+                    nearbyItem.collected = true;
+                    nearbyItem.collectedBy = this.player.id;
                     
-                    // Cập nhật điểm số
-                    this.player.score += 1;
+                    // Xử lý item theo loại
+                    switch (nearbyItem.type) {
+                        case 'FLAG':
+                            // Cờ: +1 điểm và hiệu ứng pháo hoa
+                            this.player.score += GAME_CONFIG.ITEM_VALUE.FLAG;
+                            this.createFireworks(nearbyItem.x, nearbyItem.y);
+                            this.showGameMessage("Đã nhặt được 1 lá cờ! +1 điểm");
+                            break;
+                            
+                        case 'GOLD':
+                            // Vàng: +100 điểm
+                            this.player.score += GAME_CONFIG.ITEM_VALUE.GOLD;
+                            this.showGameMessage("Đã nhặt được vàng! +100 điểm");
+                            break;
+                            
+                        case 'BOMB':
+                            // Bom: -50 điểm (nếu không có khiên)
+                            if (!this.shieldActive) {
+                                this.player.score += GAME_CONFIG.ITEM_VALUE.BOMB;
+                                this.showGameMessage("Bị trúng bom! -50 điểm", 3000);
+                            } else {
+                                this.showGameMessage("Khiên đã bảo vệ bạn khỏi bom!");
+                            }
+                            break;
+                            
+                        case 'SHIELD':
+                            // Khiên: bảo vệ 15 giây
+                            this.shieldActive = true;
+                            this.shieldEndTime = Date.now() + 15000; // 15 giây
+                            
+                            // Hiển thị hiệu ứng khiên
+                            if (this.playerSprites[this.player.id]) {
+                                this.playerSprites[this.player.id].shield.visible = true;
+                            }
+                            
+                            // Hiển thị thời gian còn lại
+                            document.getElementById('shieldIndicator').style.display = 'block';
+                            document.getElementById('shieldTime').textContent = '15';
+                            
+                            this.showGameMessage("Đã nhặt được khiên bảo vệ! (15 giây)");
+                            break;
+                    }
+                    
+                    // Cập nhật điểm số hiển thị
                     document.getElementById('scoreValue').textContent = this.player.score;
                     this.playerSprites[this.player.id].scoreText.text = this.player.score.toString();
                     
@@ -1238,8 +1542,10 @@
                         localStorage.setItem('highScore', this.highScore.toString());
                     }
                     
-                    // Cập nhật trạng thái cờ
-                    this.updateFlag(nearbyFlag);
+                    // Ẩn sprite item
+                    if (this.itemSprites[nearbyItem.id]) {
+                        this.itemSprites[nearbyItem.id].sprite.visible = false;
+                    }
                     
                     // Lưu trạng thái game
                     this.saveGameState();
@@ -1336,14 +1642,6 @@
                 this.player.x += this.player.speedX * delta;
                 this.player.y += this.player.speedY * delta;
                 
-                // Không có kiểm tra giới hạn bản đồ - cho phép di chuyển vô tận
-                // Chỉ ngăn người chơi đi quá xa khỏi biên của bản đồ
-                const buffer = 200;
-                if (this.player.x < -buffer) this.player.x = -buffer;
-                if (this.player.x > GAME_CONFIG.MAP_WIDTH + buffer) this.player.x = GAME_CONFIG.MAP_WIDTH + buffer;
-                if (this.player.y < -buffer) this.player.y = -buffer;
-                if (this.player.y > GAME_CONFIG.MAP_HEIGHT + buffer) this.player.y = GAME_CONFIG.MAP_HEIGHT + buffer;
-                
                 // Cập nhật sprite người chơi
                 this.updatePlayer(this.player);
                 
@@ -1353,6 +1651,9 @@
                     this.saveGameState();
                     this.lastTimestamp = now;
                 }
+                
+                // Cập nhật trạng thái khiên
+                this.updateShieldStatus();
                 
                 // Đặt camera theo người chơi
                 this.centerCamera();
@@ -1383,17 +1684,27 @@
                     score: this.player.score
                 };
                 
-                // Lưu trạng thái cờ
-                const flagsData = this.flags.map(flag => ({
-                    id: flag.id,
-                    collected: flag.collected,
-                    collectedBy: flag.collectedBy
+                // Lưu trạng thái item
+                const itemsData = this.items.map(item => ({
+                    id: item.id,
+                    type: item.type,
+                    x: item.x,
+                    y: item.y,
+                    collected: item.collected,
+                    collectedBy: item.collectedBy
                 }));
+                
+                // Lưu trạng thái khiên
+                const shieldData = {
+                    active: this.shieldActive,
+                    endTime: this.shieldEndTime
+                };
                 
                 // Lưu vào localStorage
                 try {
                     localStorage.setItem('playerData', JSON.stringify(playerData));
-                    localStorage.setItem('flagsData', JSON.stringify(flagsData));
+                    localStorage.setItem('itemsData', JSON.stringify(itemsData));
+                    localStorage.setItem('shieldData', JSON.stringify(shieldData));
                     localStorage.setItem('gameTimestamp', Date.now().toString());
                 } catch (error) {
                     console.error("Error saving game state:", error);
@@ -1405,16 +1716,33 @@
                 try {
                     // Kiểm tra xem có dữ liệu đã lưu không
                     const playerData = localStorage.getItem('playerData');
-                    const flagsData = localStorage.getItem('flagsData');
+                    const itemsData = localStorage.getItem('itemsData');
+                    const shieldData = localStorage.getItem('shieldData');
                     const gameTimestamp = localStorage.getItem('gameTimestamp');
                     
                     // Nếu dữ liệu đã được lưu và không quá 1 ngày
-                    if (playerData && flagsData && gameTimestamp) {
+                    if (playerData && gameTimestamp) {
                         const now = Date.now();
                         const timestamp = parseInt(gameTimestamp);
                         const oneDayMs = 24 * 60 * 60 * 1000;
                         
                         if (now - timestamp < oneDayMs) {
+                            // Khôi phục trạng thái khiên
+                            if (shieldData) {
+                                const shield = JSON.parse(shieldData);
+                                this.shieldActive = shield.active;
+                                this.shieldEndTime = shield.endTime;
+                                
+                                // Kiểm tra xem khiên có còn hiệu lực không
+                                if (this.shieldActive && now > this.shieldEndTime) {
+                                    this.shieldActive = false;
+                                } else if (this.shieldActive) {
+                                    document.getElementById('shieldIndicator').style.display = 'block';
+                                    document.getElementById('shieldTime').textContent = 
+                                        Math.ceil((this.shieldEndTime - now) / 1000);
+                                }
+                            }
+                            
                             // Dữ liệu còn mới, có thể sử dụng
                             return true;
                         }
@@ -1426,24 +1754,37 @@
                 return false;
             }
 
-            // Khôi phục trạng thái cờ
-            restoreFlagsState() {
+            // Khôi phục trạng thái các item
+            restoreItemsState() {
                 try {
-                    const flagsData = localStorage.getItem('flagsData');
-                    if (flagsData) {
-                        const savedFlags = JSON.parse(flagsData);
+                    const itemsData = localStorage.getItem('itemsData');
+                    if (itemsData) {
+                        const savedItems = JSON.parse(itemsData);
                         
-                        for (const savedFlag of savedFlags) {
-                            const flag = this.flags.find(f => f.id === savedFlag.id);
-                            if (flag) {
-                                flag.collected = savedFlag.collected;
-                                flag.collectedBy = savedFlag.collectedBy;
-                                this.updateFlag(flag);
+                        // Xóa các item hiện có
+                        this.items = [];
+                        this.itemContainer.removeChildren();
+                        this.itemSprites = {};
+                        
+                        // Xác định ID lớn nhất hiện tại để tiếp tục tạo ID mới
+                        this.nextItemId = 0;
+                        
+                        // Tạo lại các item đã lưu
+                        for (const savedItem of savedItems) {
+                            if (!savedItem.collected) {
+                                this.createItem(savedItem.type, savedItem.x, savedItem.y);
+                            }
+                            
+                            // Cập nhật ID lớn nhất
+                            const idMatch = savedItem.id.match(/\d+$/);
+                            if (idMatch) {
+                                const idNum = parseInt(idMatch[0]);
+                                this.nextItemId = Math.max(this.nextItemId, idNum + 1);
                             }
                         }
                     }
                 } catch (error) {
-                    console.error("Error restoring flags state:", error);
+                    console.error("Error restoring items state:", error);
                 }
             }
         }
