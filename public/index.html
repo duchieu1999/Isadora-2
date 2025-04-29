@@ -1,0 +1,2410 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bánh Xe Hiếu Gà - Quay Là Có Quà!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Anton&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Anime.js for better animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <!-- Howler.js for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #d82f2f;
+            --primary-dark: #b71c1c;
+            --secondary-color: #ffeb3b;
+            --text-color: #4a3528;
+            --background-color: #87CEEB;
+            --wheel-section-color: #f0d6a3;
+            --wheel-border-color: #d02b27;
+            --wheel-dot-color: #ffeb3b;
+            --wheel-text-color: #a3251b;
+            --btn-color: #d82f2f;
+            --btn-text: #ffeb3b;
+            --btn-hover: #b71c1c;
+            --outline-color: #ffbb00;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto Condensed', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            width: 100%;
+            background-image: url('https://img.upanh.tv/2025/04/29/ChatGPT-Image-18_51_42-29-thg-4-2025.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        /* Header styles */
+        .header {
+            text-align: center;
+            padding: 10px 0;
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .flag-banner {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .flag-left, .flag-right {
+            width: 90px;
+            height: 70px;
+            background-color: var(--primary-color);
+            position: relative;
+            margin: 0 10px;
+        }
+        
+        .flag-left::before, .flag-right::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffeb3b'%3E%3Cpath d='M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+        
+        .title-banner {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 10px 20px;
+            border: 2px solid var(--secondary-color);
+            width: 250px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+        }
+        
+        .title-banner h1 {
+            font-family: 'Anton', sans-serif;
+            font-size: 36px;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .title-banner h2 {
+            font-family: 'Anton', sans-serif;
+            font-size: 20px;
+            margin: 5px 0 0;
+            line-height: 1;
+        }
+        
+        .pennant-banner {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .pennant {
+            width: 25px;
+            height: 30px;
+            background-color: var(--primary-color);
+            position: relative;
+            margin: 0 3px;
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
+        }
+        
+        .pennant::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffeb3b'%3E%3Cpath d='M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+        
+        /* Main game container */
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+            padding: 0 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Countdown timer */
+        .event-countdown {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 10px 0;
+            width: 100%;
+        }
+        
+        .countdown-title {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .countdown-timer {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .countdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .countdown-value {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            font-size: 18px;
+            font-weight: bold;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+        }
+        
+        .countdown-label {
+            font-size: 12px;
+            margin-top: 2px;
+        }
+        
+        /* Wheel container */
+        .wheel-outer-container {
+            position: relative;
+            width: 100%;
+            max-width: 340px;
+            margin: 10px auto;
+        }
+        
+        .wheel-flag {
+            position: absolute;
+            top: -40px;
+            left: -80px;
+            width: 140px;
+            height: 100px;
+            z-index: 10;
+        }
+        
+        .wheel-flag-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--secondary-color);
+            font-family: 'Anton', sans-serif;
+            font-size: 18px;
+            line-height: 1.2;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%; /* Square aspect ratio */
+        }
+        
+        .wheel-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .wheel {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: var(--wheel-section-color);
+            border: 12px solid var(--wheel-border-color);
+            box-shadow: 0 0 0 2px var(--secondary-color), 0 10px 20px rgba(0,0,0,0.3);
+            will-change: transform;
+            backface-visibility: hidden;
+            transform: rotate(0deg);
+        }
+        
+        .wheel-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 50%;
+            transform-origin: bottom right;
+            text-align: center;
+            box-sizing: border-box;
+            border: 1px solid #ba8f4a;
+            overflow: hidden;
+        }
+        
+        .wheel-section-content {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            top: 20px;
+            left: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(45deg);
+            overflow: visible;
+        }
+        
+        .wheel-section-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
+        }
+        
+        .wheel-section-text {
+            font-size: 8px; 
+            font-weight: bold;
+            color: var(--wheel-text-color);
+            text-align: center;
+            width: 100%;
+            line-height: 1;
+            word-wrap: break-word;
+            overflow: visible;
+            padding: 0 2px;
+            text-shadow: 0 0 2px white;
+            white-space: nowrap;
+        }
+        
+        .wheel-dots {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .wheel-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--wheel-dot-color);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .wheel-center-fixed {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 15%;
+            height: 15%;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        .wheel-center {
+            width: 100%;
+            height: 100%;
+            background-color: var(--wheel-border-color);
+            border: 3px solid var(--secondary-color);
+            border-radius: 50%;
+        }
+        
+        .wheel-center-circle {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--secondary-color);
+            border-radius: 50%;
+        }
+        
+        .wheel-pointer-container {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 6;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .wheel-pointer {
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary-color);
+            clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+            border: 2px solid var(--secondary-color);
+            border-bottom: none;
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.3));
+        }
+        
+        /* Stats */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 10px 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            padding: 0 5px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+        
+        /* Controls */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px 0;
+            width: 100%;
+        }
+        
+        .btn {
+            background-color: var(--btn-color);
+            color: var(--btn-text);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border: 2px solid var(--secondary-color);
+            text-transform: uppercase;
+            width: 100%;
+            max-width: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:hover {
+            background-color: var(--btn-hover);
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn:disabled {
+            background-color: #888;
+            cursor: not-allowed;
+            opacity: 0.7;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-shine {
+            position: absolute;
+            top: 0;
+            left: -50px;
+            width: 30px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: skewX(-20deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { left: -50px; }
+            20% { left: 120%; }
+            100% { left: 120%; }
+        }
+        
+        .btn-spin::before {
+            content: '🎲';
+            margin-right: 10px;
+        }
+        
+        .btn-redeem {
+            background-color: #4CAF50;
+        }
+        
+        .btn-redeem:hover {
+            background-color: #388E3C;
+        }
+        
+        /* Results */
+        .result-container {
+            width: 100%;
+            min-height: 60px;
+            margin: 10px 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid var(--primary-color);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .result-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+        
+        .result-message {
+            font-size: 14px;
+            line-height: 1.4;
+            color: var(--text-color);
+        }
+        
+        .result-icon {
+            font-size: 32px;
+            margin: 5px 0;
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.2));
+            animation: iconPulse 1s infinite alternate;
+        }
+        
+        @keyframes iconPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.2); }
+        }
+        
+        .result-container.highlight {
+            background: linear-gradient(135deg, #fff9c4, #ffffff, #ffecb3);
+            background-size: 200% 200%;
+            animation: gradientBg 2s ease infinite;
+        }
+        
+        @keyframes gradientBg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Redeem section */
+        .redeem-section {
+            width: 100%;
+            margin: 10px 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .redeem-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .redeem-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .redeem-option {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: calc(50% - 5px);
+            box-sizing: border-box;
+        }
+        
+        .redeem-option:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        }
+        
+        .redeem-option.selected {
+            background-color: #d5f5d5;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px #4CAF50;
+        }
+        
+        .redeem-option-amount {
+            font-weight: bold;
+            color: var(--primary-dark);
+            font-size: 16px;
+        }
+        
+        .redeem-option-points {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .redeem-confirm-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            margin-top: 15px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .redeem-confirm-btn:hover {
+            background-color: #388E3C;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .redeem-confirm-btn:disabled {
+            background-color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Reward card */
+        .reward-card {
+            width: 100%;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            border: 3px solid var(--primary-color);
+            position: relative;
+            overflow: hidden;
+            display: none;
+            margin: 10px 0;
+        }
+        
+        .reward-card::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 235, 59, 0.05) 10px,
+                rgba(255, 235, 59, 0.05) 20px
+            );
+            z-index: -1;
+        }
+        
+        .reward-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .reward-logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary-color);
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        
+        .reward-title {
+            font-size: 18px;
+            color: var(--primary-dark);
+            text-align: left;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        
+        .reward-subtitle {
+            font-size: 12px;
+            color: #666;
+            text-align: left;
+        }
+        
+        .reward-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin: 20px 0;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+            padding: 10px;
+            background: linear-gradient(135deg, rgba(255,235,59,0.2), rgba(255,255,255,0.1));
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
+        .reward-info {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .reward-code {
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 16px;
+            margin: 10px 0;
+            border: 1px dashed #999;
+            position: relative;
+            letter-spacing: 1px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .reward-code::before {
+            content: 'MÃ:';
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background-color: white;
+            padding: 0 5px;
+            font-size: 10px;
+            color: #666;
+            border-radius: 3px;
+        }
+        
+        .reward-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #ccc;
+        }
+        
+        .reward-date {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .reward-watermark {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #999;
+            transform: rotate(-15deg);
+            opacity: 0.5;
+        }
+        
+        .save-btn {
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .save-btn:hover {
+            background-color: #388E3C;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .save-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(30deg);
+            animation: saveButtonShine 3s infinite;
+        }
+        
+        @keyframes saveButtonShine {
+            0% { left: -60%; }
+            20% { left: 130%; }
+            100% { left: 130%; }
+        }
+        
+        /* Leaderboard */
+        .leaderboard {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .leaderboard-title {
+            font-size: 16px;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .leaderboard-title::after {
+            content: '🏆';
+            margin-left: 5px;
+        }
+        
+        .leaderboard-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 5px;
+            border-bottom: 1px solid #eee;
+            transition: transform 0.2s;
+        }
+        
+        .leaderboard-item:hover {
+            background-color: rgba(255, 235, 59, 0.1);
+            transform: translateX(2px);
+        }
+        
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+        
+        .leaderboard-rank {
+            width: 24px;
+            height: 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 12px;
+        }
+        
+        .leaderboard-item:nth-child(1) .leaderboard-rank {
+            background-color: gold;
+            color: black;
+            box-shadow: 0 0 10px gold;
+        }
+        
+        .leaderboard-item:nth-child(2) .leaderboard-rank {
+            background-color: silver;
+            color: black;
+        }
+        
+        .leaderboard-item:nth-child(3) .leaderboard-rank {
+            background-color: #cd7f32;
+            color: white;
+        }
+        
+        .leaderboard-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .leaderboard-name {
+            font-weight: bold;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+        
+        .leaderboard-score {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+        
+        .leaderboard-status {
+            height: 16px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .name-input {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .name-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .name-input button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .name-input button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .user-id-hidden {
+            display: none;
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 0.8s infinite linear;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            margin-top: 20px;
+            width: 100%;
+            font-size: 12px;
+        }
+        
+        .footer p {
+            margin: 3px 0;
+        }
+        
+        /* Special effects and animations */
+        .glow {
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 10px -5px rgba(255, 235, 59, 0.5); }
+            to { box-shadow: 0 0 20px 5px rgba(255, 235, 59, 0.8); }
+        }
+        
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* Jackpot effect */
+        .jackpot-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .jackpot-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 90%;
+            border: 5px solid var(--primary-color);
+            box-shadow: 0 0 30px gold;
+            transform: scale(0.8);
+            transition: transform 0.5s;
+        }
+        
+        .jackpot-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .jackpot-overlay.show .jackpot-content {
+            transform: scale(1);
+        }
+        
+        .jackpot-title {
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .jackpot-points {
+            font-size: 36px;
+            color: gold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .jackpot-close {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        
+        /* Confetti */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 100;
+        }
+        
+        /* Reset spinner animation */
+        @keyframes resetSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .reset-icon {
+            display: inline-block;
+            animation: resetSpin 1s linear infinite;
+            margin-right: 5px;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease-out;
+            font-size: 14px;
+            max-width: 300px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        /* Responsive adjustments */
+        @media screen and (max-height: 700px) {
+            .wheel-outer-container {
+                max-width: 300px;
+            }
+            
+            .title-banner {
+                width: 200px;
+                height: 100px;
+            }
+            
+            .title-banner h1 {
+                font-size: 28px;
+            }
+            
+            .title-banner h2 {
+                font-size: 16px;
+            }
+        }
+        
+        @media screen and (max-height: 600px) {
+            .wheel-outer-container {
+                max-width: 280px;
+            }
+            
+            .controls, .stats, .result-container, .redeem-section, .leaderboard {
+                margin: 5px 0;
+            }
+            
+            .btn {
+                padding: 8px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="flag-banner">
+            <div class="flag-left"></div>
+            <div class="title-banner">
+                <h1>30 THÁNG 4</h1>
+                <h2>GIẢI PHÓNG MIỀN NAM</h2>
+            </div>
+            <div class="flag-right"></div>
+        </div>
+        <div class="pennant-banner">
+            <div class="pennant"></div>
+            <div class="pennant"></div>
+            <div class="pennant"></div>
+            <div class="pennant"></div>
+            <div class="pennant"></div>
+            <div class="pennant"></div>
+            <div class="pennant"></div>
+        </div>
+    </div>
+    
+    <div class="game-container">
+        <div class="event-countdown">
+            <div class="countdown-title">Kết thúc sự kiện</div>
+            <div class="countdown-timer">
+                <div class="countdown-item">
+                    <div class="countdown-value" id="days-value">00</div>
+                    <div class="countdown-label">Ngày</div>
+                </div>
+                <div class="countdown-item">
+                    <div class="countdown-value" id="hours-value">00</div>
+                    <div class="countdown-label">Giờ</div>
+                </div>
+                <div class="countdown-item">
+                    <div class="countdown-value" id="minutes-value">00</div>
+                    <div class="countdown-label">Phút</div>
+                </div>
+                <div class="countdown-item">
+                    <div class="countdown-value" id="seconds-value">00</div>
+                    <div class="countdown-label">Giây</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="wheel-outer-container">
+            <div class="wheel-flag">
+                <div class="wheel-flag-content">
+                    THỐNG<br>NHẤT<br>ĐẤT<br>NƯỚC
+                </div>
+            </div>
+            <div class="wheel-container">
+                <div class="wheel-wrapper">
+                    <div class="wheel" id="wheel"></div>
+                    <div class="wheel-dots" id="wheel-dots"></div>
+                    <div class="wheel-center-fixed">
+                        <div class="wheel-center">
+                            <div class="wheel-center-circle"></div>
+                        </div>
+                    </div>
+                    <div class="wheel-pointer-container">
+                        <div class="wheel-pointer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="points-value">0</div>
+                <div class="stat-label">Điểm tích lũy</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="spins-value">50</div>
+                <div class="stat-label">Lượt quay còn lại</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="timer-value">29:59</div>
+                <div class="stat-label">Làm mới lượt</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-spin" id="spin-btn">
+                <div class="btn-shine"></div>
+                QUAY NGAY
+            </button>
+        </div>
+        
+        <div class="result-container" id="result">
+            <div class="result-title">Kết quả quay thưởng</div>
+            <div class="result-message">Hãy quay bánh xe để nhận thưởng!</div>
+        </div>
+        
+        <div class="redeem-section" id="redeem-section">
+            <div class="redeem-title">Đổi điểm lấy phần thưởng</div>
+            <div class="redeem-options">
+                <div class="redeem-option" data-amount="1000" data-points="1000">
+                    <div class="redeem-option-amount">1.000 VNĐ</div>
+                    <div class="redeem-option-points">1.000 điểm</div>
+                </div>
+                <div class="redeem-option" data-amount="2000" data-points="2000">
+                    <div class="redeem-option-amount">2.000 VNĐ</div>
+                    <div class="redeem-option-points">2.000 điểm</div>
+                </div>
+                <div class="redeem-option" data-amount="5000" data-points="5000">
+                    <div class="redeem-option-amount">5.000 VNĐ</div>
+                    <div class="redeem-option-points">5.000 điểm</div>
+                </div>
+                <div class="redeem-option" data-amount="10000" data-points="10000">
+                    <div class="redeem-option-amount">10.000 VNĐ</div>
+                    <div class="redeem-option-points">10.000 điểm</div>
+                </div>
+                <div class="redeem-option" data-amount="20000" data-points="20000">
+                    <div class="redeem-option-amount">20.000 VNĐ</div>
+                    <div class="redeem-option-points">20.000 điểm</div>
+                </div>
+            </div>
+            <button class="redeem-confirm-btn" id="redeem-confirm-btn" disabled>ĐỔI NGAY</button>
+        </div>
+        
+        <div class="reward-card" id="reward-card">
+            <div class="reward-header">
+                <div class="reward-logo">🎁</div>
+                <div>
+                    <div class="reward-title">THẺ QUÀ TẶNG</div>
+                    <div class="reward-subtitle">Từ Hiếu Gà - Quay Là Có Quà</div>
+                </div>
+            </div>
+            <div class="reward-value" id="reward-value">0 VNĐ</div>
+            <div class="reward-info">Chúc mừng! Bạn đã đổi thành công điểm thưởng.</div>
+            <div class="reward-code" id="reward-code">HIEUGA-XXXX-XXXX</div>
+            <div class="reward-footer">
+                <div class="reward-date" id="reward-date">30/04/2025</div>
+            </div>
+            <div class="reward-watermark">HIẾU GÀ OFFICIAL</div>
+            <button class="save-btn" id="save-reward-btn">LƯU THẺ QUÀ TẶNG</button>
+        </div>
+        
+        <div class="leaderboard">
+            <div class="leaderboard-title">Bảng xếp hạng</div>
+            <ul class="leaderboard-list" id="leaderboard-list">
+                <!-- Leaderboard items will be added dynamically -->
+                <li class="leaderboard-item">
+                    <div class="spinner"></div>
+                </li>
+            </ul>
+            <div class="leaderboard-status" id="leaderboard-status">Đang tải dữ liệu...</div>
+            <div class="name-input">
+                <input type="text" id="player-name" placeholder="Nhập tên của bạn">
+                <button id="save-name-btn">Lưu</button>
+            </div>
+            <div class="user-id-hidden" id="user-id-container"></div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>© 2025 Bánh Xe Hiếu Gà - Quay Là Có Quà!</p>
+        <p>Chào mừng ngày Giải phóng miền Nam 30/4</p>
+    </div>
+    
+    <!-- Jackpot overlay -->
+    <div class="jackpot-overlay" id="jackpot-overlay">
+        <div class="jackpot-content">
+            <div class="jackpot-title">🎉 JACKPOT! 🎉</div>
+            <div>Bạn đã trúng JACKPOT đặc biệt!</div>
+            <div class="jackpot-points" id="jackpot-points">+1000 điểm</div>
+            <button class="jackpot-close" id="jackpot-close">TUYỆT VỜI!</button>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        // Sound effects
+        const SOUNDS = {
+            spin: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-slot-machine-spin-1925.mp3'],
+                volume: 0.5
+            }),
+            win: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3'],
+                volume: 0.5
+            }),
+            jackpot: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-casino-win-notification-1980.mp3'],
+                volume: 0.7
+            }),
+            lose: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-losing-bleeps-2026.mp3'],
+                volume: 0.4
+            }),
+            click: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-simple-click-tone-1112.mp3'],
+                volume: 0.3
+            }),
+            reward: new Howl({
+                src: ['https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3'],
+                volume: 0.5
+            })
+        };
+        
+        // Game config
+        const wheelSections = [
+            { name: "Thắng lợi vẻ vang", icon: "🏆", points: 40, probability: 0.05 },
+            { name: "Nhận gạo cứu trợ", icon: "🍚", points: 15, probability: 0.13 },
+            { name: "Cưỡi xe tăng tiến vào dinh", icon: "🪖", points: 60, probability: 0.05 },
+            { name: "Chụp ảnh ở Sài Gòn 1975", icon: "📸", points: 25, probability: 0.10 },
+            { name: "Treo cờ thống nhất", icon: "🚩", points: 20, probability: 0.12 },
+            { name: "Mất lượt", icon: "❌", points: 0, loseTurn: true, probability: 0.10 },
+            { name: "Quà tặng bất ngờ", icon: "🎁", points: 0, randomCard: true, probability: 0.08 },
+            { name: "Pháo hoa giải phóng", icon: "🎆", points: 10, extraSpin: true, probability: 0.07 },
+            { name: "Lá cờ giải phóng", icon: "🚩", points: 80, probability: 0.04 },
+            { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -10, probability: 0.10 },
+            { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -15, probability: 0.08 },
+            { name: "Nhận đôi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 },
+            // Thêm phần thưởng jackpot với tỉ lệ thấp
+            { name: "JACKPOT ĐẶC BIỆT", icon: "💰", points: 1000, jackpot: true, probability: 0.001 },
+            { name: "JACKPOT LỚN", icon: "💎", points: 2000, jackpot: true, probability: 0.0005 }
+        ];
+
+        // DOM elements
+        const wheel = document.getElementById('wheel');
+        const wheelDots = document.getElementById('wheel-dots');
+        const spinBtn = document.getElementById('spin-btn');
+        const pointsValue = document.getElementById('points-value');
+        const spinsValue = document.getElementById('spins-value');
+        const timerValue = document.getElementById('timer-value');
+        const resultContainer = document.getElementById('result');
+        const redeemSection = document.getElementById('redeem-section');
+        const redeemOptions = document.querySelectorAll('.redeem-option');
+        const redeemConfirmBtn = document.getElementById('redeem-confirm-btn');
+        const rewardCard = document.getElementById('reward-card');
+        const rewardValue = document.getElementById('reward-value');
+        const rewardCode = document.getElementById('reward-code');
+        const rewardDate = document.getElementById('reward-date');
+        const saveRewardBtn = document.getElementById('save-reward-btn');
+        const leaderboardList = document.getElementById('leaderboard-list');
+        const leaderboardStatus = document.getElementById('leaderboard-status');
+        const playerNameInput = document.getElementById('player-name');
+        const saveNameBtn = document.getElementById('save-name-btn');
+        const userIdContainer = document.getElementById('user-id-container');
+        const jackpotOverlay = document.getElementById('jackpot-overlay');
+        const jackpotPoints = document.getElementById('jackpot-points');
+        const jackpotClose = document.getElementById('jackpot-close');
+        const notification = document.getElementById('notification');
+        
+        // Countdown elements
+        const daysValue = document.getElementById('days-value');
+        const hoursValue = document.getElementById('hours-value');
+        const minutesValue = document.getElementById('minutes-value');
+        const secondsValue = document.getElementById('seconds-value');
+
+        // Game state
+        let points = 0;
+        let spinsLeft = 50;
+        let isSpinning = false;
+        let nextSpinDouble = false;
+        let refreshTimer;
+        let countdownTimer;
+        let playerName = 'Người chơi ẩn danh';
+        let selectedRedeemOption = null;
+        let isEventEnded = false;
+        let userId = '';
+        let lastWheelRotation = 0;
+        let currentSections = [];
+
+        // API endpoints
+        const API_BASE_URL = '/api';
+
+        // Initialize the game
+        async function initGame() {
+            try {
+                createWheel();
+                setupUserId();
+                await loadGameState();
+                startRefreshTimer();
+                startEventCountdown();
+                updateStats();
+                await loadLeaderboard();
+                
+                // Check if player name is saved
+                const savedName = localStorage.getItem('playerName');
+                if (savedName) {
+                    playerName = savedName;
+                    playerNameInput.value = savedName;
+                }
+                
+                // Setup redeem options
+                setupRedeemOptions();
+                
+                // Setup jackpot close
+                jackpotClose.addEventListener('click', () => {
+                    jackpotOverlay.classList.remove('show');
+                });
+                
+                // Setup sound effect preloading
+                Object.values(SOUNDS).forEach(sound => {
+                    sound.load();
+                });
+                
+                showNotification("Đã kết nối máy chủ thành công!");
+            } catch (error) {
+                console.error("Error initializing game:", error);
+                leaderboardStatus.textContent = "Đang sử dụng dữ liệu offline. Kết nối lại sau...";
+                showNotification("Đang sử dụng dữ liệu offline.");
+            }
+        }
+
+        // Show notification
+        function showNotification(message, duration = 3000) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+
+        // Setup unique user ID
+        function setupUserId() {
+            // Get user ID from local storage or create a new one
+            userId = localStorage.getItem('wheelGameUserId');
+            if (!userId) {
+                userId = generateUniqueId();
+                localStorage.setItem('wheelGameUserId', userId);
+            }
+            userIdContainer.textContent = userId;
+        }
+
+        // Generate a unique ID for the user
+        function generateUniqueId() {
+            const timestamp = Date.now().toString(36);
+            const random = Math.random().toString(36).substring(2, 10);
+            return timestamp + random;
+        }
+
+        // Create the wheel sections with exact styling from the image
+        function createWheel() {
+            // Clear existing sections
+            wheel.innerHTML = '';
+            wheelDots.innerHTML = '';
+            
+            // Use only 12 sections for the wheel (keep the original structure)
+            // But we'll select from all available sections including jackpot
+            const sectionsPool = wheelSections.slice(); // Clone the array
+            const numSections = 12; // Fixed number of sections
+            
+            // Initialize the wheel sections array
+            let sectionsToUse = [];
+            
+            // Calculate total probability for normalization
+            const totalProbability = sectionsPool.reduce((sum, section) => sum + section.probability, 0);
+            
+            // First, let's select the sections weighted by their probability
+            for (let i = 0; i < numSections; i++) {
+                // Normalize probabilities for the remaining pool
+                const remainingTotal = sectionsPool.reduce((sum, section) => sum + section.probability, 0);
+                
+                let random = Math.random() * remainingTotal;
+                let cumulativeProbability = 0;
+                let selectedIndex = 0;
+                
+                for (let j = 0; j < sectionsPool.length; j++) {
+                    cumulativeProbability += sectionsPool[j].probability;
+                    if (random <= cumulativeProbability) {
+                        selectedIndex = j;
+                        break;
+                    }
+                }
+                
+                // Add the selected section to our wheel and remove from the pool
+                sectionsToUse.push(sectionsPool[selectedIndex]);
+                sectionsPool.splice(selectedIndex, 1);
+            }
+            
+            // Create wheel sections
+            for (let i = 0; i < numSections; i++) {
+                const section = sectionsToUse[i];
+                const rotationAngle = (i * 360 / numSections);
+                
+                // Create section element
+                const sectionElement = document.createElement('div');
+                sectionElement.className = 'wheel-section';
+                sectionElement.style.transform = `rotate(${rotationAngle}deg)`;
+                sectionElement.dataset.index = i; // Store the index for reference
+                
+                // Position and style the section
+                const sectionContent = document.createElement('div');
+                sectionContent.className = 'wheel-section-content';
+                
+                // Create icon
+                const iconElement = document.createElement('div');
+                iconElement.className = 'wheel-section-icon';
+                iconElement.textContent = section.icon;
+                
+                // Highlight jackpot sections with glow effect
+                if (section.jackpot) {
+                    iconElement.style.fontSize = '28px';
+                    iconElement.style.filter = 'drop-shadow(0 0 5px gold)';
+                    sectionElement.style.background = 'linear-gradient(135deg, #fff9c4 0%, #f0d6a3 100%)';
+                }
+                
+                // Create text
+                const textElement = document.createElement('div');
+                textElement.className = 'wheel-section-text';
+                textElement.textContent = section.name;
+                
+                // Assemble the section
+                sectionContent.appendChild(iconElement);
+                sectionContent.appendChild(textElement);
+                sectionElement.appendChild(sectionContent);
+                wheel.appendChild(sectionElement);
+            }
+            
+            // Add dots around the wheel (24 dots)
+            const dotsCount = 24;
+            const radius = 48.5; // Percentage of wheel radius
+            
+            for (let i = 0; i < dotsCount; i++) {
+                const angle = (i * 360 / dotsCount) * (Math.PI / 180);
+                const x = 50 + radius * Math.cos(angle);
+                const y = 50 + radius * Math.sin(angle);
+                
+                const dot = document.createElement('div');
+                dot.className = 'wheel-dot';
+                dot.style.left = `${x}%`;
+                dot.style.top = `${y}%`;
+                wheelDots.appendChild(dot);
+            }
+            
+            // Store the current sections
+            currentSections = sectionsToUse;
+        }
+
+        // Spin the wheel
+        function spinWheel() {
+            if (isSpinning || spinsLeft <= 0 || isEventEnded) return;
+            
+            SOUNDS.spin.play();
+            
+            isSpinning = true;
+            spinsLeft--;
+            updateStats();
+            
+            // Determine the winning section
+            const numSections = currentSections.length;
+            
+            // Select a winning section based on probability
+            let winningIndex = Math.floor(Math.random() * numSections);
+            const winningSection = currentSections[winningIndex];
+            
+            // Calculate rotation angle to land on the winning section
+            const sectionAngle = 360 / numSections;
+            const targetAngle = 360 - (winningIndex * sectionAngle) - (sectionAngle / 2); // Target middle of the section
+            
+            // Ensure a full rotation (at least 2 times) plus the target angle
+            const fullRotations = 2 * 360; // 2 full rotations
+            const destinationAngle = fullRotations + targetAngle;
+            
+            // Remove any existing transition
+            wheel.style.transition = 'none';
+            // Force a reflow to immediately apply the above style
+            wheel.offsetHeight;
+            // Reset the wheel to its starting position
+            wheel.style.transform = `rotate(${lastWheelRotation}deg)`;
+            
+            // Force a reflow again to ensure the position is set
+            wheel.offsetHeight;
+            
+            // Now add the transition and spin to the destination
+            wheel.style.transition = 'transform 3s cubic-bezier(0.17, 0.89, 0.24, 1.0)';
+            wheel.style.transform = `rotate(${destinationAngle}deg)`;
+            
+            // Add some visual effects during spinning
+            anime({
+                targets: '.wheel-pointer',
+                scale: [1, 1.2, 1, 1.2, 1],
+                opacity: [1, 0.8, 1, 0.8, 1],
+                duration: 3000,
+                easing: 'easeInOutQuad'
+            });
+            
+            // Save the current rotation for next spin
+            lastWheelRotation = destinationAngle % 360;
+            
+            // Disable spin button during spinning
+            spinBtn.disabled = true;
+            
+            // After spinning animation completes
+            setTimeout(() => {
+                isSpinning = false;
+                spinBtn.disabled = false;
+                processResult(winningSection);
+                saveGameState();
+            }, 3000);
+        }
+
+        // Process the result after spinning
+        function processResult(section) {
+            let pointsEarned = section.points;
+            let message = '';
+            let isJackpot = false;
+            
+            // Apply double if applicable
+            if (nextSpinDouble) {
+                pointsEarned *= 2;
+                nextSpinDouble = false;
+                message += '<strong>Nhận đôi biếm kích hoạt!</strong> Điểm nhân đôi! ';
+            }
+            
+            // Process special effects
+            if (section.jackpot) {
+                isJackpot = true;
+                message += `<strong>JACKPOT ĐẶC BIỆT!</strong> Bạn nhận được ${pointsEarned} điểm! `;
+                SOUNDS.jackpot.play();
+                
+                // Show jackpot overlay
+                jackpotPoints.textContent = `+${pointsEarned} điểm`;
+                setTimeout(() => {
+                    jackpotOverlay.classList.add('show');
+                }, 500);
+            } else if (section.extraSpin) {
+                spinsLeft++;
+                updateStats();
+                message += `<strong>${section.name}!</strong> Bạn nhận được thêm 1 lượt quay! `;
+                SOUNDS.win.play();
+            } else if (section.loseTurn) {
+                message += `<strong>${section.name}!</strong> Thật tiếc, bạn mất lượt này. `;
+                SOUNDS.lose.play();
+            } else if (section.randomCard) {
+                // Random card gives points between 10-200 (increased range)
+                const randomPoints = Math.floor(Math.random() * 191) + 10;
+                pointsEarned = randomPoints;
+                message += `<strong>${section.name}!</strong> Bạn nhận được ${pointsEarned} điểm! `;
+                SOUNDS.win.play();
+            } else if (section.doubleNext) {
+                nextSpinDouble = true;
+                message += `<strong>${section.name}!</strong> Lượt quay tiếp theo sẽ được nhân đôi điểm! `;
+                SOUNDS.win.play();
+            } else {
+                if (pointsEarned > 0) {
+                    message += `<strong>${section.name}!</strong> Bạn nhận được ${pointsEarned} điểm! `;
+                    SOUNDS.win.play();
+                } else if (pointsEarned < 0) {
+                    message += `<strong>${section.name}!</strong> Bạn mất ${Math.abs(pointsEarned)} điểm! `;
+                    SOUNDS.lose.play();
+                } else {
+                    message += `<strong>${section.name}!</strong> `;
+                    SOUNDS.click.play();
+                }
+            }
+            
+            // Update points
+            points += pointsEarned;
+            if (points < 0) points = 0;
+            updateStats();
+            
+            // Highlight the points value with animation
+            if (pointsEarned !== 0) {
+                const pointsElement = document.getElementById('points-value');
+                pointsElement.classList.remove('pulse');
+                void pointsElement.offsetWidth; // Force reflow
+                pointsElement.classList.add('pulse');
+            }
+            
+            // Show the result with enhanced effects
+            showResult(section.icon, message, pointsEarned, isJackpot);
+            
+            // Show celebration for big wins
+            if (pointsEarned >= 60 || isJackpot) {
+                createConfetti(pointsEarned >= 500 ? 200 : 50);
+            }
+            
+            // Update leaderboard
+            updateLeaderboard();
+            
+            // Update redeem button state
+            updateRedeemButtonState();
+        }
+
+        // Show the result message with enhanced effects
+        function showResult(icon, message, pointsEarned = 0, isJackpot = false) {
+            let resultHtml = `
+                <div class="result-title">${isJackpot ? '🎊 JACKPOT! 🎊' : 'Kết quả quay thưởng'}</div>
+                <div class="result-icon">${icon}</div>
+                <div class="result-message">${message}</div>
+            `;
+            
+            resultContainer.innerHTML = resultHtml;
+            resultContainer.classList.remove('bounce', 'highlight');
+            void resultContainer.offsetWidth; // Force reflow
+            
+            // Apply different effects based on result
+            if (isJackpot) {
+                resultContainer.classList.add('highlight');
+                resultContainer.classList.add('bounce');
+            } else if (pointsEarned > 0) {
+                resultContainer.classList.add('highlight');
+            } else if (pointsEarned < 0) {
+                resultContainer.classList.add('shake');
+                setTimeout(() => {
+                    resultContainer.classList.remove('shake');
+                }, 500);
+            } else {
+                resultContainer.classList.add('bounce');
+            }
+        }
+
+        // Create enhanced confetti effect
+        function createConfetti(count = 50) {
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#fd0'];
+            
+            for (let i = 0; i < count; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.top = `-20px`;
+                confetti.style.width = `${5 + Math.random() * 10}px`;
+                confetti.style.height = `${5 + Math.random() * 10}px`;
+                confetti.style.opacity = '1';
+                document.body.appendChild(confetti);
+                
+                // Add more variety to confetti
+                if (Math.random() > 0.5) {
+                    confetti.style.borderRadius = '50%';
+                } else {
+                    confetti.style.borderRadius = '0';
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                }
+                
+                // Animate the confetti with more variety
+                const duration = 1 + Math.random() * 3;
+                const delay = Math.random() * 1;
+                
+                // Use anime.js for more complex animation
+                anime({
+                    targets: confetti,
+                    translateY: window.innerHeight + 100,
+                    translateX: [
+                        { value: -50 + Math.random() * 100, duration: duration * 500 },
+                        { value: -100 + Math.random() * 200, duration: duration * 500 }
+                    ],
+                    rotate: Math.random() * 720,
+                    opacity: [
+                        { value: 1, duration: duration * 400 },
+                        { value: 0, duration: duration * 600 }
+                    ],
+                    delay: delay * 1000,
+                    easing: 'easeOutQuad',
+                    complete: function() {
+                        if (document.body.contains(confetti)) {
+                            document.body.removeChild(confetti);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Setup redeem options
+        function setupRedeemOptions() {
+            redeemOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    if (isEventEnded) return;
+                    SOUNDS.click.play();
+                    
+                    const requiredPoints = parseInt(option.getAttribute('data-points'));
+                    
+                    if (points >= requiredPoints) {
+                        // Deselect all options
+                        redeemOptions.forEach(opt => opt.classList.remove('selected'));
+                        
+                        // Select this option
+                        option.classList.add('selected');
+                        selectedRedeemOption = option;
+                        
+                        // Enable confirm button
+                        redeemConfirmBtn.disabled = false;
+                    } else {
+                        showResult('⚠️', `Bạn cần ít nhất ${requiredPoints} điểm để đổi phần thưởng này!`);
+                        anime({
+                            targets: option,
+                            translateX: [
+                                { value: -5, duration: 50 },
+                                { value: 5, duration: 50 },
+                                { value: -5, duration: 50 },
+                                { value: 5, duration: 50 },
+                                { value: 0, duration: 50 }
+                            ]
+                        });
+                    }
+                });
+            });
+            
+            redeemConfirmBtn.addEventListener('click', redeemPoints);
+            
+            // Initial update
+            updateRedeemButtonState();
+        }
+        
+        // Update redeem button state based on points
+        function updateRedeemButtonState() {
+            const hasEnoughPoints = Array.from(redeemOptions).some(option => {
+                const requiredPoints = parseInt(option.getAttribute('data-points'));
+                return points >= requiredPoints;
+            });
+            
+            // If no option is selected but points are enough for at least one option, highlight the button
+            if (!selectedRedeemOption && hasEnoughPoints) {
+                redeemConfirmBtn.disabled = false;
+                redeemConfirmBtn.textContent = 'CHỌN MỘT MỨC';
+                redeemConfirmBtn.classList.add('pulse');
+            } else if (selectedRedeemOption) {
+                redeemConfirmBtn.disabled = false;
+                redeemConfirmBtn.textContent = 'ĐỔI NGAY';
+                redeemConfirmBtn.classList.remove('pulse');
+            } else {
+                redeemConfirmBtn.disabled = true;
+                redeemConfirmBtn.textContent = 'KHÔNG ĐỦ ĐIỂM';
+                redeemConfirmBtn.classList.remove('pulse');
+            }
+        }
+
+        // Update game statistics display
+        function updateStats() {
+            pointsValue.textContent = points;
+            spinsValue.textContent = spinsLeft;
+        }
+
+        // Start the refresh timer for spins
+        function startRefreshTimer() {
+            // Get next 30-minute timestamp (changed from 1 hour)
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const nextRefresh = new Date(now);
+            
+            if (minutes < 30) {
+                nextRefresh.setMinutes(30, 0, 0);
+            } else {
+                nextRefresh.setHours(now.getHours() + 1, 0, 0, 0);
+            }
+            
+            let timeLeft = nextRefresh - now;
+            
+            // Update timer display
+            function updateTimer() {
+                const minutes = Math.floor((timeLeft / 1000) / 60);
+                const seconds = Math.floor((timeLeft / 1000) % 60);
+                timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                
+                timeLeft -= 1000;
+                
+                if (timeLeft <= 0) {
+                    // Reset spins when timer reaches zero
+                    spinsLeft = 50;
+                    updateStats();
+                    saveGameState();
+                    
+                    // Show reset notification
+                    showNotification("Lượt quay đã được làm mới!");
+                    
+                    // Add special reset effect
+                    const resetIcon = document.createElement('span');
+                    resetIcon.className = 'reset-icon';
+                    resetIcon.textContent = '🔄';
+                    spinsValue.prepend(resetIcon);
+                    
+                    anime({
+                        targets: '#spins-value',
+                        backgroundColor: [
+                            { value: 'rgba(255, 235, 59, 0.5)', duration: 500 },
+                            { value: 'transparent', duration: 500 }
+                        ],
+                        scale: [1, 1.2, 1],
+                        duration: 1000
+                    });
+                    
+                    setTimeout(() => {
+                        if (spinsValue.contains(resetIcon)) {
+                            spinsValue.removeChild(resetIcon);
+                        }
+                    }, 3000);
+                    
+                    // Restart timer for next refresh
+                    startRefreshTimer();
+                }
+            }
+            
+            // Update immediately and then every second
+            updateTimer();
+            clearInterval(refreshTimer); // Clear any existing timer
+            refreshTimer = setInterval(updateTimer, 1000);
+        }
+        
+        // Start event countdown timer
+        function startEventCountdown() {
+            const endDate = new Date('2025-05-01T00:00:00');
+            
+            function updateCountdown() {
+                const now = new Date();
+                const timeDiff = endDate - now;
+                
+                if (timeDiff <= 0) {
+                    // Event ended
+                    daysValue.textContent = '00';
+                    hoursValue.textContent = '00';
+                    minutesValue.textContent = '00';
+                    secondsValue.textContent = '00';
+                    
+                    isEventEnded = true;
+                    spinBtn.disabled = true;
+                    spinBtn.textContent = 'SỰ KIỆN ĐÃ KẾT THÚC';
+                    
+                    clearInterval(countdownTimer);
+                    return;
+                }
+                
+                // Calculate days, hours, minutes, seconds
+                const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+                
+                // Update UI
+                daysValue.textContent = String(days).padStart(2, '0');
+                hoursValue.textContent = String(hours).padStart(2, '0');
+                minutesValue.textContent = String(minutes).padStart(2, '0');
+                secondsValue.textContent = String(seconds).padStart(2, '0');
+                
+                // Add pulse effect when time is running low (last 24 hours)
+                if (days === 0 && hours < 24) {
+                    document.querySelectorAll('.countdown-value').forEach(el => {
+                        el.classList.add('glow');
+                    });
+                }
+            }
+            
+            // Update immediately and then every second
+            updateCountdown();
+            clearInterval(countdownTimer); // Clear any existing timer
+            countdownTimer = setInterval(updateCountdown, 1000);
+        }
+
+        // Redeem points for rewards
+        function redeemPoints() {
+            if (!selectedRedeemOption) {
+                showResult('⚠️', 'Vui lòng chọn một mức quy đổi!');
+                return;
+            }
+            
+            SOUNDS.reward.play();
+            
+            const amount = parseInt(selectedRedeemOption.getAttribute('data-amount'));
+            const requiredPoints = parseInt(selectedRedeemOption.getAttribute('data-points'));
+            
+            if (points < requiredPoints) {
+                showResult('⚠️', `Bạn cần ít nhất ${requiredPoints} điểm để đổi phần thưởng này!`);
+                return;
+            }
+            
+            // Deduct points
+            points -= requiredPoints;
+            updateStats();
+            
+            // Generate unique code
+            const uniqueCode = generateUniqueCode();
+            
+            // Update reward card
+            rewardValue.textContent = `${amount.toLocaleString()} VNĐ`;
+            rewardCode.textContent = uniqueCode;
+            rewardDate.textContent = new Date().toLocaleDateString('vi-VN');
+            
+            // Show reward card with animation
+            rewardCard.style.display = 'block';
+            anime({
+                targets: '#reward-card',
+                scale: [0.9, 1],
+                opacity: [0, 1],
+                duration: 500,
+                easing: 'easeOutExpo'
+            });
+            
+            // Reset selection
+            selectedRedeemOption.classList.remove('selected');
+            selectedRedeemOption = null;
+            redeemConfirmBtn.disabled = true;
+            
+            // Save state
+            saveGameState();
+            
+            // Show success message
+            showResult('🎁', `Chúc mừng! Bạn đã đổi thành công ${requiredPoints.toLocaleString()} điểm lấy ${amount.toLocaleString()} VNĐ.`);
+            
+            // Update redeem button state
+            updateRedeemButtonState();
+            
+            // Create mini celebration
+            createConfetti(20);
+        }
+
+        // Generate a unique code for rewards
+        function generateUniqueCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            const timestamp = Date.now().toString(36).toUpperCase();
+            let code = 'HIEUGA-';
+            
+            // Add 4 random characters
+            for (let i = 0; i < 4; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            
+            // Add timestamp-based characters
+            code += '-' + timestamp.substring(0, 4);
+            
+            return code;
+        }
+
+        // Save reward card as image
+        function saveRewardCard() {
+            SOUNDS.click.play();
+            
+            // Create a canvas from the reward card element
+            html2canvas(rewardCard).then(canvas => {
+                // Create a link to download the image
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = 'the-qua-hieu-ga.png';
+                
+                // Trigger the download
+                link.click();
+                
+                // Show notification
+                showNotification('Đã lưu thẻ quà tặng thành công!');
+            }).catch(err => {
+                console.error('Error saving reward card:', err);
+                alert('Đã lưu thẻ quà tặng! Hãy gửi mã này cho Hiếu Gà để nhận quà nhé!');
+            });
+        }
+
+        // Save game state to localStorage and API
+        async function saveGameState() {
+            const gameState = {
+                points: points,
+                spinsLeft: spinsLeft,
+                nextSpinDouble: nextSpinDouble,
+                lastUpdate: Date.now(),
+                wheelRotation: lastWheelRotation
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('wheelGameState', JSON.stringify(gameState));
+            
+            // Save to API
+            try {
+                const response = await fetch(`${API_BASE_URL}/saveScore`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        name: playerName,
+                        score: points
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to save score to server');
+                }
+            } catch (err) {
+                console.error("Error saving to API:", err);
+                // Use localStorage as fallback
+                updateLocalLeaderboard();
+            }
+        }
+
+        // Load game state
+        async function loadGameState() {
+            // First load from localStorage
+            const savedState = localStorage.getItem('wheelGameState');
+            if (savedState) {
+                const gameState = JSON.parse(savedState);
+                
+                // Check if state is from current 30-minute period
+                const now = new Date();
+                const stateTime = new Date(gameState.lastUpdate);
+                
+                // Calculate if they're in the same 30-minute period
+                const nowPeriod = Math.floor(now.getHours() * 2 + now.getMinutes() / 30);
+                const statePeriod = Math.floor(stateTime.getHours() * 2 + stateTime.getMinutes() / 30);
+                
+                const sameDay = now.getDate() === stateTime.getDate() && 
+                                now.getMonth() === stateTime.getMonth() && 
+                                now.getFullYear() === stateTime.getFullYear();
+                
+                if (sameDay && nowPeriod === statePeriod) {
+                    points = gameState.points || 0;
+                    spinsLeft = gameState.spinsLeft !== undefined ? gameState.spinsLeft : 50;
+                    nextSpinDouble = gameState.nextSpinDouble || false;
+                    lastWheelRotation = gameState.wheelRotation || 0;
+                } else {
+                    // Reset spins for new period but keep points
+                    points = gameState.points || 0;
+                    spinsLeft = 50;
+                    nextSpinDouble = false;
+                    lastWheelRotation = 0;
+                }
+            }
+            
+            // Try to fetch from API
+            try {
+                const response = await fetch(`${API_BASE_URL}/getScore?userId=${userId}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.score > points) {
+                        points = data.score;
+                        updateStats();
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading from API:", err);
+            }
+        }
+
+        // Save player name
+        async function savePlayerName() {
+            const newName = playerNameInput.value.trim();
+            if (newName) {
+                SOUNDS.click.play();
+                
+                playerName = newName;
+                localStorage.setItem('playerName', playerName);
+                
+                // Save to API
+                try {
+                    await saveGameState();
+                    await loadLeaderboard();
+                } catch (err) {
+                    console.error("Error saving name to API:", err);
+                    updateLocalLeaderboard();
+                }
+                
+                // Show confirmation
+                showResult('✅', `Tên "${playerName}" đã được lưu thành công!`);
+                showNotification(`Tên đã cập nhật thành "${playerName}"!`);
+            }
+        }
+
+        // Update local leaderboard (fallback when API fails)
+        function updateLocalLeaderboard() {
+            let leaderboard = localStorage.getItem('localLeaderboard');
+            if (leaderboard) {
+                leaderboard = JSON.parse(leaderboard);
+            } else {
+                leaderboard = [
+                    { userId: "sample1", name: "Vô Địch", score: 2800 },
+                    { userId: "sample2", name: "Tuấn Anh", score: 2200 },
+                    { userId: "sample3", name: "Mai Phương", score: 1800 },
+                    { userId: "sample4", name: "Bảo Long", score: 1500 },
+                    { userId: "sample5", name: "Thu Hà", score: 1200 }
+                ];
+            }
+            
+            // Update current player
+            const existingIndex = leaderboard.findIndex(entry => entry.userId === userId);
+            if (existingIndex !== -1) {
+                if (points > leaderboard[existingIndex].score) {
+                    leaderboard[existingIndex].score = points;
+                    leaderboard[existingIndex].name = playerName;
+                }
+            } else if (points > 0) {
+                leaderboard.push({
+                    userId: userId,
+                    name: playerName,
+                    score: points
+                });
+            }
+            
+            // Sort and save
+            leaderboard.sort((a, b) => b.score - a.score);
+            localStorage.setItem('localLeaderboard', JSON.stringify(leaderboard));
+            
+            // Update UI
+            updateLeaderboardDisplay(leaderboard);
+        }
+
+        // Load leaderboard
+        async function loadLeaderboard() {
+            leaderboardList.innerHTML = '<li class="leaderboard-item"><div class="spinner"></div></li>';
+            leaderboardStatus.textContent = 'Đang tải dữ liệu...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/getLeaderboard`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load leaderboard');
+                }
+                
+                const leaderboard = await response.json();
+                
+                if (!leaderboard || leaderboard.length === 0) {
+                    throw new Error('No leaderboard data');
+                }
+                
+                updateLeaderboardDisplay(leaderboard);
+                leaderboardStatus.textContent = `Cập nhật lúc: ${new Date().toLocaleTimeString()}`;
+            } catch (err) {
+                console.error("Error loading leaderboard:", err);
+                leaderboardStatus.textContent = 'Đang sử dụng dữ liệu offline. Kết nối lại sau...';
+                
+                // Fallback to local data
+                let localLeaderboard = localStorage.getItem('localLeaderboard');
+                if (localLeaderboard) {
+                    localLeaderboard = JSON.parse(localLeaderboard);
+                } else {
+                    localLeaderboard = [
+                        { userId: "sample1", name: "Vô Địch", score: 2800 },
+                        { userId: "sample2", name: "Tuấn Anh", score: 2200 },
+                        { userId: "sample3", name: "Mai Phương", score: 1800 },
+                        { userId: "sample4", name: "Bảo Long", score: 1500 },
+                        { userId: "sample5", name: "Thu Hà", score: 1200 }
+                    ];
+                    localStorage.setItem('localLeaderboard', JSON.stringify(localLeaderboard));
+                }
+                
+                updateLocalLeaderboard();
+            }
+        }
+
+        // Update leaderboard display
+        function updateLeaderboardDisplay(leaderboard) {
+            leaderboardList.innerHTML = '';
+            
+            // Sort the leaderboard
+            leaderboard.sort((a, b) => b.score - a.score);
+            
+            // Limit to top 10
+            const topScores = leaderboard.slice(0, 10);
+            
+            topScores.forEach((player, index) => {
+                const li = document.createElement('li');
+                li.className = 'leaderboard-item';
+                
+                const isCurrentPlayer = player.userId === userId;
+                if (isCurrentPlayer) {
+                    li.style.backgroundColor = 'rgba(255, 235, 59, 0.2)';
+                }
+                
+                // Add extra effects for top 3 places
+                let specialEffect = '';
+                if (index === 0) {
+                    specialEffect = 'float';
+                } else if (index === 1 || index === 2) {
+                    specialEffect = 'pulse';
+                }
+                
+                li.innerHTML = `
+                    <div class="leaderboard-rank ${index < 3 ? specialEffect : ''}">${index + 1}</div>
+                    <div class="leaderboard-info">
+                        <div class="leaderboard-name">${player.name}${isCurrentPlayer ? ' (Bạn)' : ''}</div>
+                    </div>
+                    <div class="leaderboard-score">${player.score.toLocaleString()}</div>
+                `;
+                
+                leaderboardList.appendChild(li);
+            });
+            
+            // Animation for leaderboard items
+            anime({
+                targets: '.leaderboard-item',
+                translateX: [20, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(100),
+                easing: 'easeOutQuad'
+            });
+        }
+
+        // Update leaderboard
+        async function updateLeaderboard() {
+            // First update the local leaderboard as fallback
+            updateLocalLeaderboard();
+            
+            // Then try to update via API
+            try {
+                await saveGameState();
+                // Only reload leaderboard sometimes to reduce API calls
+                if (Math.random() < 0.3) {
+                    await loadLeaderboard();
+                }
+            } catch (err) {
+                console.error("Error updating leaderboard:", err);
+            }
+        }
+
+        // Event listeners
+        spinBtn.addEventListener('click', spinWheel);
+        saveRewardBtn.addEventListener('click', saveRewardCard);
+        saveNameBtn.addEventListener('click', savePlayerName);
+
+        // HTML2Canvas library for saving reward card as image
+        // This would normally be included via a CDN, but here's a minimal implementation
+        function html2canvas(element) {
+            return new Promise((resolve, reject) => {
+                try {
+                    // Create canvas element
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    
+                    // Set canvas dimensions to match element
+                    const rect = element.getBoundingClientRect();
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+                    
+                    // Draw a white background
+                    context.fillStyle = 'white';
+                    context.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // In a real implementation, this would render the HTML element to the canvas
+                    // Here we're just creating a simple placeholder
+                    context.fillStyle = 'red';
+                    context.font = 'bold 20px Arial';
+                    context.textAlign = 'center';
+                    context.fillText('Thẻ quà tặng Hiếu Gà', canvas.width/2, 30);
+                    
+                    context.fillStyle = 'black';
+                    context.font = '16px Arial';
+                    context.fillText(rewardValue.textContent, canvas.width/2, 60);
+                    
+                    context.fillStyle = 'blue';
+                    context.fillText(rewardCode.textContent, canvas.width/2, 90);
+                    
+                    context.fillStyle = 'gray';
+                    context.font = '12px Arial';
+                    context.fillText(rewardDate.textContent, canvas.width/2, 120);
+                    
+                    resolve(canvas);
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+
+        // Initialize the game when the page loads
+        window.addEventListener('load', initGame);
+        
+        // Periodically refresh leaderboard
+        setInterval(loadLeaderboard, 60000); // Every minute
+    </script>
+</body>
+</html>
