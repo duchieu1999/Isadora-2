@@ -1397,7 +1397,7 @@
                 <div class="stat-label">Lượt quay còn lại</div>
             </div>
             <div class="stat">
-                <div class="stat-value" id="timer-value">59:59</div>
+                <div class="stat-value" id="timer-value">29:59</div>
                 <div class="stat-label">+50 lượt quay sau</div>
             </div>
         </div>
@@ -1458,7 +1458,7 @@
                 <div class="reward-date" id="reward-date">30/04/2025</div>
             </div>
             <div class="reward-watermark">SỰ KIỆN 30/4 HIẾU GÀ OFFICIAL</div>
-            <button class="save-btn" id="save-reward-btn">TẢI VỀ ẢNH PHIẾU NHẬN THƯỞNG</button>
+            <button class="save-btn" id="save-reward-btn">XEM & LƯU PHIẾU THƯỞNG</button>
         </div>
         
         <div class="leaderboard">
@@ -1508,13 +1508,10 @@
     <div class="notification" id="notification"></div>
     
     <script>
-        // Phát hiện ngay nếu đang chạy trong Telegram WebApp
-        const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
-        if (isTelegramWebApp) {
-            console.log("Running in Telegram WebApp environment");
-            // Thiết lập các thông số ban đầu cho Telegram WebApp
-            document.documentElement.style.setProperty('--primary-color', '#0088cc');
-        }
+        // Mặc định coi như đang chạy trong Telegram WebApp
+        const isTelegramWebApp = true;
+        // Thiết lập các thông số ban đầu cho Telegram WebApp
+        document.documentElement.style.setProperty('--primary-color', '#0088cc');
         
         // Sound effects
         const SOUNDS = {
@@ -1620,25 +1617,30 @@
         // Initialize the game
         async function initGame() {
             try {
-                // Phát hiện nếu đang chạy trong Telegram WebApp
-                if (isTelegramWebApp) {
-                    console.log("Configuring for Telegram WebApp");
-                    
-                    // Nghe sự kiện từ Telegram WebApp nếu cần
-                    window.Telegram.WebApp.onEvent('viewportChanged', function() {
-                        // Điều chỉnh giao diện cho phù hợp với kích thước WebApp mới
-                        adjustWheelSize();
-                    });
-                    
-                    // Thay đổi văn bản nút phiếu quà
-                    updateButtonText();
-                    
-                    // Cho Telegram biết app đã sẵn sàng
-                    window.Telegram.WebApp.ready();
-                    
-                    // Đặt màu nền chính của thanh main button trong Telegram (nếu cần)
-                    if (window.Telegram.WebApp.setHeaderColor) {
-                        window.Telegram.WebApp.setHeaderColor('#d82f2f');
+                // Cấu hình cho Telegram WebApp
+                console.log("Configuring for Telegram WebApp");
+                
+                // Thay đổi văn bản nút phiếu quà
+                updateButtonText();
+                
+                // Kiểm tra xem Telegram API có tồn tại không
+                if (window.Telegram && window.Telegram.WebApp) {
+                    try {
+                        // Nghe sự kiện từ Telegram WebApp nếu cần
+                        window.Telegram.WebApp.onEvent('viewportChanged', function() {
+                            // Điều chỉnh giao diện cho phù hợp với kích thước WebApp mới
+                            adjustWheelSize();
+                        });
+                        
+                        // Cho Telegram biết app đã sẵn sàng
+                        window.Telegram.WebApp.ready();
+                        
+                        // Đặt màu nền chính của thanh main button trong Telegram (nếu cần)
+                        if (window.Telegram.WebApp.setHeaderColor) {
+                            window.Telegram.WebApp.setHeaderColor('#d82f2f');
+                        }
+                    } catch (e) {
+                        console.log("Telegram API not available, but UI optimized for Telegram");
                     }
                 }
                 
@@ -1703,15 +1705,15 @@
             }
         }
 
-        // Thêm hàm điều chỉnh kích thước bánh xe
+        // Thêm hàm điều chỉnh kích thước bánh xe cho Telegram
         function adjustWheelSize() {
             const isMobile = window.innerWidth < 500;
             
-            // Điều chỉnh kích thước bánh xe dựa trên môi trường và thiết bị
+            // Điều chỉnh kích thước bánh xe dựa trên thiết bị
             const wheelContainer = document.querySelector('.wheel-outer-container');
             if (wheelContainer) {
                 if (isMobile) {
-                    wheelContainer.style.maxWidth = isTelegramWebApp ? '280px' : '300px';
+                    wheelContainer.style.maxWidth = '280px'; // Kích thước tối ưu cho Telegram mobile
                 } else {
                     wheelContainer.style.maxWidth = '340px';
                 }
@@ -1723,8 +1725,8 @@
             const lastRefreshTime = localStorage.getItem('lastRefreshTime');
             const now = new Date().getTime();
             
-            // Nếu chưa có thời điểm làm mới hoặc đã qua 1 giờ kể từ lần làm mới cuối
-            if (!lastRefreshTime || (now - parseInt(lastRefreshTime)) >= 3600000) {
+            // Nếu chưa có thời điểm làm mới hoặc đã qua 30 phút kể từ lần làm mới cuối
+            if (!lastRefreshTime || (now - parseInt(lastRefreshTime)) >= 1800000) {
                 // Đặt lại số lượt quay lên 50
                 spinsLeft = 50;
                 updateStats();
@@ -1732,12 +1734,11 @@
                 // Lưu thời điểm làm mới mới
                 localStorage.setItem('lastRefreshTime', now);
                 
-                // Tính toán thời điểm làm mới tiếp theo
-                const nextHour = new Date();
-                nextHour.setHours(nextHour.getHours() + 1);
-                nextHour.setMinutes(0, 0, 0);
-                nextHour.setSeconds(0, 0);
-                localStorage.setItem('nextRefreshTime', nextHour.getTime());
+                // Tính toán thời điểm làm mới tiếp theo (30 phút)
+                const nextTime = new Date();
+                nextTime.setMinutes(nextTime.getMinutes() + 30);
+                nextTime.setSeconds(0, 0);
+                localStorage.setItem('nextRefreshTime', nextTime.getTime());
                 
                 // Lưu trạng thái mới
                 saveGameState();
@@ -1746,16 +1747,12 @@
             }
         }
 
-        // Hàm cập nhật văn bản nút dựa vào môi trường
+        // Hàm cập nhật văn bản nút cho Telegram
         function updateButtonText() {
             const saveRewardBtn = document.getElementById('save-reward-btn');
             
             if (saveRewardBtn) {
-                if (isTelegramWebApp) {
-                    saveRewardBtn.textContent = 'XEM & LƯU PHIẾU THƯỞNG';
-                } else {
-                    saveRewardBtn.textContent = 'TẢI VỀ ẢNH PHIẾU NHẬN THƯỞNG';
-                }
+                saveRewardBtn.textContent = 'XEM & LƯU PHIẾU THƯỞNG';
             }
         }
 
@@ -2227,16 +2224,15 @@
             let lastRefreshTime = localStorage.getItem('lastRefreshTime');
             const now = new Date().getTime();
             
-            // If no saved time or saved time is in the past, calculate next refresh hour
+            // If no saved time or saved time is in the past, calculate next refresh time
             if (!nextRefreshTime || parseInt(nextRefreshTime) <= now) {
-                // Calculate next whole hour
-                const nextHour = new Date();
-                nextHour.setHours(nextHour.getHours() + 1);
-                nextHour.setMinutes(0, 0, 0);
-                nextHour.setSeconds(0, 0);
+                // Calculate next refresh time (30 minutes from now)
+                const nextTime = new Date();
+                nextTime.setMinutes(nextTime.getMinutes() + 30);
+                nextTime.setSeconds(0, 0);
                 
                 // Save to localStorage
-                nextRefreshTime = nextHour.getTime();
+                nextRefreshTime = nextTime.getTime();
                 localStorage.setItem('nextRefreshTime', nextRefreshTime);
                 
                 // Also save the last refresh time if not set
@@ -2265,16 +2261,15 @@
                     const currentTime = new Date().getTime();
                     localStorage.setItem('lastRefreshTime', currentTime);
                     
-                    // Calculate next hour refresh time
-                    const nextHour = new Date();
-                    nextHour.setHours(nextHour.getHours() + 1);
-                    nextHour.setMinutes(0, 0, 0);
-                    nextHour.setSeconds(0, 0);
-                    nextRefreshTime = nextHour.getTime();
+                    // Calculate next refresh time (30 minutes from now)
+                    const nextTime = new Date();
+                    nextTime.setMinutes(nextTime.getMinutes() + 30);
+                    nextTime.setSeconds(0, 0);
+                    nextRefreshTime = nextTime.getTime();
                     localStorage.setItem('nextRefreshTime', nextRefreshTime);
                     
                     // Reset timeLeft for next cycle
-                    timeLeft = nextRefreshTime - currentTime;
+                    timeLeft = 1800000; // 30 minutes in milliseconds
                     
                     // Show reset notification
                     showNotification("Lượt quay đã được làm mới!");
@@ -2391,10 +2386,7 @@
             
             // Show reward card with animation
             rewardCard.style.display = 'block';
-            
-            // Cập nhật nút dựa trên môi trường (Telegram hay browser)
-            updateButtonText();
-            
+                        
             anime({
                 targets: '#reward-card',
                 scale: [0.9, 1],
@@ -2490,6 +2482,21 @@
             customPosterImage = imageUrl;
         }
 
+        // Lưu phiếu thưởng - luôn sử dụng overlay toàn màn hình
+        function saveRewardPoster() {
+            SOUNDS.click.play();
+            
+            // Đảm bảo rằng customPosterImage đã được tạo
+            if (!customPosterImage) {
+                // Nếu chưa có, tạo lại
+                const amount = parseInt(rewardValue.textContent.replace(/\D/g, ''));
+                generateRewardPoster(amount);
+            }
+            
+            // Hiển thị overlay toàn màn hình với poster và hướng dẫn
+            showPosterOverlay();
+        }
+
         // Hiển thị poster toàn màn hình
         function showPosterOverlay() {
             // Tạo overlay hiển thị poster toàn màn hình
@@ -2525,7 +2532,7 @@
             buttonContainer.className = 'poster-button-container';
             
             // Nút chia sẻ qua Telegram (nếu có API)
-            if (isTelegramWebApp) {
+            if (window.Telegram && window.Telegram.WebApp) {
                 const shareButton = document.createElement('button');
                 shareButton.textContent = 'Chia sẻ với Hiếu Gà';
                 shareButton.className = 'poster-share-button';
@@ -2533,19 +2540,17 @@
                 // Xử lý sự kiện click cho nút chia sẻ
                 shareButton.addEventListener('click', function() {
                     try {
-                        if (window.Telegram && window.Telegram.WebApp) {
-                            // Thông báo cho bot hoặc người dùng Telegram
-                            window.Telegram.WebApp.sendData(JSON.stringify({
-                                action: 'reward_claimed',
-                                amount: rewardValue.textContent,
-                                user: playerName,
-                                date: rewardDate.textContent
-                            }));
-                            
-                            // Đóng overlay và thông báo
-                            document.body.removeChild(overlay);
-                            showNotification('Đã gửi thông tin đến Hiếu Gà!');
-                        }
+                        // Thông báo cho bot hoặc người dùng Telegram
+                        window.Telegram.WebApp.sendData(JSON.stringify({
+                            action: 'reward_claimed',
+                            amount: rewardValue.textContent,
+                            user: playerName,
+                            date: rewardDate.textContent
+                        }));
+                        
+                        // Đóng overlay và thông báo
+                        document.body.removeChild(overlay);
+                        showNotification('Đã gửi thông tin đến Hiếu Gà!');
                     } catch (e) {
                         console.error("Error sharing to Telegram", e);
                         showNotification('Không thể chia sẻ. Vui lòng chụp màn hình!');
@@ -2580,56 +2585,6 @@
                 posterContainer.style.transition = 'transform 0.3s ease-out';
                 posterContainer.style.transform = 'scale(1)';
             }, 50);
-        }
-
-        // Lưu phiếu thưởng
-        function saveRewardPoster() {
-            SOUNDS.click.play();
-            
-            // Đảm bảo rằng customPosterImage đã được tạo
-            if (!customPosterImage) {
-                // Nếu chưa có, tạo lại
-                const amount = parseInt(rewardValue.textContent.replace(/\D/g, ''));
-                generateRewardPoster(amount);
-            }
-            
-            if (isTelegramWebApp) {
-                // Hiển thị overlay toàn màn hình với poster và hướng dẫn
-                showPosterOverlay();
-            } else {
-                // Chức năng tải xuống cho trình duyệt thông thường
-                try {
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = customPosterImage;
-                    downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
-                    
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-                    
-                    showNotification('Đã tải poster thành công!');
-                } catch (err) {
-                    console.error('Error downloading poster:', err);
-                    
-                    // Fallback to HTML2Canvas
-                    html2canvas(rewardCard).then(canvas => {
-                        const imageUrl = canvas.toDataURL('image/png');
-                        
-                        const downloadLink = document.createElement('a');
-                        downloadLink.href = imageUrl;
-                        downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
-                        
-                        document.body.appendChild(downloadLink);
-                        downloadLink.click();
-                        document.body.removeChild(downloadLink);
-                        
-                        showNotification('Đã tải poster thành công!');
-                    }).catch(err => {
-                        console.error('Error saving reward poster:', err);
-                        alert('Không thể tải poster. Vui lòng thử lại sau!');
-                    });
-                }
-            }
         }
 
         // Save game state to localStorage and API
@@ -2679,8 +2634,8 @@
             if (savedState) {
                 const gameState = JSON.parse(savedState);
                 
-                // Check if it's been more than an hour since the last refresh
-                if (!lastRefreshTime || (now - parseInt(lastRefreshTime)) >= 3600000) {
+                // Check if it's been more than 30 minutes since the last refresh
+                if (!lastRefreshTime || (now - parseInt(lastRefreshTime)) >= 1800000) {
                     // Reset spins but keep points
                     points = gameState.points || 0;
                     spinsLeft = 50;
