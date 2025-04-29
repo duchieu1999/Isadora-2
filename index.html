@@ -510,21 +510,42 @@
             // Tải texture cho xe tăng
             async loadTextures() {
                 return new Promise((resolve) => {
-                    const tankUrl = 'https://img.upanh.tv/2025/04/29/ChatGPT-Image-12_31_11-29-thg-4-2025.png';
-                    
-                    PIXI.Assets.load(tankUrl).then(texture => {
-                        this.playerTexture = texture;
-                        resolve();
-                    }).catch(error => {
-                        console.error("Error loading tank texture:", error);
-                        // Fallback texture as a colored square if image can't load
+                    try {
+                        const tankUrl = 'https://img.upanh.tv/2025/04/29/ChatGPT-Image-12_31_11-29-thg-4-2025.png';
+                        
+                        // Tạo texture dự phòng trước khi tải
                         const graphics = new PIXI.Graphics();
                         graphics.beginFill(0x5D5CDE);
-                        graphics.drawRect(0, 0, 64, 64);
+                        graphics.drawRect(-32, -32, 64, 64);
                         graphics.endFill();
                         this.playerTexture = this.app.renderer.generateTexture(graphics);
+                        
+                        // Tải hình ảnh xe tăng
+                        const img = new Image();
+                        img.crossOrigin = "Anonymous";
+                        img.onload = () => {
+                            this.playerTexture = PIXI.Texture.from(img);
+                            console.log("Tank texture loaded successfully");
+                            resolve();
+                        };
+                        img.onerror = (e) => {
+                            console.error("Error loading tank image:", e);
+                            // Đã có texture dự phòng, tiếp tục
+                            resolve();
+                        };
+                        img.src = tankUrl;
+                    } catch (error) {
+                        console.error("Error in loadTextures:", error);
+                        // Đảm bảo luôn có texture dự phòng nếu có lỗi
+                        if (!this.playerTexture) {
+                            const graphics = new PIXI.Graphics();
+                            graphics.beginFill(0x5D5CDE);
+                            graphics.drawRect(-32, -32, 64, 64);
+                            graphics.endFill();
+                            this.playerTexture = this.app.renderer.generateTexture(graphics);
+                        }
                         resolve();
-                    });
+                    }
                 });
             }
 
@@ -1000,49 +1021,91 @@
                     nameInput.value = savedName;
                 }
                 
-                // Xử lý nút bắt đầu chơi
-                startButton.addEventListener('click', () => {
-                    let playerName = nameInput.value.trim();
-                    if (!playerName) playerName = `Player${Math.floor(Math.random() * 1000)}`;
-                    if (playerName.length > 15) playerName = playerName.substring(0, 15);
-                    
-                    // Lưu tên người chơi
-                    localStorage.setItem('playerName', playerName);
-                    
-                    // Khởi tạo người chơi
-                    const playerX = GAME_CONFIG.MAP_WIDTH / 2;
-                    const playerY = GAME_CONFIG.MAP_HEIGHT / 2;
-                    
-                    // Tạo ID cho người chơi
-                    const playerId = 'player_' + Date.now();
-                    
-                    // Kiểm tra xem có dữ liệu đã lưu không
-                    const savedPlayer = JSON.parse(localStorage.getItem('playerData'));
-                    let x = playerX;
-                    let y = playerY;
-                    let score = 0;
-                    
-                    if (savedPlayer) {
-                        x = savedPlayer.x;
-                        y = savedPlayer.y;
-                        score = savedPlayer.score;
+                // Xử lý nút bắt đầu chơi - Sử dụng function thay vì arrow function để đảm bảo binding đúng
+                startButton.addEventListener('click', function() {
+                    try {
+                        console.log("Start button clicked");
+                        
+                        let playerName = nameInput.value.trim();
+                        if (!playerName) playerName = `Player${Math.floor(Math.random() * 1000)}`;
+                        if (playerName.length > 15) playerName = playerName.substring(0, 15);
+                        
+                        // Lưu tên người chơi
+                        try {
+                            localStorage.setItem('playerName', playerName);
+                        } catch (e) {
+                            console.log("Could not save player name to localStorage");
+                        }
+                        
+                        // Khởi tạo người chơi
+                        const playerX = GAME_CONFIG.MAP_WIDTH / 2;
+                        const playerY = GAME_CONFIG.MAP_HEIGHT / 2;
+                        
+                        // Tạo ID cho người chơi
+                        const playerId = 'player_' + Date.now();
+                        
+                        // Kiểm tra xem có dữ liệu đã lưu không
+                        let x = playerX;
+                        let y = playerY;
+                        let score = 0;
+                        
+                        try {
+                            const savedPlayerData = localStorage.getItem('playerData');
+                            if (savedPlayerData) {
+                                const savedPlayer = JSON.parse(savedPlayerData);
+                                x = savedPlayer.x || playerX;
+                                y = savedPlayer.y || playerY;
+                                score = savedPlayer.score || 0;
+                            }
+                        } catch (e) {
+                            console.log("Could not load saved player data", e);
+                            // Use defaults
+                        }
+                        
+                        // Make sure we have a valid texture before creating the player
+                        if (!game.playerTexture) {
+                            // Create fallback texture if missing
+                            const graphics = new PIXI.Graphics();
+                            graphics.beginFill(0x5D5CDE);
+                            graphics.drawRect(-32, -32, 64, 64);
+                            graphics.endFill();
+                            game.playerTexture = game.app.renderer.generateTexture(graphics);
+                        }
+                        
+                        game.player = game.createPlayer(playerId, playerName, x, y);
+                        game.player.score = score;
+                        
+                        // Cập nhật điểm số hiển thị
+                        document.getElementById('scoreValue').textContent = score;
+                        game.playerSprites[playerId].scoreText.text = score.toString();
+                        
+                        // Ẩn màn hình giới thiệu
+                        document.getElementById('introScreen').style.display = 'none';
+                        
+                        // Khôi phục trạng thái các lá cờ
+                        try {
+                            game.restoreFlagsState();
+                        } catch (e) {
+                            console.log("Could not restore flags state", e);
+                            // Continue with new flags
+                        }
+                        
+                        // Bắt đầu game
+                        game.gameStarted = true;
+                        console.log("Game started successfully");
+                    } catch (error) {
+                        console.error("Error starting game:", error);
+                        // Fallback to ensure game starts even if there are errors
+                        document.getElementById('introScreen').style.display = 'none';
+                        
+                        if (!game.player) {
+                            const playerId = 'player_emergency_' + Date.now();
+                            game.player = game.createPlayer(playerId, "Player", GAME_CONFIG.MAP_WIDTH / 2, GAME_CONFIG.MAP_HEIGHT / 2);
+                        }
+                        
+                        game.gameStarted = true;
+                        alert("Game started with some errors. If you experience issues, please refresh the page.");
                     }
-                    
-                    this.player = this.createPlayer(playerId, playerName, x, y);
-                    this.player.score = score;
-                    
-                    // Cập nhật điểm số hiển thị
-                    document.getElementById('scoreValue').textContent = score;
-                    this.playerSprites[playerId].scoreText.text = score.toString();
-                    
-                    // Ẩn màn hình giới thiệu
-                    document.getElementById('introScreen').style.display = 'none';
-                    
-                    // Khôi phục trạng thái các lá cờ
-                    this.restoreFlagsState();
-                    
-                    // Bắt đầu game
-                    this.gameStarted = true;
                 });
                 
                 // Xử lý bảng xếp hạng
