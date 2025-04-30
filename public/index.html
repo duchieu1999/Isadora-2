@@ -2110,7 +2110,7 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
     if (!nextRefreshTime || new Date(parseInt(nextRefreshTime)) <= now) {
         // Calculate next whole hour
         const nextHour = new Date(now);
-        nextHour.setMinutes(now.getMinutes() + 35, 0, 0);
+        nextHour.setMinutes(now.getMinutes() + 30, 0, 0);
         
         // Save to localStorage
         nextRefreshTime = nextHour.getTime();
@@ -2146,7 +2146,7 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
             localStorage.setItem('nextRefreshTime', nextRefreshTime);
             
             // Reset timeLeft for next cycle
-            timeLeft = 2100000; // 1 hour in milliseconds
+            timeLeft = 1800000; 
             
             // Restart timer display
             updateTimer();
