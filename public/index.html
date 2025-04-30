@@ -1473,8 +1473,8 @@
             { name: "Quà tặng bất ngờ", icon: "🎁", points: 0, randomCard: true, probability: 0.08 },
             { name: "Pháo hoa giải phóng", icon: "🎆", points: 10, extraSpin: true, probability: 0.07 },
             { name: "Lá cờ giải phóng", icon: "🚩", points: 80, probability: 0.04 },
-            { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -25, probability: 0.10 },
-            { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -35, probability: 0.08 },
+            { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -10, probability: 0.10 },
+            { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -15, probability: 0.08 },
             { name: "Nhận đôi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 },
             // Thêm phần thưởng jackpot với tỉ lệ thấp
             { name: "JACKPOT ĐẶC BIỆT", icon: "💰", points: 100, jackpot: true, probability: 0.001 },
@@ -1903,7 +1903,7 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
                 SOUNDS.lose.play();
             } else if (section.randomCard) {
                 // Random card gives points between 10-200 (increased range)
-                const randomPoints = Math.floor(Math.random() * 81) + 10;
+                const randomPoints = Math.floor(Math.random() * 181) + 100;
                 pointsEarned = randomPoints;
                 message += `<strong>${section.name}!</strong> Bạn nhận được ${pointsEarned} điểm! `;
                 SOUNDS.win.play();
