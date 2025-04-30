@@ -15,14 +15,14 @@ const MONGODB_URI = "mongodb+srv://duchieufaryoung0:80E9gUahdOXmGKuy@cluster0.6n
 const DB_NAME = "telegram_bot_db";
 const COLLECTION_NAME = "wheel_game_leaderboard";
 
+// Game constants
+const MAX_SPINS = 50;
+const REFRESH_TIME_MS = 30 * 60 * 1000; // 30 minutes in milliseconds
+
 // MongoDB Client
 let mongoClient;
 let db;
 let leaderboardCollection;
-
-// Constants for game config
-const MAX_SPINS = 50;
-const REFRESH_TIME_MS = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 // Connect to MongoDB
 async function connectToMongoDB() {
@@ -73,7 +73,7 @@ function validateAndUpdateSpins(playerData) {
 // API Routes
 app.post('/api/saveScore', async (req, res) => {
   try {
-    const { userId, name, score, spinsLeft, lastSpinRefreshTime, nextSpinDouble } = req.body;
+    const { userId, name, score, spinsLeft, lastSpinRefreshTime, nextSpinDouble, lastUpdate } = req.body;
     
     if (!userId || !name || score === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -172,7 +172,44 @@ app.get('/api/getScore', async (req, res) => {
   }
 });
 
-// New endpoint to check and refresh spins
+// Force refresh spins endpoint
+app.post('/api/refreshSpins', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId parameter' });
+    }
+    
+    let player = await leaderboardCollection.findOne({ userId });
+    
+    if (!player) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+    
+    // Force refresh spins
+    player.spinsLeft = MAX_SPINS;
+    player.lastSpinRefreshTime = new Date().getTime();
+    player.nextRefreshTime = player.lastSpinRefreshTime + REFRESH_TIME_MS;
+    
+    // Update in database
+    await leaderboardCollection.updateOne(
+      { userId },
+      { $set: player }
+    );
+    
+    res.json({
+      success: true,
+      refreshed: true,
+      player
+    });
+  } catch (err) {
+    console.error('Error refreshing spins:', err);
+    res.status(500).json({ error: 'Failed to refresh spins' });
+  }
+});
+
+// Check spins endpoint
 app.post('/api/checkSpins', async (req, res) => {
   try {
     const { userId } = req.body;
