@@ -1702,22 +1702,22 @@ async function initGame() {
         adjustWheelSize();
         
         // Kiểm tra lại một lần nữa số lượt quay sau khi khởi tạo
-        setTimeout(() => {
-            const savedState = localStorage.getItem('wheelGameState');
-            if (savedState) {
-                const gameState = JSON.parse(savedState);
-                console.log("Current spins: " + spinsLeft + ", Saved spins: " + gameState.spinsLeft);
-                
-                // Đảm bảo UI hiển thị đúng số lượt quay
-                if (spinsLeft !== gameState.spinsLeft) {
-                    spinsLeft = gameState.spinsLeft;
-                    updateStats();
-                }
-            }
-            
-            // Kiểm tra và áp dụng reset lượt quay nếu cần
-            checkSpinReset();
-        }, 500);
+setTimeout(() => {
+    const savedState = localStorage.getItem('wheelGameState');
+    if (savedState) {
+        const gameState = JSON.parse(savedState);
+        console.log("Current spins: " + spinsLeft + ", Saved spins: " + gameState.spinsLeft);
+        
+        // Đảm bảo UI hiển thị đúng số lượt quay
+        if (spinsLeft !== gameState.spinsLeft) {
+            spinsLeft = gameState.spinsLeft;
+            updateStats();
+        }
+    }
+    
+    // Kiểm tra và áp dụng reset lượt quay nếu cần
+    checkSpinReset();
+}, 500);
         
         showNotification("Đã kết nối máy chủ thành công!");
     } catch (error) {
@@ -2199,62 +2199,7 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
             spinsValue.textContent = spinsLeft;
         }
 
-        function startRefreshTimer() {
-    // Check if we have a saved next refresh time in localStorage
-    let nextRefreshTime = localStorage.getItem('nextRefreshTime');
-    const now = new Date();
-    
-    // If no saved time or saved time is in the past, calculate next refresh time
-    if (!nextRefreshTime || new Date(parseInt(nextRefreshTime)) <= now) {
-        // Calculate next refresh at exactly 30 minutes from now
-        const nextRefresh = new Date(now);
-        nextRefresh.setMinutes(nextRefresh.getMinutes() + 30, 0, 0);
-        
-        // Save to localStorage
-        nextRefreshTime = nextRefresh.getTime();
-        localStorage.setItem('nextRefreshTime', nextRefreshTime);
-    }
-    
-    // Calculate time left based on saved next refresh time
-    let timeLeft = new Date(parseInt(nextRefreshTime)) - now;
-    
-    // Update timer display
-    function updateTimer() {
-        const minutes = Math.floor((timeLeft / 1000) / 60);
-        const seconds = Math.floor((timeLeft / 1000) % 60);
-        timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        
-        timeLeft -= 1000;
-        
-        if (timeLeft <= 0) {
-            // Reset spins when timer reaches zero
-            spinsLeft = 50;
-            updateStats();
-            saveGameState();
-            
-            // Show reset notification
-            showNotification("Lượt quay đã được làm mới! +50 lượt quay");
-            
-            // Calculate and save next refresh time (30 minutes from now)
-            const freshNow = new Date();
-            const nextRefresh = new Date(freshNow);
-            nextRefresh.setMinutes(nextRefresh.getMinutes() + 30, 0, 0);
-            
-            nextRefreshTime = nextRefresh.getTime();
-            localStorage.setItem('nextRefreshTime', nextRefreshTime);
-            
-            // Reset timeLeft for next cycle (30 minutes = 1800000 milliseconds)
-            timeLeft = 1800000;
-            
-            // Force UI update
-            updateStats();
-            
-            // Restart timer display
-            updateTimer();
-        }
-    }
-
-            // Add this function to check if spins need to be reset based on timer
+        // Thêm hàm này vào cùng khu vực với các hàm khác
 function checkSpinReset() {
     const nextRefreshTime = localStorage.getItem('nextRefreshTime');
     const now = new Date();
@@ -2262,11 +2207,11 @@ function checkSpinReset() {
     if (nextRefreshTime) {
         const refreshTime = new Date(parseInt(nextRefreshTime));
         if (now >= refreshTime) {
-            // Timer has expired, reset spins
+            // Timer đã hết hạn, đặt lại số lượt quay
             spinsLeft = 50;
             updateStats();
             
-            // Calculate new refresh time (30 minutes from now)
+            // Tính toán thời gian làm mới tiếp theo (30 phút từ hiện tại)
             const nextRefresh = new Date(now);
             nextRefresh.setMinutes(nextRefresh.getMinutes() + 30, 0, 0);
             localStorage.setItem('nextRefreshTime', nextRefresh.getTime());
@@ -2275,10 +2220,65 @@ function checkSpinReset() {
         }
     }
 }
+
+        function startRefreshTimer() {
+    // Kiểm tra xem có thời gian làm mới tiếp theo đã lưu trong localStorage không
+    let nextRefreshTime = localStorage.getItem('nextRefreshTime');
+    const now = new Date();
     
-    // Update immediately and then every second
+    // Nếu không có thời gian đã lưu hoặc thời gian đã lưu ở quá khứ, tính toán thời gian làm mới tiếp theo
+    if (!nextRefreshTime || new Date(parseInt(nextRefreshTime)) <= now) {
+        // Tính toán thời gian làm mới sau đúng 30 phút
+        const nextRefresh = new Date(now);
+        nextRefresh.setMinutes(nextRefresh.getMinutes() + 30, 0, 0);
+        
+        // Lưu vào localStorage
+        nextRefreshTime = nextRefresh.getTime();
+        localStorage.setItem('nextRefreshTime', nextRefreshTime);
+    }
+    
+    // Tính toán thời gian còn lại dựa trên thời gian làm mới đã lưu
+    let timeLeft = new Date(parseInt(nextRefreshTime)) - now;
+    
+    // Cập nhật hiển thị đếm ngược
+    function updateTimer() {
+        const minutes = Math.floor((timeLeft / 1000) / 60);
+        const seconds = Math.floor((timeLeft / 1000) % 60);
+        timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
+        timeLeft -= 1000;
+        
+        if (timeLeft <= 0) {
+            // Đặt lại số lượt quay khi hết thời gian
+            spinsLeft = 50;
+            updateStats();
+            saveGameState();
+            
+            // Hiển thị thông báo đã làm mới
+            showNotification("Lượt quay đã được làm mới! +50 lượt quay");
+            
+            // Tính toán thời gian làm mới tiếp theo (30 phút từ hiện tại)
+            const freshNow = new Date();
+            const nextRefresh = new Date(freshNow);
+            nextRefresh.setMinutes(nextRefresh.getMinutes() + 30, 0, 0);
+            
+            nextRefreshTime = nextRefresh.getTime();
+            localStorage.setItem('nextRefreshTime', nextRefreshTime);
+            
+            // Đặt lại thời gian còn lại cho chu kỳ tiếp theo (30 phút = 1800000 mili giây)
+            timeLeft = 1800000;
+            
+            // Cập nhật giao diện
+            updateStats();
+            
+            // Khởi động lại hiển thị đếm ngược
+            updateTimer();
+        }
+    }
+    
+    // Cập nhật ngay lập tức và sau đó mỗi giây
     updateTimer();
-    clearInterval(refreshTimer); // Clear any existing timer
+    clearInterval(refreshTimer); // Xóa bất kỳ bộ đếm thời gian hiện có
     refreshTimer = setInterval(updateTimer, 1000);
 }
         
