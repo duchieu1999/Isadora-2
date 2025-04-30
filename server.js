@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '2mb' })); // Tăng giới hạn kích thước request
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -23,32 +23,74 @@ const REFRESH_TIME_MS = 30 * 60 * 1000; // 30 minutes in milliseconds
 let mongoClient;
 let db;
 let leaderboardCollection;
+let isConnected = false;
 
-// Connect to MongoDB
-async function connectToMongoDB() {
-  try {
-    mongoClient = new MongoClient(MONGODB_URI);
-    await mongoClient.connect();
-    console.log('Connected to MongoDB Atlas');
-    
-    db = mongoClient.db(DB_NAME);
-    leaderboardCollection = db.collection(COLLECTION_NAME);
-    
-    // Create index on userId for faster lookups
-    await leaderboardCollection.createIndex({ userId: 1 }, { unique: true });
-    
-    return true;
-  } catch (err) {
-    console.error('Failed to connect to MongoDB:', err);
-    return false;
+// Enhanced connect to MongoDB with retry
+async function connectToMongoDB(retry = 3, delay = 1000) {
+  if (isConnected) return true;
+  
+  let retryCount = 0;
+  while (retryCount < retry) {
+    try {
+      console.log(`Connecting to MongoDB (attempt ${retryCount + 1})...`);
+      mongoClient = new MongoClient(MONGODB_URI, { 
+        connectTimeoutMS: 5000, // Thêm timeout để tránh chờ quá lâu
+        socketTimeoutMS: 45000, // Socket timeout
+        serverSelectionTimeoutMS: 5000 // Server selection timeout
+      });
+      
+      await mongoClient.connect();
+      console.log('Connected to MongoDB Atlas');
+      
+      db = mongoClient.db(DB_NAME);
+      leaderboardCollection = db.collection(COLLECTION_NAME);
+      
+      // Create index on userId for faster lookups
+      await leaderboardCollection.createIndex({ userId: 1 }, { unique: true });
+      
+      isConnected = true;
+      return true;
+    } catch (err) {
+      console.error(`Failed to connect to MongoDB (attempt ${retryCount + 1}):`, err);
+      retryCount++;
+      
+      if (retryCount >= retry) {
+        console.error('Maximum retry attempts reached');
+        return false;
+      }
+      
+      // Wait before next retry
+      await new Promise(resolve => setTimeout(resolve, delay));
+      // Exponential backoff
+      delay *= 2;
+    }
   }
+  return false;
 }
 
 // Initialize MongoDB connection
 connectToMongoDB();
 
+// Ensure database connection middleware
+async function ensureDbConnection(req, res, next) {
+  if (!isConnected) {
+    try {
+      const connected = await connectToMongoDB();
+      if (!connected) {
+        return res.status(500).json({ error: 'Database connection failed' });
+      }
+    } catch (err) {
+      console.error('Database connection check failed:', err);
+      return res.status(500).json({ error: 'Database connection check failed' });
+    }
+  }
+  next();
+}
+
 // Helper function to validate and update spins
 function validateAndUpdateSpins(playerData) {
+  if (!playerData) return false;
+  
   const now = new Date().getTime();
   const lastSpinRefreshTime = playerData.lastSpinRefreshTime || 0;
   const timeSinceLastRefresh = now - lastSpinRefreshTime;
@@ -67,28 +109,54 @@ function validateAndUpdateSpins(playerData) {
     return true; // Spins were adjusted
   }
   
+  // Ensure spins don't go below zero
+  if (playerData.spinsLeft < 0) {
+    playerData.spinsLeft = 0;
+    return true; // Spins were adjusted
+  }
+  
   return false; // No changes needed
 }
 
-// API Routes
-app.post('/api/saveScore', async (req, res) => {
+// API Routes with enhanced error handling
+app.post('/api/saveScore', ensureDbConnection, async (req, res) => {
   try {
-    const { userId, name, score, spinsLeft, lastSpinRefreshTime, nextSpinDouble, lastUpdate } = req.body;
+    console.log("Save score request received");
+    
+    const { userId, name, score, spinsLeft, lastSpinRefreshTime, nextSpinDouble } = req.body;
     
     if (!userId || !name || score === undefined) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      console.error("Missing required fields:", { userId, name, score });
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        details: { userId: !!userId, name: !!name, score: score !== undefined }
+      });
     }
     
     // Get existing player data or create default
-    let playerData = await leaderboardCollection.findOne({ userId }) || {
-      userId,
-      name,
-      score: 0,
-      spinsLeft: MAX_SPINS,
-      lastSpinRefreshTime: 0,
-      nextSpinDouble: false,
-      createdAt: new Date()
-    };
+    let playerData = await leaderboardCollection.findOne({ userId });
+    
+    if (!playerData) {
+      console.log(`Creating new player: ${userId}, ${name}`);
+      playerData = {
+        userId,
+        name,
+        score: 0,
+        spinsLeft: MAX_SPINS,
+        lastSpinRefreshTime: 0,
+        nextSpinDouble: false,
+        createdAt: new Date().getTime()
+      };
+    } else {
+      console.log(`Updating existing player: ${userId}, ${name}`);
+    }
+    
+    // Log previous values for debugging
+    console.log("Previous values:", {
+      score: playerData.score,
+      spinsLeft: playerData.spinsLeft,
+      lastSpinRefreshTime: playerData.lastSpinRefreshTime
+    });
     
     // Update player data with new values
     playerData.name = name;
@@ -118,15 +186,25 @@ app.post('/api/saveScore', async (req, res) => {
     // Update last update timestamp
     playerData.lastUpdate = new Date().getTime();
     
+    // Log new values for debugging
+    console.log("New values:", {
+      score: playerData.score,
+      spinsLeft: playerData.spinsLeft,
+      lastSpinRefreshTime: playerData.lastSpinRefreshTime,
+      nextRefreshTime: playerData.nextRefreshTime
+    });
+    
     // Update in database
     const result = await leaderboardCollection.updateOne(
       { userId },
       { 
         $set: playerData,
-        $setOnInsert: { createdAt: new Date() }
+        $setOnInsert: { createdAt: new Date().getTime() }
       },
       { upsert: true }
     );
+    
+    console.log("Database update result:", result);
     
     // Return updated player data and refresh status
     res.json({ 
@@ -136,11 +214,16 @@ app.post('/api/saveScore', async (req, res) => {
     });
   } catch (err) {
     console.error('Error saving score:', err);
-    res.status(500).json({ error: 'Failed to save score' });
+    res.status(500).json({ 
+      error: 'Failed to save score',
+      message: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 });
 
-app.get('/api/getScore', async (req, res) => {
+// Other API routes keep the same with the ensureDbConnection middleware added
+app.get('/api/getScore', ensureDbConnection, async (req, res) => {
   try {
     const { userId } = req.query;
     
@@ -173,7 +256,7 @@ app.get('/api/getScore', async (req, res) => {
 });
 
 // Force refresh spins endpoint
-app.post('/api/refreshSpins', async (req, res) => {
+app.post('/api/refreshSpins', ensureDbConnection, async (req, res) => {
   try {
     const { userId } = req.body;
     
@@ -210,7 +293,7 @@ app.post('/api/refreshSpins', async (req, res) => {
 });
 
 // Check spins endpoint
-app.post('/api/checkSpins', async (req, res) => {
+app.post('/api/checkSpins', ensureDbConnection, async (req, res) => {
   try {
     const { userId } = req.body;
     
@@ -246,7 +329,7 @@ app.post('/api/checkSpins', async (req, res) => {
   }
 });
 
-app.get('/api/getLeaderboard', async (req, res) => {
+app.get('/api/getLeaderboard', ensureDbConnection, async (req, res) => {
   try {
     const leaderboard = await leaderboardCollection
       .find({})
@@ -259,6 +342,15 @@ app.get('/api/getLeaderboard', async (req, res) => {
     console.error('Error getting leaderboard:', err);
     res.status(500).json({ error: 'Failed to get leaderboard' });
   }
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    dbConnected: isConnected,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Serve the main HTML page
