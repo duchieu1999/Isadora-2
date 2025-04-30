@@ -966,85 +966,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Global spinner for page loading */
-        .global-spinner-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        
-        .global-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--primary-color);
-            animation: spin 1s infinite linear;
-        }
-        
-        .global-spinner-text {
-            color: white;
-            margin-top: 20px;
-            font-size: 16px;
-            text-align: center;
-        }
-        
-        /* Error page */
-        .error-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .error-icon {
-            font-size: 60px;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-        }
-        
-        .error-title {
-            font-size: 24px;
-            color: white;
-            margin-bottom: 15px;
-        }
-        
-        .error-message {
-            font-size: 16px;
-            color: white;
-            margin-bottom: 30px;
-            max-width: 80%;
-            line-height: 1.5;
-        }
-        
-        .error-button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
         /* Footer */
         .footer {
             text-align: center;
@@ -1290,168 +1211,6 @@
             display: none;
         }
         
-        /* Status indicator */
-        .status-indicator {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-        }
-        
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-        
-        .status-dot.online {
-            background-color: #4CAF50;
-        }
-        
-        .status-dot.syncing {
-            background-color: #FFC107;
-            animation: pulse 1s infinite;
-        }
-        
-        .status-dot.error {
-            background-color: #F44336;
-        }
-        
-        /* Refresh button */
-        .refresh-spins-button {
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        
-        .refresh-spins-button:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-50%) scale(1.1);
-        }
-        
-        /* Poster overlay styles */
-        .poster-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            animation: fadeIn 0.3s ease-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .poster-container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 12px;
-            max-width: 90%;
-            max-height: 75vh;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: 0 0 30px rgba(216, 47, 47, 0.5);
-            border: 5px solid var(--primary-color);
-            animation: scaleIn 0.3s ease-out;
-        }
-        
-        @keyframes scaleIn {
-            from { transform: scale(0.9); }
-            to { transform: scale(1); }
-        }
-        
-        .poster-instructions {
-            color: white;
-            text-align: center;
-            margin-top: 20px;
-            max-width: 90%;
-        }
-        
-        .poster-instructions h3 {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-        
-        .poster-instructions p {
-            font-size: 14px;
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
-        
-        .poster-buttons {
-            display: flex;
-            justify-content: center;
-            margin-top: 15px;
-            gap: 10px;
-        }
-        
-        .poster-button {
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-        }
-        
-        .poster-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-        
-        .poster-button.share {
-            background-color: #0088cc;
-            color: white;
-        }
-        
-        .poster-button.close {
-            background-color: #666;
-            color: white;
-        }
-        
-        .screenshot-hint {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            animation: pulse 2s infinite;
-        }
-        
         /* Responsive adjustments */
         @media screen and (max-height: 700px) {
             .wheel-outer-container {
@@ -1489,28 +1248,6 @@
     </style>
 </head>
 <body>
-    <!-- Global spinner -->
-    <div class="global-spinner-container" id="global-spinner">
-        <div class="global-spinner"></div>
-        <div class="global-spinner-text">Đang kết nối với máy chủ...</div>
-    </div>
-    
-    <!-- Error page -->
-    <div class="error-container" id="error-container" style="display: none;">
-        <div class="error-icon">⚠️</div>
-        <div class="error-title">Không thể kết nối máy chủ</div>
-        <div class="error-message" id="error-message">
-            Đã xảy ra lỗi khi kết nối với máy chủ. Vui lòng thử lại sau.
-        </div>
-        <button class="error-button" onclick="location.reload()">Tải lại trang</button>
-    </div>
-    
-    <!-- Status indicator -->
-    <div class="status-indicator" id="status-indicator">
-        <div class="status-dot" id="status-dot"></div>
-        <span id="status-text">Đang kết nối...</span>
-    </div>
-    
     <div class="header">
         <div class="flag-banner">
             <div class="flag-left"></div>
@@ -1586,14 +1323,13 @@
                 <div class="stat-label">Lượt quay còn lại</div>
             </div>
             <div class="stat">
-                <div class="stat-value" id="timer-value">29:59</div>
+                <div class="stat-value" id="timer-value">59:59</div>
                 <div class="stat-label">+50 lượt quay sau</div>
-                <button class="refresh-spins-button" id="refresh-spins-button" title="Kiểm tra làm mới lượt quay">↻</button>
             </div>
         </div>
         
         <div class="controls">
-            <button class="btn btn-spin" id="spin-btn" disabled>
+            <button class="btn btn-spin" id="spin-btn">
                 <div class="btn-shine"></div>
                 QUAY NGAY
             </button>
@@ -1648,7 +1384,7 @@
                 <div class="reward-date" id="reward-date">30/04/2025</div>
             </div>
             <div class="reward-watermark">SỰ KIỆN 30/4 HIẾU GÀ OFFICIAL</div>
-            <button class="save-btn" id="save-reward-btn">XEM PHIẾU NHẬN THƯỞNG</button>
+            <button class="save-btn" id="save-reward-btn">TẢI VỀ ẢNH PHIẾU NHẬN THƯỞNG</button>
         </div>
         
         <div class="leaderboard">
@@ -1684,7 +1420,7 @@
     </div>
     
     <!-- Name registration overlay -->
-    <div class="name-registration-overlay" id="name-registration-overlay" style="display: none;">
+    <div class="name-registration-overlay" id="name-registration-overlay">
         <div class="name-registration-content">
             <div class="name-registration-title">Chào mừng bạn!</div>
             <div class="name-registration-subtitle">Vui lòng nhập tên của bạn để bắt đầu chơi và xuất hiện trên bảng xếp hạng.</div>
@@ -1698,13 +1434,6 @@
     <div class="notification" id="notification"></div>
     
     <script>
-        // Constants
-        const API_BASE_URL = '/api';
-        const MAX_SPINS = 50;
-        const REFRESH_TIME_MS = 1800000; // 30 minutes
-        const MAX_RETRY_ATTEMPTS = 3;
-        const SYNC_INTERVAL = 30000; // Sync every 30 seconds
-        
         // Sound effects
         const SOUNDS = {
             spin: new Howl({
@@ -1747,7 +1476,7 @@
             { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -25, probability: 0.10 },
             { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -35, probability: 0.08 },
             { name: "Nhận đôi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 },
-            // Jackpot prizes with low probability
+            // Thêm phần thưởng jackpot với tỉ lệ thấp
             { name: "JACKPOT ĐẶC BIỆT", icon: "💰", points: 100, jackpot: true, probability: 0.001 },
             { name: "JACKPOT LỚN", icon: "💎", points: 150, jackpot: true, probability: 0.0005 }
         ];
@@ -1759,7 +1488,6 @@
         const pointsValue = document.getElementById('points-value');
         const spinsValue = document.getElementById('spins-value');
         const timerValue = document.getElementById('timer-value');
-        const refreshSpinsButton = document.getElementById('refresh-spins-button');
         const resultContainer = document.getElementById('result');
         const redeemSection = document.getElementById('redeem-section');
         const redeemOptions = document.querySelectorAll('.redeem-option');
@@ -1782,12 +1510,6 @@
         const nameRegistrationInput = document.getElementById('name-registration-input');
         const nameRegistrationButton = document.getElementById('name-registration-button');
         const nameRegistrationError = document.getElementById('name-registration-error');
-        const globalSpinner = document.getElementById('global-spinner');
-        const errorContainer = document.getElementById('error-container');
-        const errorMessage = document.getElementById('error-message');
-        const statusIndicator = document.getElementById('status-indicator');
-        const statusDot = document.getElementById('status-dot');
-        const statusText = document.getElementById('status-text');
         
         // Countdown elements
         const daysValue = document.getElementById('days-value');
@@ -1797,12 +1519,11 @@
 
         // Game state
         let points = 0;
-        let spinsLeft = MAX_SPINS;
+        let spinsLeft = 50;
         let isSpinning = false;
         let nextSpinDouble = false;
         let refreshTimer;
         let countdownTimer;
-        let syncTimer;
         let playerName = '';
         let selectedRedeemOption = null;
         let isEventEnded = false;
@@ -1810,333 +1531,130 @@
         let lastWheelRotation = 0;
         let currentSections = [];
         let customPosterImage = null;
-        let lastSpinRefreshTime = 0;
-        let nextRefreshTime = 0;
-        let isSaving = false;
-        let dataLoaded = false;
-        let retryCount = 0;
-        let isOnline = navigator.onLine;
-        
+
+        // API endpoints
+        const API_BASE_URL = '/api';
+
         // Initialize the game
-        window.addEventListener('load', initGame);
-        
-        // Setup online/offline detection
-        window.addEventListener('online', handleOnlineStatus);
-        window.addEventListener('offline', handleOfflineStatus);
-        
-      // Thay đổi trong hàm initGame để kiểm tra kết nối máy chủ trước
 async function initGame() {
     try {
-        console.log("Khởi tạo game...");
-        
-        // Đặt trạng thái là đang tải
-        showLoadingState(true, "Đang kết nối với máy chủ...");
-        
-        // Thiết lập userId trước
-        setupUserId();
-        
-        // Tạo bánh xe và các thiết lập UI
-        createWheel();
-        setupUIEvents();
-        
-        // Kiểm tra kết nối máy chủ
-        try {
-            const healthCheck = await fetch(`${API_BASE_URL}/health`, { 
-                timeout: 5000,
-                cache: 'no-cache'
+        // Phát hiện nếu đang chạy trong Telegram WebApp
+        const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
+        if (isTelegramWebApp) {
+            console.log("Running in Telegram WebApp environment");
+            
+            // Cấu hình cụ thể cho Telegram nếu cần
+            document.documentElement.style.setProperty('--primary-color', '#0088cc'); // Telegram blue
+            
+            // Nghe sự kiện từ Telegram WebApp nếu cần
+            window.Telegram.WebApp.onEvent('viewportChanged', function() {
+                // Điều chỉnh giao diện cho phù hợp với kích thước WebApp mới
+                adjustWheelSize();
             });
             
-            if (!healthCheck.ok) {
-                throw new Error('Kiểm tra kết nối máy chủ thất bại');
+            // Thay đổi văn bản nút phiếu quà
+            if (saveRewardBtn) {
+                saveRewardBtn.textContent = 'XEM & LƯU PHIẾU THƯỞNG';
             }
             
-            const healthData = await healthCheck.json();
-            console.log("Trạng thái máy chủ:", healthData);
+            // Cho Telegram biết app đã sẵn sàng
+            window.Telegram.WebApp.ready();
             
-            if (!healthData.dbConnected) {
-                console.warn("Cơ sở dữ liệu chưa được kết nối, có thể gặp vấn đề khi lưu dữ liệu");
-                showNotification("Máy chủ đang khởi động, có thể gặp vấn đề khi lưu dữ liệu", 5000);
-            }
-        } catch (error) {
-            console.error("Không thể kiểm tra trạng thái máy chủ:", error);
-            showNotification("Không thể kiểm tra trạng thái máy chủ, tiếp tục với tính năng giới hạn", 5000);
+            // Đặt màu nền chính của thanh main button trong Telegram (nếu cần)
+            window.Telegram.WebApp.setHeaderColor('#d82f2f');
         }
         
-        // Tải dữ liệu từ máy chủ với retry
-        await loadDataFromServerWithRetry();
-        
-        // Khởi động các bộ đếm thời gian
+        // Khởi tạo các thành phần chính của game
+        createWheel();
+        setupUserId();
+        checkNameRegistration();
+        await loadGameState();
         startRefreshTimer();
         startEventCountdown();
-        startSyncTimer();
-        
-        // Tải bảng xếp hạng sau khi dữ liệu đã được tải
+        updateStats();
         await loadLeaderboard();
         
-        // Bật nút quay sau khi dữ liệu đã được tải
-        spinBtn.disabled = false;
+        // Setup redeem options
+        setupRedeemOptions();
         
-        // Ẩn trạng thái đang tải
-        showLoadingState(false);
-        
-        // Đặt trạng thái là trực tuyến
-        updateStatus('online', 'Đã kết nối');
-        setTimeout(() => {
-            statusIndicator.style.display = 'none';
-        }, 3000);
-        
-        // Hiển thị thông báo
-        showNotification("Đã kết nối với máy chủ thành công!");
-        
-        // Đăng ký tự động lưu trước khi rời trang
-        window.addEventListener('beforeunload', () => {
-            saveGameState(true); // Lưu ngay lập tức
+        // Setup jackpot close
+        jackpotClose.addEventListener('click', () => {
+            jackpotOverlay.classList.remove('show');
         });
         
-        // Thiết lập xử lý khi tab thay đổi hiển thị
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                console.log("Tab trở thành hiển thị, đồng bộ dữ liệu...");
-                syncWithServer();
+        // Setup sound effect preloading
+        Object.values(SOUNDS).forEach(sound => {
+            sound.load();
+        });
+        
+        // Setup name registration
+        nameRegistrationButton.addEventListener('click', handleNameRegistration);
+        nameRegistrationInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleNameRegistration();
             }
         });
         
-        // Kiểm tra xem đăng ký tên là cần thiết
-        checkNameRegistration();
+        // Thêm sự kiện resize để điều chỉnh kích thước bánh xe trên các thiết bị khác nhau
+        window.addEventListener('resize', adjustWheelSize);
+        adjustWheelSize();
         
+        // Kiểm tra lại một lần nữa số lượt quay sau khi khởi tạo
+        setTimeout(() => {
+            const savedState = localStorage.getItem('wheelGameState');
+            if (savedState) {
+                const gameState = JSON.parse(savedState);
+                console.log("Current spins: " + spinsLeft + ", Saved spins: " + gameState.spinsLeft);
+                
+                // Đảm bảo UI hiển thị đúng số lượt quay
+                if (spinsLeft !== gameState.spinsLeft) {
+                    spinsLeft = gameState.spinsLeft;
+                    updateStats();
+                }
+            }
+            
+            // Kiểm tra và áp dụng reset lượt quay nếu cần
+            checkSpinReset();
+        }, 500);
+        
+        showNotification("Đã kết nối máy chủ thành công!");
     } catch (error) {
-        console.error("Lỗi khởi tạo game:", error);
-        handleInitError("Không thể kết nối với máy chủ. Vui lòng thử lại sau.");
-    }
-}
-        // Hiển thị trạng thái đang tải
-function showLoadingState(show, message = "Đang tải...") {
-    if (show) {
-        globalSpinner.style.display = 'flex';
-        document.querySelector('.global-spinner-text').textContent = message;
-    } else {
-        globalSpinner.style.display = 'none';
+        console.error("Error initializing game:", error);
+        leaderboardStatus.textContent = "Đang tải dữ liệu...";
+        showNotification("Đang tải dữ liệu bảng xếp hạng.");
     }
 }
 
-// Thêm hàm kiểm tra trạng thái máy chủ riêng
-async function checkServerStatus() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/health`, { 
-            timeout: 5000,
-            cache: 'no-cache'
-        });
-        
-        if (!response.ok) return false;
-        
-        const data = await response.json();
-        return data.status === 'ok' && data.dbConnected;
-    } catch (e) {
-        console.error("Lỗi kiểm tra trạng thái máy chủ:", e);
-        return false;
-    }
-}
-        
-        // Load data from server with retry mechanism
-        async function loadDataFromServerWithRetry() {
-            retryCount = 0;
-            let delay = 1000; // Start with 1 second delay
-            
-            while (retryCount < MAX_RETRY_ATTEMPTS) {
-                try {
-                    updateStatus('syncing', `Đang kết nối (lần ${retryCount + 1})...`);
-                    await loadDataFromServer();
-                    
-                    // If successful, return
-                    console.log("Data loaded successfully");
-                    dataLoaded = true;
-                    return;
-                } catch (error) {
-                    retryCount++;
-                    console.error(`Attempt ${retryCount} failed:`, error);
-                    
-                    if (retryCount >= MAX_RETRY_ATTEMPTS) {
-                        throw new Error("Maximum retry attempts reached");
-                    }
-                    
-                    // Exponential backoff
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2; // Double the delay for next attempt
-                }
-            }
-        }
-        
-      // Thay đổi trong hàm loadDataFromServer để thêm phục hồi từ bản sao lưu
-async function loadDataFromServer() {
-    if (!userId) {
-        console.log("Không có userId, bỏ qua tải dữ liệu");
-        return;
-    }
+
+        // Thêm hàm mới này vào mã JavaScript
+function updateButtonText() {
+    const saveRewardBtn = document.getElementById('save-reward-btn');
+    const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
     
-    try {
-        const response = await fetch(`${API_BASE_URL}/getScore?userId=${userId}`);
-        
-        if (response.status === 404) {
-            console.log("Không tìm thấy người chơi trên máy chủ");
-            
-            // Thử khôi phục từ bản sao lưu trước
-            if (tryRestoreFromBackup()) {
-                console.log("Đã khôi phục từ bản sao lưu, đang lưu lên server");
-                await saveGameState(true);
-                return;
-            }
-            
-            // Nếu không có bản sao lưu, sử dụng giá trị mặc định
-            console.log("Sử dụng giá trị mặc định");
-            points = 0;
-            spinsLeft = MAX_SPINS;
-            nextSpinDouble = false;
-            lastSpinRefreshTime = Date.now();
-            nextRefreshTime = lastSpinRefreshTime + REFRESH_TIME_MS;
-            
-            // Lưu trạng thái ban đầu lên server
-            await saveGameState(true);
-            return;
-        }
-        
-        if (!response.ok) {
-            throw new Error(`Lỗi máy chủ: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log("Dữ liệu nhận từ server:", data);
-        
-        // Cập nhật trạng thái game từ dữ liệu server
-        points = data.score || 0;
-        spinsLeft = data.spinsLeft !== undefined ? data.spinsLeft : MAX_SPINS;
-        nextSpinDouble = data.nextSpinDouble || false;
-        lastSpinRefreshTime = data.lastSpinRefreshTime || Date.now();
-        nextRefreshTime = data.nextRefreshTime || (lastSpinRefreshTime + REFRESH_TIME_MS);
-        lastWheelRotation = data.wheelRotation || 0;
-        
-        // Nếu tên người chơi chưa được thiết lập nhưng có trong dữ liệu, sử dụng nó
-        if ((!playerName || playerName === '') && data.name) {
-            playerName = data.name;
-            playerNameInput.value = playerName;
-            localStorage.setItem('playerName', playerName);
-        }
-        
-        // Cập nhật UI
-        updateStats();
-        showNotification("Đã tải dữ liệu từ máy chủ thành công", 2000);
-        
-    } catch (error) {
-        console.error("Lỗi khi tải dữ liệu từ máy chủ:", error);
-        
-        // Thử khôi phục từ bản sao lưu nếu không thể kết nối server
-        if (tryRestoreFromBackup()) {
-            showNotification("Đã khôi phục dữ liệu từ bản sao lưu cục bộ", 3000);
+    if (saveRewardBtn) {
+        if (isTelegramWebApp) {
+            saveRewardBtn.textContent = 'XEM & LƯU PHIẾU THƯỞNG';
         } else {
-            showNotification("Không thể tải dữ liệu từ máy chủ", 3000);
+            saveRewardBtn.textContent = 'TẢI POSTER NHẬN THƯỞNG';
         }
-        
-        throw error; // Ném lỗi để xử lý ở nơi gọi hàm
     }
 }
-        
-        // Setup user ID
-        function setupUserId() {
-            userId = localStorage.getItem('wheelGameUserId');
-            if (!userId) {
-                userId = generateUniqueId();
-                localStorage.setItem('wheelGameUserId', userId);
-            }
-            userIdContainer.textContent = userId;
-        }
-        
-        // Generate unique ID
-        function generateUniqueId() {
-            return Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
-        }
-        
-        // Check if name registration is needed
+
+// Đăng ký sự kiện để chạy sau khi DOM đã tải xong
+document.addEventListener('DOMContentLoaded', updateButtonText);
+
+        // Check if name is registered
         function checkNameRegistration() {
-            // Get from localStorage first
             const savedName = localStorage.getItem('playerName');
-            
             if (savedName) {
                 playerName = savedName;
                 playerNameInput.value = savedName;
                 nameRegistrationOverlay.style.display = 'none';
             } else {
-                // Show name registration overlay
                 nameRegistrationOverlay.style.display = 'flex';
             }
         }
-        
-        // Setup UI events
-        function setupUIEvents() {
-            // Spin button
-            spinBtn.addEventListener('click', spinWheel);
-            
-            // Redeem options
-            redeemOptions.forEach(option => {
-                option.addEventListener('click', handleRedeemOptionClick);
-            });
-            
-            // Redeem confirm button
-            redeemConfirmBtn.addEventListener('click', redeemPoints);
-            
-            // Save reward button
-            saveRewardBtn.addEventListener('click', saveRewardPoster);
-            
-            // Save name button
-            saveNameBtn.addEventListener('click', savePlayerName);
-            
-            // Refresh spins button
-            refreshSpinsButton.addEventListener('click', checkAndRefreshSpins);
-            
-            // Jackpot close button
-            jackpotClose.addEventListener('click', () => {
-                jackpotOverlay.classList.remove('show');
-            });
-            
-            // Name registration button
-            nameRegistrationButton.addEventListener('click', handleNameRegistration);
-            nameRegistrationInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    handleNameRegistration();
-                }
-            });
-        }
-        
-        // Handle redeem option click
-        function handleRedeemOptionClick() {
-            if (isEventEnded) return;
-            SOUNDS.click.play();
-            
-            const requiredPoints = parseInt(this.getAttribute('data-points'));
-            
-            if (points >= requiredPoints) {
-                // Deselect all options
-                redeemOptions.forEach(opt => opt.classList.remove('selected'));
-                
-                // Select this option
-                this.classList.add('selected');
-                selectedRedeemOption = this;
-                
-                // Enable confirm button
-                redeemConfirmBtn.disabled = false;
-            } else {
-                showResult('⚠️', `Bạn cần ít nhất ${requiredPoints} điểm để đổi phần thưởng này!`);
-                anime({
-                    targets: this,
-                    translateX: [
-                        { value: -5, duration: 50 },
-                        { value: 5, duration: 50 },
-                        { value: -5, duration: 50 },
-                        { value: 5, duration: 50 },
-                        { value: 0, duration: 50 }
-                    ]
-                });
-            }
-        }
-        
+
         // Handle name registration
         function handleNameRegistration() {
             const name = nameRegistrationInput.value.trim();
@@ -2158,51 +1676,43 @@ async function loadDataFromServer() {
             showNotification(`Chào mừng ${name} đến với Bánh Xe Hiếu Gà!`);
             SOUNDS.click.play();
         }
-        
-        // Start sync timer
-        function startSyncTimer() {
-            // Clear any existing timer
-            if (syncTimer) clearInterval(syncTimer);
+
+        // Show notification
+        function showNotification(message, duration = 3000) {
+            notification.textContent = message;
+            notification.classList.add('show');
             
-            // Sync every 30 seconds
-            syncTimer = setInterval(() => {
-                if (isOnline) {
-                    syncWithServer();
-                }
-            }, SYNC_INTERVAL);
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
         }
-        
-        // Sync with server
-        async function syncWithServer() {
-            if (!isOnline || isSaving) return;
-            
-            try {
-                updateStatus('syncing', 'Đang đồng bộ...');
-                
-                // Get latest data from server
-                await loadDataFromServer();
-                
-                // Check if spins need to be refreshed
-                await checkSpinsWithServer();
-                
-                // Update status
-                updateStatus('online', 'Đã đồng bộ');
-                setTimeout(() => {
-                    statusIndicator.style.display = 'none';
-                }, 2000);
-            } catch (error) {
-                console.error("Error syncing with server:", error);
-                updateStatus('error', 'Lỗi đồng bộ');
+
+        // Setup unique user ID
+        function setupUserId() {
+            // Get user ID from local storage or create a new one
+            userId = localStorage.getItem('wheelGameUserId');
+            if (!userId) {
+                userId = generateUniqueId();
+                localStorage.setItem('wheelGameUserId', userId);
             }
+            userIdContainer.textContent = userId;
         }
-        
-        // Create the wheel
+
+        // Generate a unique ID for the user
+        function generateUniqueId() {
+            const timestamp = Date.now().toString(36);
+            const random = Math.random().toString(36).substring(2, 10);
+            return timestamp + random;
+        }
+
+        // Create the wheel sections with exact styling from the image
         function createWheel() {
             // Clear existing sections
             wheel.innerHTML = '';
             wheelDots.innerHTML = '';
             
-            // Use only 12 sections for the wheel
+            // Use only 12 sections for the wheel (keep the original structure)
+            // But we'll select from all available sections including jackpot
             const sectionsPool = wheelSections.slice(); // Clone the array
             const numSections = 12; // Fixed number of sections
             
@@ -2212,7 +1722,7 @@ async function loadDataFromServer() {
             // Calculate total probability for normalization
             const totalProbability = sectionsPool.reduce((sum, section) => sum + section.probability, 0);
             
-            // Select the sections weighted by their probability
+            // First, let's select the sections weighted by their probability
             for (let i = 0; i < numSections; i++) {
                 // Normalize probabilities for the remaining pool
                 const remainingTotal = sectionsPool.reduce((sum, section) => sum + section.probability, 0);
@@ -2292,109 +1802,70 @@ async function loadDataFromServer() {
             // Store the current sections
             currentSections = sectionsToUse;
         }
-        
-        // Thay đổi trong hàm spinWheel để đảm bảo lưu trạng thái sau mỗi lần quay
-function spinWheel() {
-    if (isSpinning || spinsLeft <= 0 || isEventEnded || !dataLoaded) return;
-    
-    // Kiểm tra nếu tên người chơi chưa được thiết lập
-    if (!playerName || playerName.trim() === '') {
-        showNameRegistrationOverlay();
-        showNotification("Vui lòng nhập tên trước khi quay!", 3000);
-        return;
-    }
-    
-    SOUNDS.spin.play();
-    
-    isSpinning = true;
-    spinsLeft--;
-    updateStats();
-    
-    // Xác định phần thưởng đã được chọn
-    const numSections = currentSections.length;
-    let winningIndex = Math.floor(Math.random() * numSections);
-    const winningSection = currentSections[winningIndex];
-    
-    // Tính góc quay để rơi vào phần thưởng đã chọn
-    const sectionAngle = 360 / numSections;
-    const targetAngle = 360 - (winningIndex * sectionAngle) - (sectionAngle / 2);
-    
-    // Đảm bảo quay đủ vòng (ít nhất 2 vòng) cộng với góc mục tiêu
-    const fullRotations = 2 * 360;
-    const destinationAngle = fullRotations + targetAngle;
-    
-    // Xóa chuyển động hiện có
-    wheel.style.transition = 'none';
-    wheel.offsetHeight; // Force reflow
-    wheel.style.transform = `rotate(${lastWheelRotation}deg)`;
-    wheel.offsetHeight; // Force reflow lại
-    
-    // Bây giờ thêm chuyển động và quay đến đích
-    wheel.style.transition = 'transform 3s cubic-bezier(0.17, 0.89, 0.24, 1.0)';
-    wheel.style.transform = `rotate(${destinationAngle}deg)`;
-    
-    // Thêm hiệu ứng trực quan trong quá trình quay
-    anime({
-        targets: '.wheel-pointer',
-        scale: [1, 1.2, 1, 1.2, 1],
-        opacity: [1, 0.8, 1, 0.8, 1],
-        duration: 3000,
-        easing: 'easeInOutQuad'
-    });
-    
-    // Lưu góc quay hiện tại cho lần quay tiếp theo
-    lastWheelRotation = destinationAngle % 360;
-    
-    // Tắt nút quay trong khi đang quay
-    spinBtn.disabled = true;
-    
-    // Sau khi hoàn thành hoạt ảnh quay
-    setTimeout(() => {
-        isSpinning = false;
-        spinBtn.disabled = false;
-        processResult(winningSection);
-        
-        // Lưu trạng thái ngay sau khi quay, với nhiều lần thử lại
-        saveGameStateWithLoading();
-    }, 3000);
-}
-        // Thêm hàm lưu trạng thái với hiển thị trạng thái đang tải
-async function saveGameStateWithLoading() {
-    // Hiển thị trạng thái đang lưu
-    updateStatus('syncing', 'Đang lưu...');
-    
-    try {
-        await saveGameState(true); // Lưu trạng thái ngay lập tức
-        updateStatus('online', 'Đã lưu');
-        setTimeout(() => {
-            statusIndicator.style.display = 'none';
-        }, 2000);
-    } catch (error) {
-        console.error("Lỗi lưu trạng thái:", error);
-        updateStatus('error', 'Lỗi lưu');
-        showNotification("Không thể lưu trạng thái. Đang thử lại...", 3000);
-        
-        // Thử lại sau 3 giây
-        setTimeout(async () => {
-            try {
-                await saveGameState(true);
-                updateStatus('online', 'Đã lưu');
-                setTimeout(() => {
-                    statusIndicator.style.display = 'none';
-                }, 2000);
-            } catch (retryError) {
-                console.error("Lỗi khi thử lại lưu trạng thái:", retryError);
-                updateStatus('error', 'Lỗi lưu');
-                showNotification("Vẫn không thể lưu trạng thái. Vui lòng kiểm tra kết nối mạng.", 5000);
-            }
-        }, 3000);
-    }
-}
-        // Hiển thị overlay đăng ký tên
-function showNameRegistrationOverlay() {
-    nameRegistrationOverlay.style.display = 'flex';
-}
-        
+
+        // Spin the wheel
+        function spinWheel() {
+            if (isSpinning || spinsLeft <= 0 || isEventEnded) return;
+            
+            SOUNDS.spin.play();
+            
+            isSpinning = true;
+            spinsLeft--;
+            updateStats();
+            
+            // Determine the winning section
+            const numSections = currentSections.length;
+            
+            // Select a winning section based on probability
+            let winningIndex = Math.floor(Math.random() * numSections);
+            const winningSection = currentSections[winningIndex];
+            
+            // Calculate rotation angle to land on the winning section
+            const sectionAngle = 360 / numSections;
+            const targetAngle = 360 - (winningIndex * sectionAngle) - (sectionAngle / 2); // Target middle of the section
+            
+            // Ensure a full rotation (at least 2 times) plus the target angle
+            const fullRotations = 2 * 360; // 2 full rotations
+            const destinationAngle = fullRotations + targetAngle;
+            
+            // Remove any existing transition
+            wheel.style.transition = 'none';
+            // Force a reflow to immediately apply the above style
+            wheel.offsetHeight;
+            // Reset the wheel to its starting position
+            wheel.style.transform = `rotate(${lastWheelRotation}deg)`;
+            
+            // Force a reflow again to ensure the position is set
+            wheel.offsetHeight;
+            
+            // Now add the transition and spin to the destination
+            wheel.style.transition = 'transform 3s cubic-bezier(0.17, 0.89, 0.24, 1.0)';
+            wheel.style.transform = `rotate(${destinationAngle}deg)`;
+            
+            // Add some visual effects during spinning
+            anime({
+                targets: '.wheel-pointer',
+                scale: [1, 1.2, 1, 1.2, 1],
+                opacity: [1, 0.8, 1, 0.8, 1],
+                duration: 3000,
+                easing: 'easeInOutQuad'
+            });
+            
+            // Save the current rotation for next spin
+            lastWheelRotation = destinationAngle % 360;
+            
+            // Disable spin button during spinning
+            spinBtn.disabled = true;
+            
+            // After spinning animation completes
+            setTimeout(() => {
+                isSpinning = false;
+                spinBtn.disabled = false;
+                processResult(winningSection);
+                saveGameState();
+            }, 3000);
+        }
+
         // Process the result after spinning
         function processResult(section) {
             let pointsEarned = section.points;
@@ -2420,10 +1891,10 @@ function showNameRegistrationOverlay() {
                     jackpotOverlay.classList.add('show');
                 }, 500);
             } else if (section.extraSpin) {
-                // Add spin with limit check
-                if (spinsLeft < MAX_SPINS) {
-                    spinsLeft++;
-                }
+    // Thêm kiểm tra giới hạn
+    if (spinsLeft < 50) {
+        spinsLeft++;
+    }
                 updateStats();
                 message += `<strong>${section.name}!</strong> Bạn nhận được thêm 1 lượt quay! `;
                 SOUNDS.win.play();
@@ -2431,7 +1902,7 @@ function showNameRegistrationOverlay() {
                 message += `<strong>${section.name}!</strong> Thật tiếc, bạn mất lượt này. `;
                 SOUNDS.lose.play();
             } else if (section.randomCard) {
-                // Random card gives points between 10-90
+                // Random card gives points between 10-200 (increased range)
                 const randomPoints = Math.floor(Math.random() * 81) + 10;
                 pointsEarned = randomPoints;
                 message += `<strong>${section.name}!</strong> Bạn nhận được ${pointsEarned} điểm! `;
@@ -2480,7 +1951,7 @@ function showNameRegistrationOverlay() {
             // Update redeem button state
             updateRedeemButtonState();
         }
-        
+
         // Show the result message with enhanced effects
         function showResult(icon, message, pointsEarned = 0, isJackpot = false) {
             let resultHtml = `
@@ -2490,7 +1961,7 @@ function showNameRegistrationOverlay() {
             `;
             
             resultContainer.innerHTML = resultHtml;
-            resultContainer.classList.remove('bounce', 'highlight', 'shake');
+            resultContainer.classList.remove('bounce', 'highlight');
             void resultContainer.offsetWidth; // Force reflow
             
             // Apply different effects based on result
@@ -2501,11 +1972,14 @@ function showNameRegistrationOverlay() {
                 resultContainer.classList.add('highlight');
             } else if (pointsEarned < 0) {
                 resultContainer.classList.add('shake');
+                setTimeout(() => {
+                    resultContainer.classList.remove('shake');
+                }, 500);
             } else {
                 resultContainer.classList.add('bounce');
             }
         }
-        
+
         // Create enhanced confetti effect
         function createConfetti(count = 50) {
             const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#fd0'];
@@ -2556,8 +2030,49 @@ function showNameRegistrationOverlay() {
                 });
             }
         }
+
+        // Setup redeem options
+        function setupRedeemOptions() {
+            redeemOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    if (isEventEnded) return;
+                    SOUNDS.click.play();
+                    
+                    const requiredPoints = parseInt(option.getAttribute('data-points'));
+                    
+                    if (points >= requiredPoints) {
+                        // Deselect all options
+                        redeemOptions.forEach(opt => opt.classList.remove('selected'));
+                        
+                        // Select this option
+                        option.classList.add('selected');
+                        selectedRedeemOption = option;
+                        
+                        // Enable confirm button
+                        redeemConfirmBtn.disabled = false;
+                    } else {
+                        showResult('⚠️', `Bạn cần ít nhất ${requiredPoints} điểm để đổi phần thưởng này!`);
+                        anime({
+                            targets: option,
+                            translateX: [
+                                { value: -5, duration: 50 },
+                                { value: 5, duration: 50 },
+                                { value: -5, duration: 50 },
+                                { value: 5, duration: 50 },
+                                { value: 0, duration: 50 }
+                            ]
+                        });
+                    }
+                });
+            });
+            
+            redeemConfirmBtn.addEventListener('click', redeemPoints);
+            
+            // Initial update
+            updateRedeemButtonState();
+        }
         
-        // Update redeem button state
+        // Update redeem button state based on points
         function updateRedeemButtonState() {
             const hasEnoughPoints = Array.from(redeemOptions).some(option => {
                 const requiredPoints = parseInt(option.getAttribute('data-points'));
@@ -2579,217 +2094,70 @@ function showNameRegistrationOverlay() {
                 redeemConfirmBtn.classList.remove('pulse');
             }
         }
-        
+
         // Update game statistics display
         function updateStats() {
             pointsValue.textContent = points;
             spinsValue.textContent = spinsLeft;
-            
-            // Also update redeem button state
-            updateRedeemButtonState();
         }
-        
-        // Start refresh timer
+
         function startRefreshTimer() {
-            // First update once
-            updateRefreshTimer();
-            
-            // Clear any existing timer
-            if (refreshTimer) clearInterval(refreshTimer);
-            
-            // Update every second
-            refreshTimer = setInterval(updateRefreshTimer, 1000);
-        }
+    // Check if we have a saved next refresh time in localStorage
+    let nextRefreshTime = localStorage.getItem('nextRefreshTime');
+    const now = new Date();
+    
+    // If no saved time or saved time is in the past, calculate next refresh hour
+    if (!nextRefreshTime || new Date(parseInt(nextRefreshTime)) <= now) {
+        // Calculate next whole hour
+        const nextHour = new Date(now);
+        nextHour.setMinutes(now.getMinutes() + 35, 0, 0);
         
-        // Update refresh timer display
-        function updateRefreshTimer() {
-            const now = new Date().getTime();
-            
-            // Make sure nextRefreshTime is set
-            if (!nextRefreshTime || nextRefreshTime <= now) {
-                // Calculate next refresh time
-                nextRefreshTime = lastSpinRefreshTime + REFRESH_TIME_MS;
-            }
-            
-            // Calculate time left
-            let timeLeft = nextRefreshTime - now;
-            
-            if (timeLeft <= 0) {
-                // Time to refresh spins
-                checkAndRefreshSpins(true);
-                return;
-            }
-            
-            // Display time left
-            const minutes = Math.floor((timeLeft / 1000) / 60);
-            const seconds = Math.floor((timeLeft / 1000) % 60);
-            timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
+        // Save to localStorage
+        nextRefreshTime = nextHour.getTime();
+        localStorage.setItem('nextRefreshTime', nextRefreshTime);
+    }
+    
+    // Calculate time left based on saved next refresh time
+    let timeLeft = new Date(parseInt(nextRefreshTime)) - now;
+    
+    // Update timer display
+    function updateTimer() {
+        const minutes = Math.floor((timeLeft / 1000) / 60);
+        const seconds = Math.floor((timeLeft / 1000) % 60);
+        timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         
-        // Check and refresh spins (can be called manually or automatically)
-        async function checkAndRefreshSpins(automatic = false) {
-            try {
-                if (!automatic) {
-                    SOUNDS.click.play();
-                    showNotification("Đang kiểm tra lượt quay...");
-                }
-                
-                if (isOnline) {
-                    // Try to refresh with server
-                    await checkSpinsWithServer();
-                } else {
-                    // If offline, check locally
-                    const now = new Date().getTime();
-                    
-                    if (now >= nextRefreshTime) {
-                        // Time to refresh
-                        refreshSpins();
-                    } else {
-                        // Not time yet
-                        const minutes = Math.floor(((nextRefreshTime - now) / 1000) / 60);
-                        const seconds = Math.floor(((nextRefreshTime - now) / 1000) % 60);
-                        showNotification(`Chưa đến thời gian làm mới. Còn ${minutes}:${seconds < 10 ? '0' + seconds : seconds}.`);
-                    }
-                }
-            } catch (error) {
-                console.error("Error checking spins:", error);
-                showNotification("Lỗi khi kiểm tra lượt quay.");
-            }
-        }
+        timeLeft -= 1000;
         
-        // Check spins with server
-        async function checkSpinsWithServer() {
-            try {
-                updateStatus('syncing', 'Đang kiểm tra lượt quay...');
-                
-                const response = await fetch(`${API_BASE_URL}/checkSpins`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ userId })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.refreshed) {
-                    // Server refreshed spins
-                    spinsLeft = data.player.spinsLeft;
-                    lastSpinRefreshTime = data.player.lastSpinRefreshTime;
-                    nextRefreshTime = data.player.nextRefreshTime;
-                    
-                    // Update UI
-                    updateStats();
-                    showNotification("Lượt quay đã được làm mới! +50 lượt quay");
-                    
-                    // Show animation on spins value
-                    spinsValue.classList.add('glow');
-                    setTimeout(() => {
-                        spinsValue.classList.remove('glow');
-                    }, 3000);
-                    
-                    updateStatus('online', 'Đã làm mới lượt quay');
-                    
-                    return true;
-                } else {
-                    // No refresh needed
-                    const now = new Date().getTime();
-                    const minutes = Math.floor(((nextRefreshTime - now) / 1000) / 60);
-                    const seconds = Math.floor(((nextRefreshTime - now) / 1000) % 60);
-                    
-                    if (minutes >= 0 && seconds >= 0) {
-                        showNotification(`Chưa đến thời gian làm mới. Còn ${minutes}:${seconds < 10 ? '0' + seconds : seconds}.`);
-                    } else {
-                        // Force refresh if time is negative
-                        await forceRefreshSpins();
-                    }
-                    
-                    updateStatus('online', 'Đã kiểm tra lượt quay');
-                    
-                    return false;
-                }
-                
-            } catch (error) {
-                console.error("Error checking spins with server:", error);
-                showNotification("Lỗi khi kiểm tra lượt quay với máy chủ.");
-                return false;
-            }
-        }
-        
-        // Force refresh spins
-        async function forceRefreshSpins() {
-            try {
-                updateStatus('syncing', 'Đang làm mới lượt quay...');
-                
-                const response = await fetch(`${API_BASE_URL}/refreshSpins`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ userId })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Update with server data
-                spinsLeft = data.player.spinsLeft;
-                lastSpinRefreshTime = data.player.lastSpinRefreshTime;
-                nextRefreshTime = data.player.nextRefreshTime;
-                
-                // Update UI
-                updateStats();
-                showNotification("Lượt quay đã được làm mới! +50 lượt quay");
-                
-                // Show animation on spins value
-                spinsValue.classList.add('glow');
-                setTimeout(() => {
-                    spinsValue.classList.remove('glow');
-                }, 3000);
-                
-                updateStatus('online', 'Đã làm mới lượt quay');
-                
-                return true;
-            } catch (error) {
-                console.error("Error forcing refresh:", error);
-                showNotification("Lỗi khi làm mới lượt quay.");
-                return false;
-            }
-        }
-        
-        // Refresh spins locally
-        function refreshSpins() {
-            const now = new Date().getTime();
-            
-            // Refresh to max spins
-            spinsLeft = MAX_SPINS;
-            
-            // Update refresh times
-            lastSpinRefreshTime = now;
-            nextRefreshTime = now + REFRESH_TIME_MS;
-            
-            // Update UI
+        if (timeLeft <= 0) {
+            // Reset spins when timer reaches zero
+            spinsLeft = 50;
             updateStats();
-            
-            // Show notification
-            showNotification("Lượt quay đã được làm mới! +50 lượt quay");
-            
-            // Show animation on spins value
-            spinsValue.classList.add('glow');
-            setTimeout(() => {
-                spinsValue.classList.remove('glow');
-            }, 3000);
-            
-            // Save state
             saveGameState();
+            
+            // Show reset notification
+            showNotification("Lượt quay đã được làm mới!");
+            
+            // Calculate and save next refresh time
+            const nextHour = new Date();
+            nextHour.setMinutes(now.getMinutes() + 30, 0, 0);
+
+            
+            nextRefreshTime = nextHour.getTime();
+            localStorage.setItem('nextRefreshTime', nextRefreshTime);
+            
+            // Reset timeLeft for next cycle
+            timeLeft = 2100000; // 1 hour in milliseconds
+            
+            // Restart timer display
+            updateTimer();
         }
+    }
+    
+    // Update immediately and then every second
+    updateTimer();
+    clearInterval(refreshTimer); // Clear any existing timer
+    refreshTimer = setInterval(updateTimer, 1000);
+}
         
         // Start event countdown timer
         function startEventCountdown() {
@@ -2839,7 +2207,7 @@ function showNameRegistrationOverlay() {
             clearInterval(countdownTimer); // Clear any existing timer
             countdownTimer = setInterval(updateCountdown, 1000);
         }
-        
+
         // Redeem points for rewards
         function redeemPoints() {
             if (!selectedRedeemOption) {
@@ -2868,13 +2236,14 @@ function showNameRegistrationOverlay() {
             rewardValue.textContent = `${amount.toLocaleString()} VNĐ`;
             rewardDate.textContent = new Date().toLocaleDateString('vi-VN');
 
+             // Show reward card with animation
+    rewardCard.style.display = 'block';
+    
+    // Cập nhật nội dung nút phù hợp với môi trường (thêm dòng này)
+    updateButtonText();
+            
             // Show reward card with animation
             rewardCard.style.display = 'block';
-            
-            // Update button text
-            saveRewardBtn.textContent = 'XEM PHIẾU NHẬN THƯỞNG';
-            
-            // Show reward card with animation
             anime({
                 targets: '#reward-card',
                 scale: [0.9, 1],
@@ -2899,8 +2268,10 @@ function showNameRegistrationOverlay() {
             
             // Create mini celebration
             createConfetti(20);
+
+
         }
-        
+
         // Generate reward poster 
         function generateRewardPoster(amount) {
             // Create a canvas element
@@ -2959,11 +2330,6 @@ function showNameRegistrationOverlay() {
             ctx.font = 'bold 36px Arial';
             ctx.fillText('HIẾU GÀ OFFICIAL', canvas.width / 2, canvas.height - 60);
             
-            // Draw user ID in small text
-            ctx.fillStyle = '#999';
-            ctx.font = '12px Arial';
-            ctx.fillText(`ID: ${userId}`, canvas.width / 2, canvas.height - 20);
-            
             // Get image URL
             const imageUrl = canvas.toDataURL('image/png');
             
@@ -2974,315 +2340,309 @@ function showNameRegistrationOverlay() {
             // Store for download
             customPosterImage = imageUrl;
         }
-        
-        // Save reward poster
-        function saveRewardPoster() {
-            SOUNDS.click.play();
-            
-            // Show poster overlay
-            showPosterOverlay();
-            
-            // Show notification
-            showNotification('Hãy chụp màn hình để lưu phiếu thưởng!');
-        }
-        
-        // Show poster overlay
-        function showPosterOverlay() {
-            // Remove existing overlay if any
-            const existingOverlay = document.querySelector('.poster-overlay');
-            if (existingOverlay) {
-                document.body.removeChild(existingOverlay);
-            }
-            
-            // Create new overlay
-            const overlay = document.createElement('div');
-            overlay.className = 'poster-overlay';
-            
-            // Create poster container
-            const posterContainer = document.createElement('div');
-            posterContainer.className = 'poster-container';
-            
-            // Create screenshot hint
-            const screenshotHint = document.createElement('div');
-            screenshotHint.className = 'screenshot-hint';
-            screenshotHint.innerHTML = '📷 Chụp màn hình ở đây';
-            
-            // Clone reward card
-            const posterClone = rewardCard.cloneNode(true);
-            posterClone.style.display = 'block';
-            posterClone.style.width = '100%';
-            posterClone.style.maxWidth = '400px';
-            posterClone.style.margin = '0 auto';
-            posterClone.style.boxShadow = '0 0 30px rgba(216, 47, 47, 0.5)';
-            posterClone.style.background = 'linear-gradient(135deg, #ffffff, #fff9e6)';
-            
-            // Remove save button from clone
-            const saveBtn = posterClone.querySelector('#save-reward-btn');
-            if (saveBtn) saveBtn.remove();
-            
-            // Add poster and hint to container
-            posterContainer.appendChild(screenshotHint);
-            posterContainer.appendChild(posterClone);
-            
-            // Create instructions
-            const instructions = document.createElement('div');
-            instructions.className = 'poster-instructions';
-            instructions.innerHTML = `
-                <h3>🔴 Hướng dẫn nhận thưởng 🔴</h3>
-                <p>Chụp màn hình phiếu nhận thưởng và gửi cho Hiếu Gà</p>
-                <p>Lưu ý: Phiếu chỉ có giá trị khi gửi kèm tên đã đăng ký (${playerName})</p>
-            `;
-            
-            // Create button container
-            const buttonContainer = document.createElement('div');
-            buttonContainer.className = 'poster-buttons';
-            
-            // Add share button for Telegram
-            if (window.Telegram && window.Telegram.WebApp) {
-                const shareButton = document.createElement('button');
-                shareButton.className = 'poster-button share';
-                shareButton.innerHTML = '<span>🚀 Gửi cho Hiếu Gà</span>';
-                shareButton.addEventListener('click', function() {
-                    try {
-                        window.Telegram.WebApp.sendData(JSON.stringify({
-                            action: 'reward_claimed',
-                            amount: rewardValue.textContent,
-                            user: playerName,
-                            userId: userId,
-                            date: rewardDate.textContent
-                        }));
-                        // Close overlay
-                        document.body.removeChild(overlay);
-                    } catch (e) {
-                        console.error("Error sharing to Telegram", e);
-                    }
-                });
-                buttonContainer.appendChild(shareButton);
-            }
-            
-            // Add close button
-            const closeButton = document.createElement('button');
-            closeButton.className = 'poster-button close';
-            closeButton.textContent = 'Đóng';
-            closeButton.addEventListener('click', function() {
-                document.body.removeChild(overlay);
-            });
-            buttonContainer.appendChild(closeButton);
-            
-            // Assemble all components
-            overlay.appendChild(posterContainer);
-            overlay.appendChild(instructions);
-            overlay.appendChild(buttonContainer);
-            
-            // Add to body
-            document.body.appendChild(overlay);
-            
-            // Apply animation effect
-            setTimeout(() => {
-                posterContainer.style.transform = 'scale(1)';
-            }, 50);
-        }
-        
-    // Cập nhật phần saveGameState với nhiều retry và logging tốt hơn
-async function saveGameState(forceImmediate = false) {
-    if (isSaving && !forceImmediate) {
-        console.log("Đang có một lưu trữ đang chạy, bỏ qua");
-        return;
-    }
+
+     function saveRewardPoster() {
+    SOUNDS.click.play();
     
-    try {
-        isSaving = true;
-        
-        // Kiểm tra nếu tên người chơi chưa được thiết lập
-        if (!playerName || playerName.trim() === '') {
-            console.log("Tên người chơi chưa được thiết lập, không lưu trạng thái");
-            showNotification("Vui lòng nhập tên trước khi quay!", 3000);
-            isSaving = false;
-            return;
-        }
-        
-        updateStatus('syncing', 'Đang lưu...');
-        
-        // Tạo đối tượng dữ liệu
-        const gameState = {
-            userId: userId,
-            name: playerName,
-            score: points,
-            spinsLeft: spinsLeft,
-            lastSpinRefreshTime: lastSpinRefreshTime,
-            nextSpinDouble: nextSpinDouble,
-            wheelRotation: lastWheelRotation,
-            lastUpdate: Date.now()
-        };
-        
-        console.log("Đang lưu trạng thái:", gameState);
-        
-        // Hàm lưu trữ với retry
-        const saveWithRetry = async (retries = 3, delay = 1000) => {
-            let error;
+    // Thay đổi hướng dẫn dựa trên môi trường (Telegram hay trình duyệt)
+    const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
+    
+    if (isTelegramWebApp) {
+        // Hiển thị overlay toàn màn hình với poster và hướng dẫn
+        showPosterOverlay();
+    } else {
+        // Vẫn giữ chức năng tải xuống cho trình duyệt thông thường
+        if (customPosterImage) {
+            // Create a download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = customPosterImage;
+            downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
             
-            for (let i = 0; i < retries; i++) {
-                try {
-                    // Thêm timeout để không chờ quá lâu
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 giây timeout
-                    
-                    const response = await fetch(`${API_BASE_URL}/saveScore`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(gameState),
-                        signal: controller.signal
-                    }).finally(() => clearTimeout(timeoutId));
-                    
-                    if (!response.ok) {
-                        throw new Error(`Lỗi máy chủ: ${response.status}`);
-                    }
-                    
-                    const result = await response.json();
-                    console.log("Kết quả lưu trữ:", result);
-                    
-                    // Kiểm tra nếu server làm mới lượt quay
-                    if (result.refreshed) {
-                        console.log("Máy chủ đã làm mới lượt quay trong quá trình lưu");
-                        
-                        // Cập nhật dữ liệu từ server
-                        spinsLeft = result.player.spinsLeft;
-                        lastSpinRefreshTime = result.player.lastSpinRefreshTime;
-                        nextRefreshTime = result.player.nextRefreshTime;
-                        
-                        // Cập nhật UI
+            // Trigger download
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            showNotification('Đã tải poster thành công!');
+        } else {
+            // Fallback to HTML2Canvas
+            html2canvas(rewardCard).then(canvas => {
+                const imageUrl = canvas.toDataURL('image/png');
+                
+                const downloadLink = document.createElement('a');
+                downloadLink.href = imageUrl;
+                downloadLink.download = `phieu-qua-hieu-ga-${Date.now()}.png`;
+                
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                
+                showNotification('Đã tải poster thành công!');
+            }).catch(err => {
+                console.error('Error saving reward poster:', err);
+                alert('Không thể tải poster. Vui lòng thử lại sau!');
+            });
+        }
+    }
+}
+
+        // Thêm hàm mới để hiển thị poster toàn màn hình
+function showPosterOverlay() {
+    // Tạo overlay hiển thị poster toàn màn hình
+    const overlay = document.createElement('div');
+    overlay.className = 'poster-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.9)';
+    overlay.style.zIndex = '10000';
+    overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.padding = '20px';
+    
+    // Tạo container cho poster
+    const posterContainer = document.createElement('div');
+    posterContainer.style.backgroundColor = 'white';
+    posterContainer.style.padding = '15px';
+    posterContainer.style.borderRadius = '10px';
+    posterContainer.style.maxWidth = '90%';
+    posterContainer.style.maxHeight = '70vh';
+    posterContainer.style.position = 'relative';
+    
+    // Clone poster từ reward card
+    const posterClone = rewardCard.cloneNode(true);
+    posterClone.style.display = 'block';
+    posterClone.style.width = '100%';
+    posterClone.style.maxWidth = '400px';
+    posterClone.style.margin = '0 auto';
+    posterClone.style.boxShadow = 'none';
+    posterClone.querySelector('#save-reward-btn').style.display = 'none';
+    
+    // Thêm poster vào container
+    posterContainer.appendChild(posterClone);
+    
+    // Thêm hướng dẫn
+    const instructions = document.createElement('div');
+    instructions.style.color = 'white';
+    instructions.style.padding = '15px';
+    instructions.style.textAlign = 'center';
+    instructions.style.marginTop = '20px';
+    instructions.innerHTML = `
+        <h3 style="margin-bottom:10px;">Chụp màn hình để lưu phiếu thưởng</h3>
+        <p style="margin-bottom:15px;">Sau khi chụp, gửi hình ảnh cho admin để nhận thưởng</p>
+    `;
+    
+    // Nút chia sẻ qua Telegram (nếu có API)
+    const shareButton = document.createElement('button');
+    shareButton.textContent = 'Chia sẻ với Admin';
+    shareButton.style.backgroundColor = '#0088cc'; // Màu Telegram
+    shareButton.style.color = 'white';
+    shareButton.style.border = 'none';
+    shareButton.style.padding = '12px 24px';
+    shareButton.style.borderRadius = '8px';
+    shareButton.style.marginTop = '10px';
+    shareButton.style.cursor = 'pointer';
+    shareButton.style.fontWeight = 'bold';
+    
+    // Xử lý sự kiện click cho nút chia sẻ
+    shareButton.addEventListener('click', function() {
+        try {
+            if (window.Telegram && window.Telegram.WebApp) {
+                // Thông báo cho bot hoặc người dùng Telegram
+                window.Telegram.WebApp.sendData(JSON.stringify({
+                    action: 'reward_claimed',
+                    amount: rewardValue.textContent,
+                    user: playerName,
+                    date: rewardDate.textContent
+                }));
+                
+                // Đóng overlay và thông báo
+                document.body.removeChild(overlay);
+                showNotification('Đã gửi thông tin đến Admin!');
+            }
+        } catch (e) {
+            console.error("Error sharing to Telegram", e);
+        }
+    });
+    
+    // Nút đóng
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Đóng';
+    closeButton.style.backgroundColor = '#666';
+    closeButton.style.color = 'white';
+    closeButton.style.border = 'none';
+    closeButton.style.padding = '12px 24px';
+    closeButton.style.borderRadius = '8px';
+    closeButton.style.marginTop = '10px';
+    closeButton.style.marginLeft = '10px';
+    closeButton.style.cursor = 'pointer';
+    
+    // Xử lý sự kiện click cho nút đóng
+    closeButton.addEventListener('click', function() {
+        document.body.removeChild(overlay);
+    });
+    
+    // Thêm các thành phần vào overlay
+    overlay.appendChild(posterContainer);
+    overlay.appendChild(instructions);
+    
+    // Container cho các nút
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'center';
+    buttonContainer.style.marginTop = '10px';
+    
+    buttonContainer.appendChild(shareButton);
+    buttonContainer.appendChild(closeButton);
+    
+    overlay.appendChild(buttonContainer);
+    
+    // Thêm overlay vào body
+    document.body.appendChild(overlay);
+    
+    // Thêm hiệu ứng hiển thị
+    setTimeout(() => {
+        posterContainer.style.transition = 'transform 0.3s ease-out';
+        posterContainer.style.transform = 'scale(1)';
+    }, 50);
+}
+
+
+        // Save game state to localStorage and API
+        async function saveGameState() {
+            const gameState = {
+                points: points,
+                spinsLeft: spinsLeft,
+                nextSpinDouble: nextSpinDouble,
+                lastUpdate: Date.now(),
+                wheelRotation: lastWheelRotation
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('wheelGameState', JSON.stringify(gameState));
+            
+            // Save to API
+            try {
+                const response = await fetch(`${API_BASE_URL}/saveScore`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        name: playerName,
+                        score: points
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to save score to server');
+                }
+            } catch (err) {
+                console.error("Error saving to API:", err);
+                // Use localStorage as fallback
+                updateLocalLeaderboard();
+            }
+        }
+
+        // Load game state
+        async function loadGameState() {
+            // First load from localStorage
+            const savedState = localStorage.getItem('wheelGameState');
+            if (savedState) {
+                const gameState = JSON.parse(savedState);
+                
+                // Check if state is from current hour
+                const now = new Date();
+                const stateTime = new Date(gameState.lastUpdate);
+                
+                // Calculate if they're in the same hour period
+                const nowHour = now.getHours();
+                const stateHour = stateTime.getHours();
+                
+                const sameDay = now.getDate() === stateTime.getDate() && 
+                                now.getMonth() === stateTime.getMonth() && 
+                                now.getFullYear() === stateTime.getFullYear();
+                
+                if (sameDay && nowHour === stateHour) {
+    points = gameState.points || 0;
+    // Đảm bảo không vượt quá 50 lượt quay
+    spinsLeft = Math.min(50, gameState.spinsLeft !== undefined ? gameState.spinsLeft : 50);
+    nextSpinDouble = gameState.nextSpinDouble || false;
+    lastWheelRotation = gameState.wheelRotation || 0;
+} else {
+    // Reset spins for new hour but keep points
+    points = gameState.points || 0;
+    spinsLeft = 50; // Giá trị này đã cố định là 50
+    nextSpinDouble = false;
+    lastWheelRotation = 0;
+}
+            }
+            
+            // Try to fetch from API
+            try {
+                const response = await fetch(`${API_BASE_URL}/getScore?userId=${userId}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.score > points) {
+                        points = data.score;
                         updateStats();
-                        showNotification("Lượt quay đã được làm mới! Bạn có " + spinsLeft + " lượt quay.");
-                    }
-                    
-                    // Lưu dự phòng vào localStorage để có thể phục hồi nếu cần
-                    localStorage.setItem('wheelGameBackup', JSON.stringify({
-                        userId,
-                        playerName,
-                        points,
-                        spinsLeft,
-                        lastSpinRefreshTime,
-                        nextRefreshTime,
-                        nextSpinDouble,
-                        lastWheelRotation,
-                        timestamp: Date.now()
-                    }));
-                    
-                    updateStatus('online', 'Đã lưu thành công');
-                    console.log("Đã lưu trạng thái thành công");
-                    return true;
-                    
-                } catch (err) {
-                    console.error(`Lỗi lưu trữ lần ${i+1}:`, err);
-                    error = err;
-                    
-                    // Nếu còn retry thì đợi rồi thử lại
-                    if (i < retries - 1) {
-                        console.log(`Đang chờ ${delay}ms trước khi thử lại...`);
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 2; // Exponential backoff
                     }
                 }
+            } catch (err) {
+                console.error("Error loading from API:", err);
             }
-            
-            throw error; // Ném lỗi cuối cùng nếu tất cả retry đều thất bại
-        };
-        
-        // Thực hiện lưu với retry
-        await saveWithRetry();
-        
-        // Ẩn trạng thái sau khi lưu thành công
-        setTimeout(() => {
-            statusIndicator.style.display = 'none';
-        }, 2000);
-        
-    } catch (error) {
-        console.error("Lỗi lưu trạng thái sau khi đã thử lại nhiều lần:", error);
-        updateStatus('error', 'Lỗi lưu');
-        showNotification("Không thể lưu trạng thái. Dữ liệu sẽ được lưu tạm thời.", 5000);
-        
-        // Lưu dữ liệu vào localStorage để khôi phục sau này
-        try {
-            localStorage.setItem('wheelGameBackup', JSON.stringify({
-                userId,
-                playerName,
-                points,
-                spinsLeft,
-                lastSpinRefreshTime,
-                nextRefreshTime,
-                nextSpinDouble,
-                lastWheelRotation,
-                timestamp: Date.now(),
-                isBackup: true
-            }));
-            console.log("Đã lưu bản sao lưu vào localStorage");
-        } catch (e) {
-            console.error("Không thể lưu bản sao lưu:", e);
         }
-    } finally {
-        isSaving = false;
-    }
-}
 
-        // Thêm hàm khôi phục dữ liệu từ bản sao lưu khi cần thiết
-function tryRestoreFromBackup() {
-    try {
-        const backup = localStorage.getItem('wheelGameBackup');
-        if (!backup) return false;
-        
-        const data = JSON.parse(backup);
-        // Kiểm tra xem backup có phải cho userId hiện tại không và không quá cũ (24 giờ)
-        if (data.userId === userId && Date.now() - data.timestamp < 24 * 60 * 60 * 1000) {
-            console.log("Đang khôi phục từ bản sao lưu:", data);
-            
-            // Khôi phục dữ liệu
-            if (data.playerName) playerName = data.playerName;
-            if (data.points !== undefined) points = data.points;
-            if (data.spinsLeft !== undefined) spinsLeft = data.spinsLeft;
-            if (data.lastSpinRefreshTime) lastSpinRefreshTime = data.lastSpinRefreshTime;
-            if (data.nextRefreshTime) nextRefreshTime = data.nextRefreshTime;
-            if (data.nextSpinDouble !== undefined) nextSpinDouble = data.nextSpinDouble;
-            if (data.lastWheelRotation !== undefined) lastWheelRotation = data.lastWheelRotation;
-            
-            updateStats();
-            return true;
-        }
-    } catch (e) {
-        console.error("Lỗi khi khôi phục từ bản sao lưu:", e);
-    }
-    return false;
-}
-
-        
         // Save player name
         async function savePlayerName() {
             const newName = playerNameInput.value.trim();
             if (newName) {
                 SOUNDS.click.play();
                 
-                // Update name
                 playerName = newName;
                 localStorage.setItem('playerName', playerName);
                 
+                // Save to API
                 try {
-                    // Save to server
-                    await saveGameState(true);
-                    
-                    // Update leaderboard
+                    await saveGameState();
                     await loadLeaderboard();
-                    
-                    // Show confirmation
-                    showResult('✅', `Tên "${playerName}" đã được lưu thành công!`);
-                    showNotification(`Tên đã cập nhật thành "${playerName}"!`);
-                } catch (error) {
-                    console.error("Error saving name:", error);
-                    showNotification("Lỗi khi lưu tên. Vui lòng thử lại sau.");
+                } catch (err) {
+                    console.error("Error saving name to API:", err);
+                    updateLocalLeaderboard();
                 }
+                
+                // Show confirmation
+                showResult('✅', `Tên "${playerName}" đã được lưu thành công!`);
+                showNotification(`Tên đã cập nhật thành "${playerName}"!`);
             }
         }
-        
+
+        function updateLocalLeaderboard() {
+    // Chỉ lưu trữ dữ liệu của người dùng hiện tại
+    let leaderboard = [];
+    
+    // Nếu có điểm, thêm người dùng vào bảng xếp hạng
+    if (points > 0 && playerName) {
+        leaderboard = [{
+            userId: userId,
+            name: playerName,
+            score: points
+        }];
+    }
+    
+    // Lưu vào localStorage để dùng làm cache tạm thời
+    localStorage.setItem('localLeaderboard', JSON.stringify(leaderboard));
+    
+    // Update UI
+    updateLeaderboardDisplay(leaderboard);
+}
+
         // Load leaderboard
         async function loadLeaderboard() {
             leaderboardList.innerHTML = '<li class="leaderboard-item"><div class="spinner"></div></li>';
@@ -3292,134 +2652,124 @@ function tryRestoreFromBackup() {
                 const response = await fetch(`${API_BASE_URL}/getLeaderboard`);
                 
                 if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
+                    throw new Error('Failed to load leaderboard');
                 }
                 
                 const leaderboard = await response.json();
                 
                 if (!leaderboard || leaderboard.length === 0) {
-                    leaderboardList.innerHTML = '<li class="leaderboard-item" style="justify-content: center"><div style="color:#666;font-style:italic;">Chưa có dữ liệu xếp hạng</div></li>';
-                    leaderboardStatus.textContent = 'Không có dữ liệu xếp hạng';
-                    return;
+                    throw new Error('No leaderboard data');
                 }
                 
-                // Update leaderboard display
                 updateLeaderboardDisplay(leaderboard);
-                
-                // Update status
-                const now = new Date();
-                const options = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
-                leaderboardStatus.textContent = `Cập nhật: ${now.toLocaleTimeString('vi-VN', options)}`;
-            } catch (error) {
-                console.error("Error loading leaderboard:", error);
-                leaderboardList.innerHTML = '<li class="leaderboard-item" style="justify-content: center"><div style="color:#666;font-style:italic;">Lỗi khi tải dữ liệu</div></li>';
-                leaderboardStatus.textContent = 'Lỗi khi tải bảng xếp hạng';
-            }
+const now = new Date();
+const options = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+leaderboardStatus.textContent = `Cập nhật: ${now.toLocaleTimeString('vi-VN', options)}`;
+            } catch (err) {
+    console.error("Error loading leaderboard:", err);
+    leaderboardStatus.textContent = 'Đang cập nhật bảng xếp hạng...';
+    
+    // Chỉ hiển thị dữ liệu của người dùng hiện tại
+    let localLeaderboard = [];
+    
+    // Nếu có điểm, thêm người dùng hiện tại vào bảng xếp hạng
+    if (points > 0 && playerName) {
+        localLeaderboard = [{
+            userId: userId,
+            name: playerName,
+            score: points
+        }];
+    }
+    
+    // Cập nhật hiển thị
+    updateLeaderboardDisplay(localLeaderboard);
+}
+        }
+
+       function updateLeaderboardDisplay(leaderboard) {
+    leaderboardList.innerHTML = '';
+    
+    // Hiển thị thông báo nếu không có dữ liệu
+    if (!leaderboard || leaderboard.length === 0) {
+        const emptyItem = document.createElement('li');
+        emptyItem.className = 'leaderboard-item';
+        emptyItem.style.justifyContent = 'center';
+        emptyItem.innerHTML = '<div style="color:#666;font-style:italic;">Chưa có dữ liệu xếp hạng</div>';
+        leaderboardList.appendChild(emptyItem);
+        return;
+    }
+    
+    // Sort the leaderboard
+    leaderboard.sort((a, b) => b.score - a.score);
+    
+    // Limit to top 10
+    const topScores = leaderboard.slice(0, 10);
+    
+    topScores.forEach((player, index) => {
+        const li = document.createElement('li');
+        li.className = 'leaderboard-item';
+        
+        const isCurrentPlayer = player.userId === userId;
+        if (isCurrentPlayer) {
+            li.style.backgroundColor = 'rgba(255, 235, 59, 0.2)';
         }
         
-        // Update leaderboard display
-        function updateLeaderboardDisplay(leaderboard) {
-            leaderboardList.innerHTML = '';
-            
-            // Sort leaderboard
-            leaderboard.sort((a, b) => b.score - a.score);
-            
-            // Limit to top 10
-            const topScores = leaderboard.slice(0, 10);
-            
-            topScores.forEach((player, index) => {
-                const li = document.createElement('li');
-                li.className = 'leaderboard-item';
-                
-                const isCurrentPlayer = player.userId === userId;
-                if (isCurrentPlayer) {
-                    li.style.backgroundColor = 'rgba(255, 235, 59, 0.2)';
-                }
-                
-                // Add extra effects for top 3 places
-                let specialEffect = '';
-                if (index === 0) {
-                    specialEffect = 'float';
-                } else if (index === 1 || index === 2) {
-                    specialEffect = 'pulse';
-                }
-                
-                li.innerHTML = `
-                    <div class="leaderboard-rank ${index < 3 ? specialEffect : ''}">${index + 1}</div>
-                    <div class="leaderboard-info">
-                        <div class="leaderboard-name">${player.name}${isCurrentPlayer ? ' (Bạn)' : ''}</div>
-                    </div>
-                    <div class="leaderboard-score">${player.score.toLocaleString()}</div>
-                `;
-                
-                leaderboardList.appendChild(li);
-            });
-            
-            // Animation for leaderboard items
-            anime({
-                targets: '.leaderboard-item',
-                translateX: [20, 0],
-                opacity: [0, 1],
-                delay: anime.stagger(100),
-                easing: 'easeOutQuad'
-            });
+        // Add extra effects for top 3 places
+        let specialEffect = '';
+        if (index === 0) {
+            specialEffect = 'float';
+        } else if (index === 1 || index === 2) {
+            specialEffect = 'pulse';
         }
         
+        li.innerHTML = `
+            <div class="leaderboard-rank ${index < 3 ? specialEffect : ''}">${index + 1}</div>
+            <div class="leaderboard-info">
+                <div class="leaderboard-name">${player.name}${isCurrentPlayer ? ' (Bạn)' : ''}</div>
+            </div>
+            <div class="leaderboard-score">${player.score.toLocaleString()}</div>
+        `;
+        
+        leaderboardList.appendChild(li);
+    });
+    
+    // Animation for leaderboard items
+    anime({
+        targets: '.leaderboard-item',
+        translateX: [20, 0],
+        opacity: [0, 1],
+        delay: anime.stagger(100),
+        easing: 'easeOutQuad'
+    });
+}
+
         // Update leaderboard
         async function updateLeaderboard() {
-            if (!isOnline) return;
+            // First update the local leaderboard as fallback
+            updateLocalLeaderboard();
             
+            // Then try to update via API
             try {
-                // First save game state
                 await saveGameState();
-                
-                // Then reload leaderboard (only sometimes to reduce API calls)
+                // Only reload leaderboard sometimes to reduce API calls
                 if (Math.random() < 0.3) {
                     await loadLeaderboard();
                 }
-            } catch (error) {
-                console.error("Error updating leaderboard:", error);
+            } catch (err) {
+                console.error("Error updating leaderboard:", err);
             }
         }
+
+        // Event listeners
+        spinBtn.addEventListener('click', spinWheel);
+        saveRewardBtn.addEventListener('click', saveRewardPoster);
+        saveNameBtn.addEventListener('click', savePlayerName);
+
+        // Initialize the game when the page loads
+        window.addEventListener('load', initGame);
         
-        // Show notification
-        function showNotification(message, duration = 3000) {
-            notification.textContent = message;
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, duration);
-        }
-        
-        // Handle online status change
-        function handleOnlineStatus() {
-            console.log("Back online");
-            isOnline = true;
-            updateStatus('online', 'Đã kết nối lại');
-            syncWithServer();
-        }
-        
-        // Handle offline status change
-        function handleOfflineStatus() {
-            console.log("Gone offline");
-            isOnline = false;
-            updateStatus('error', 'Mất kết nối');
-        }
-        
-        // Update status indicator
-        function updateStatus(status, message) {
-            statusIndicator.style.display = 'flex';
-            statusDot.className = 'status-dot ' + status;
-            statusText.textContent = message;
-        }
-        
-        // Handle initialization error
-        function handleInitError(message) {
-            globalSpinner.style.display = 'none';
-            errorMessage.textContent = message;
-            errorContainer.style.display = 'flex';
-        }
+        // Periodically refresh leaderboard
+        setInterval(loadLeaderboard, 60000); // Every minute
     </script>
 </body>
 </html>
