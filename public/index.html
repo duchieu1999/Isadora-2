@@ -1464,21 +1464,21 @@
         
         // Game config
         const wheelSections = [
-            { name: "Thắng lợi vẻ vang", icon: "🏆", points: 40, probability: 0.05 },
-            { name: "Nhận gạo cứu trợ", icon: "🍚", points: 15, probability: 0.13 },
+            { name: "Thắng lợi vẻ vang", icon: "🏆", points: 50, probability: 0.05 },
+            { name: "Nhận gạo cứu trợ", icon: "🍚", points: 25, probability: 0.13 },
             { name: "Cưỡi xe tăng tiến vào dinh", icon: "🪖", points: 60, probability: 0.05 },
-            { name: "Chụp ảnh ở Sài Gòn 1975", icon: "📸", points: 25, probability: 0.10 },
+            { name: "Chụp ảnh ở Sài Gòn 1975", icon: "📸", points: 35, probability: 0.10 },
             { name: "Treo cờ thống nhất", icon: "🚩", points: 20, probability: 0.12 },
             { name: "Mất lượt", icon: "❌", points: 0, loseTurn: true, probability: 0.10 },
             { name: "Quà tặng bất ngờ", icon: "🎁", points: 0, randomCard: true, probability: 0.08 },
-            { name: "Pháo hoa giải phóng", icon: "🎆", points: 10, extraSpin: true, probability: 0.07 },
+            { name: "Pháo hoa giải phóng", icon: "🎆", points: 40, extraSpin: true, probability: 0.07 },
             { name: "Lá cờ giải phóng", icon: "🚩", points: 80, probability: 0.04 },
-            { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -30, probability: 0.10 },
-            { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -45, probability: 0.08 },
+            { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -20, probability: 0.10 },
+            { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -25, probability: 0.08 },
             { name: "Nhận đôi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 },
             // Thêm phần thưởng jackpot với tỉ lệ thấp
-            { name: "JACKPOT ĐẶC BIỆT", icon: "💰", points: 100, jackpot: true, probability: 0.001 },
-            { name: "JACKPOT LỚN", icon: "💎", points: 200, jackpot: true, probability: 0.0005 }
+            { name: "JACKPOT ĐẶC BIỆT", icon: "💰", points: 400, jackpot: true, probability: 0.001 },
+            { name: "JACKPOT LỚN", icon: "💎", points: 500, jackpot: true, probability: 0.0005 }
         ];
 
         // DOM elements
@@ -1903,7 +1903,7 @@ document.addEventListener('DOMContentLoaded', updateButtonText);
                 SOUNDS.lose.play();
             } else if (section.randomCard) {
                 // Random card gives points between 10-200 (increased range)
-                const randomPoints = Math.floor(Math.random() * 201) + 30;
+                const randomPoints = Math.floor(Math.random() * 251) + 180;
                 pointsEarned = randomPoints;
                 message += `<strong>${section.name}!</strong> Bạn nhận được ${pointsEarned} điểm! `;
                 SOUNDS.win.play();
