@@ -11,7 +11,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
     <!-- HTML2Canvas for reward card capture -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <!-- Sau khi tải trang, sẽ sử dụng setInterval để liên tục đồng bộ thời gian refresh -->
     <style>
+        /* Giữ nguyên CSS từ file cũ */
         :root {
             --primary-color: #d82f2f;
             --primary-dark: #b71c1c;
@@ -1338,6 +1340,55 @@
             transform: translateY(-50%) scale(1.1);
         }
         
+        /* Status indicator */
+        .sync-status {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .sync-status.online {
+            background-color: rgba(0, 128, 0, 0.7);
+        }
+        
+        .sync-status.offline {
+            background-color: rgba(255, 0, 0, 0.7);
+        }
+        
+        .sync-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .sync-indicator.online {
+            background-color: #4CAF50;
+        }
+        
+        .sync-indicator.offline {
+            background-color: #f44336;
+        }
+        
+        .sync-indicator.syncing {
+            background-color: #ffc107;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        
         /* Responsive adjustments */
         @media screen and (max-height: 700px) {
             .wheel-outer-container {
@@ -1561,6 +1612,12 @@
     <!-- Notification -->
     <div class="notification" id="notification"></div>
     
+    <!-- Sync status indicator -->
+    <div class="sync-status" id="sync-status">
+        <span class="sync-indicator" id="sync-indicator"></span>
+        <span id="sync-text">Đang đồng bộ dữ liệu...</span>
+    </div>
+    
     <script>
         // Sound effects
         const SOUNDS = {
@@ -1601,8 +1658,8 @@
             { name: "Quà tặng bất ngờ", icon: "🎁", points: 0, randomCard: true, probability: 0.08 },
             { name: "Pháo hoa giải phóng", icon: "🎆", points: 10, extraSpin: true, probability: 0.07 },
             { name: "Lá cờ giải phóng", icon: "🚩", points: 80, probability: 0.04 },
-            { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -15, probability: 0.10 },
-            { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -25, probability: 0.08 },
+            { name: "Bị kẹt đường vì xe tăng", icon: "🚧", points: -25, probability: 0.10 },
+            { name: "Bị đánh thức bởi loa phường", icon: "🔊", points: -35, probability: 0.08 },
             { name: "Nhận đôi biếm ở lượt sau", icon: "👨‍🚀", points: 0, doubleNext: true, probability: 0.08 },
             // Thêm phần thưởng jackpot với tỉ lệ thấp
             { name: "JACKPOT ĐẶC BIỆT", icon: "💰", points: 100, jackpot: true, probability: 0.001 },
@@ -1612,6 +1669,8 @@
         // Thời gian làm mới lượt quay (30 phút = 1800000ms)
         const REFRESH_TIME_MS = 1800000;
         const MAX_SPINS = 50; // Số lượt quay tối đa
+        const SYNC_INTERVAL = 60000; // Đồng bộ mỗi 1 phút
+        const API_BASE_URL = '/api';
 
         // DOM elements
         const wheel = document.getElementById('wheel');
@@ -1643,6 +1702,9 @@
         const nameRegistrationInput = document.getElementById('name-registration-input');
         const nameRegistrationButton = document.getElementById('name-registration-button');
         const nameRegistrationError = document.getElementById('name-registration-error');
+        const syncStatus = document.getElementById('sync-status');
+        const syncIndicator = document.getElementById('sync-indicator');
+        const syncText = document.getElementById('sync-text');
         
         // Countdown elements
         const daysValue = document.getElementById('days-value');
@@ -1657,6 +1719,7 @@
         let nextSpinDouble = false;
         let refreshTimer;
         let countdownTimer;
+        let syncTimer;
         let playerName = '';
         let selectedRedeemOption = null;
         let isEventEnded = false;
@@ -1665,9 +1728,9 @@
         let currentSections = [];
         let customPosterImage = null;
         let lastSpinRefreshTime = 0; // Thời gian làm mới lượt quay gần nhất
-
-        // API endpoints
-        const API_BASE_URL = '/api';
+        let nextRefreshTime = 0; // Thời gian làm mới tiếp theo
+        let isSyncingWithServer = false; // Đang đồng bộ với server
+        let isOnline = true; // Trạng thái kết nối
 
         // Initialize the game
         async function initGame() {
@@ -1702,14 +1765,19 @@
                 createWheel();
                 setupUserId();
                 checkNameRegistration();
-                await loadGameState();
                 
-                // Giải pháp 1: Đảm bảo kiểm tra làm mới lượt quay trước khi bắt đầu đếm ngược
-                await checkSpinReset();
+                // Thiết lập trạng thái đồng bộ
+                setupSyncStatus();
                 
-                // Bắt đầu bộ đếm ngược & kiểm tra khoảng thời gian làm mới
+                // Load state từ server
+                await syncWithServer();
+                
+                // Bắt đầu các bộ đếm thời gian
                 startRefreshTimer();
                 startEventCountdown();
+                startSyncTimer();
+                
+                // Cập nhật UI
                 updateStats();
                 await loadLeaderboard();
                 
@@ -1738,40 +1806,270 @@
                 window.addEventListener('resize', adjustWheelSize);
                 adjustWheelSize();
                 
-                // Giải pháp 2: Thêm sự kiện cho nút làm mới
+                // Thêm sự kiện cho nút làm mới
                 refreshSpinsButton.addEventListener('click', forceCheckSpinReset);
                 
-                // Kiểm tra lại một lần nữa số lượt quay sau khi khởi tạo
-                setTimeout(async () => {
-                    // Giải pháp 3: Đọc lại state từ local storage và đảm bảo cập nhật UI
-                    await loadLatestSpinCount();
-                    
-                    // Kiểm tra và áp dụng reset lượt quay nếu cần
-                    await checkSpinReset();
-                    
-                    // Giải pháp 4: Kiểm tra mỗi phút xem có cần làm mới lượt quay không
-                    setInterval(checkSpinReset, 60000);
-                }, 500);
+                // Theo dõi trạng thái online/offline
+                window.addEventListener('online', handleOnlineStatus);
+                window.addEventListener('offline', handleOfflineStatus);
+                
+                // Trước khi rời khỏi trang, lưu trạng thái
+                window.addEventListener('beforeunload', function() {
+                    saveGameState(true); // Đánh dấu là lưu cuối cùng trước khi thoát
+                });
+                
+                // Thiết lập để khi tab trở nên active, kiểm tra và đồng bộ lại
+                document.addEventListener('visibilitychange', function() {
+                    if (document.visibilityState === 'visible') {
+                        console.log("Tab trở thành visible, đồng bộ dữ liệu");
+                        syncWithServer();
+                    }
+                });
                 
                 showNotification("Đã kết nối máy chủ thành công!");
             } catch (error) {
                 console.error("Error initializing game:", error);
-                leaderboardStatus.textContent = "Đang tải dữ liệu...";
-                showNotification("Đang tải dữ liệu bảng xếp hạng.");
+                handleOfflineMode();
+                showNotification("Không thể kết nối máy chủ, chuyển sang chế độ offline");
             }
         }
-
-        // Hàm đọc lại số lượt quay mới nhất từ localStorage
-        async function loadLatestSpinCount() {
+        
+        // Setup sync status display
+        function setupSyncStatus() {
+            syncStatus.style.display = 'block';
+            updateSyncStatus('online');
+            
+            // Ẩn sau 5 giây
+            setTimeout(() => {
+                syncStatus.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Update sync status
+        function updateSyncStatus(status, message) {
+            syncStatus.style.display = 'block';
+            syncIndicator.className = 'sync-indicator ' + status;
+            
+            if (status === 'online') {
+                syncStatus.className = 'sync-status online';
+                syncText.textContent = message || 'Đã kết nối máy chủ';
+            } else if (status === 'offline') {
+                syncStatus.className = 'sync-status offline';
+                syncText.textContent = message || 'Đang chạy offline';
+            } else if (status === 'syncing') {
+                syncStatus.className = 'sync-status';
+                syncText.textContent = message || 'Đang đồng bộ dữ liệu...';
+            }
+            
+            // Ẩn sau 3 giây
+            setTimeout(() => {
+                syncStatus.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Handle online status
+        function handleOnlineStatus() {
+            isOnline = true;
+            updateSyncStatus('online', 'Kết nối trở lại, đang đồng bộ...');
+            syncWithServer();
+        }
+        
+        // Handle offline status
+        function handleOfflineStatus() {
+            isOnline = false;
+            updateSyncStatus('offline', 'Mất kết nối, dữ liệu sẽ được lưu cục bộ');
+        }
+        
+        // Handle offline mode
+        function handleOfflineMode() {
+            isOnline = false;
+            
+            // Load từ local storage
+            loadFromLocalStorage();
+            
+            // Cập nhật UI
+            updateStats();
+            updateSyncStatus('offline');
+        }
+        
+        // Start sync timer
+        function startSyncTimer() {
+            // Clear any existing timer
+            if (syncTimer) clearInterval(syncTimer);
+            
+            // Sync mỗi phút
+            syncTimer = setInterval(async () => {
+                if (isOnline && !isSyncingWithServer) {
+                    await syncWithServer();
+                }
+            }, SYNC_INTERVAL);
+        }
+        
+        // Sync with server
+        async function syncWithServer() {
+            if (isSyncingWithServer) return;
+            
+            try {
+                isSyncingWithServer = true;
+                updateSyncStatus('syncing');
+                
+                // Kiểm tra xem đã có người chơi chưa
+                if (!userId) {
+                    setupUserId();
+                }
+                
+                // Kiểm tra xem có thông tin từ server không
+                const response = await fetch(`${API_BASE_URL}/getScore?userId=${userId}`);
+                
+                if (response.ok) {
+                    const serverData = await response.json();
+                    
+                    // Kiểm tra nextRefreshTime từ server
+                    if (serverData.nextRefreshTime) {
+                        nextRefreshTime = serverData.nextRefreshTime;
+                        
+                        // Lưu vào localStorage để sử dụng khi offline
+                        localStorage.setItem('nextRefreshTime', nextRefreshTime);
+                    }
+                    
+                    // Kiểm tra nếu dữ liệu server mới hơn
+                    if (serverData.lastUpdate > (localStorage.getItem('lastUpdate') || 0)) {
+                        console.log("Sử dụng dữ liệu từ server vì mới hơn");
+                        
+                        // Cập nhật game state từ server
+                        points = serverData.score || 0;
+                        
+                        // Cập nhật spinsLeft nếu có
+                        if (serverData.spinsLeft !== undefined) {
+                            spinsLeft = serverData.spinsLeft;
+                        }
+                        
+                        // Cập nhật lastSpinRefreshTime 
+                        if (serverData.lastSpinRefreshTime) {
+                            lastSpinRefreshTime = serverData.lastSpinRefreshTime;
+                            localStorage.setItem('lastSpinRefreshTime', lastSpinRefreshTime);
+                        }
+                        
+                        // Cập nhật nextSpinDouble nếu có
+                        if (serverData.nextSpinDouble !== undefined) {
+                            nextSpinDouble = serverData.nextSpinDouble;
+                        }
+                        
+                        // Cập nhật playerName nếu có và chưa được thiết lập
+                        if (serverData.name && (!playerName || playerName.trim() === '')) {
+                            playerName = serverData.name;
+                            playerNameInput.value = playerName;
+                            localStorage.setItem('playerName', playerName);
+                        }
+                        
+                        // Lưu trạng thái cập nhật
+                        localStorage.setItem('lastUpdate', serverData.lastUpdate);
+                        
+                        // Cập nhật UI
+                        updateStats();
+                    } else {
+                        // Dữ liệu cục bộ mới hơn, đẩy lên server
+                        console.log("Dữ liệu cục bộ mới hơn, đồng bộ lên server");
+                        await saveGameState();
+                    }
+                    
+                    // Kiểm tra xem cần làm mới lượt quay không
+                    await checkSpinResetWithServer();
+                } else if (response.status === 404) {
+                    // Người chơi chưa tồn tại trên server, tạo mới
+                    console.log("Người chơi chưa tồn tại trên server, tạo mới");
+                    await saveGameState();
+                } else {
+                    throw new Error("Server error: " + response.status);
+                }
+                
+                updateSyncStatus('online', 'Đã đồng bộ xong');
+                isOnline = true;
+            } catch (error) {
+                console.error("Error syncing with server:", error);
+                handleOfflineMode();
+            } finally {
+                isSyncingWithServer = false;
+            }
+        }
+        
+        // Check spin reset with server
+        async function checkSpinResetWithServer() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/checkSpins`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.refreshed) {
+                        // Server đã làm mới lượt quay
+                        console.log("Server đã làm mới lượt quay");
+                        
+                        // Cập nhật trạng thái game từ server
+                        spinsLeft = data.player.spinsLeft;
+                        lastSpinRefreshTime = data.player.lastSpinRefreshTime;
+                        nextRefreshTime = data.player.nextRefreshTime;
+                        
+                        // Lưu vào localStorage
+                        localStorage.setItem('lastSpinRefreshTime', lastSpinRefreshTime);
+                        localStorage.setItem('nextRefreshTime', nextRefreshTime);
+                        
+                        // Cập nhật UI
+                        updateStats();
+                        showNotification("Lượt quay đã được làm mới! Bạn có " + spinsLeft + " lượt quay.");
+                        
+                        // Cập nhật bộ đếm ngược
+                        restartRefreshTimer();
+                        
+                        return true;
+                    }
+                }
+                
+                return false;
+            } catch (error) {
+                console.error("Error checking spins with server:", error);
+                return false;
+            }
+        }
+        
+        // Load from local storage
+        function loadFromLocalStorage() {
             const savedState = localStorage.getItem('wheelGameState');
             if (savedState) {
                 const gameState = JSON.parse(savedState);
-                console.log("Current spins: " + spinsLeft + ", Saved spins: " + gameState.spinsLeft);
                 
-                // Đảm bảo UI hiển thị đúng số lượt quay và thời gian cập nhật
-                spinsLeft = Math.min(MAX_SPINS, gameState.spinsLeft || 0);
+                points = gameState.points || 0;
+                spinsLeft = gameState.spinsLeft !== undefined ? gameState.spinsLeft : MAX_SPINS;
+                nextSpinDouble = gameState.nextSpinDouble || false;
+                lastWheelRotation = gameState.wheelRotation || 0;
                 lastSpinRefreshTime = gameState.lastSpinRefreshTime || 0;
-                updateStats();
+                
+                // Kiểm tra xem cần làm mới lượt quay không
+                const now = new Date().getTime();
+                nextRefreshTime = localStorage.getItem('nextRefreshTime') || (lastSpinRefreshTime + REFRESH_TIME_MS);
+                
+                if (now >= nextRefreshTime) {
+                    // Đã đến thời gian làm mới
+                    spinsLeft = MAX_SPINS;
+                    lastSpinRefreshTime = now;
+                    nextRefreshTime = now + REFRESH_TIME_MS;
+                    
+                    // Lưu lại
+                    localStorage.setItem('lastSpinRefreshTime', lastSpinRefreshTime);
+                    localStorage.setItem('nextRefreshTime', nextRefreshTime);
+                    
+                    // Thông báo
+                    showNotification("Lượt quay đã được làm mới! Bạn có " + spinsLeft + " lượt quay.");
+                }
+                
+                // Đảm bảo không vượt quá MAX_SPINS
+                if (spinsLeft > MAX_SPINS) spinsLeft = MAX_SPINS;
             }
         }
 
@@ -2245,72 +2543,141 @@
             spinsValue.textContent = spinsLeft;
         }
 
-        // Giải pháp 5: Cải tiến hàm startRefreshTimer() để sử dụng thời gian chính xác
+        // Start refresh timer
         function startRefreshTimer() {
-            // Lấy thời gian làm mới tiếp theo từ localStorage hoặc tạo mới
-            let nextRefreshTime = localStorage.getItem('nextRefreshTime');
+            // Cập nhật một lần ban đầu
+            updateRefreshTimer();
+            
+            // Clear any existing timer
+            if (refreshTimer) clearInterval(refreshTimer);
+            
+            // Update every second
+            refreshTimer = setInterval(updateRefreshTimer, 1000);
+        }
+        
+        // Restart refresh timer (khi thời gian được làm mới)
+        function restartRefreshTimer() {
+            // Clear existing timer
+            if (refreshTimer) clearInterval(refreshTimer);
+            
+            // Lấy thời gian làm mới tiếp theo
             const now = new Date().getTime();
             
-            // Nếu không có thời gian đã lưu hoặc thời gian đã lưu đã qua, tính toán thời gian mới
-            if (!nextRefreshTime || parseInt(nextRefreshTime) <= now) {
-                // Tính chính xác 30 phút từ thời điểm hiện tại
-                const nextRefresh = now + REFRESH_TIME_MS;
-                
-                // Lưu vào localStorage
-                nextRefreshTime = nextRefresh;
+            // Nếu nextRefreshTime chưa được thiết lập hoặc đã quá hạn
+            if (!nextRefreshTime || now >= nextRefreshTime) {
+                // Tính thời gian làm mới mới (30 phút từ hiện tại)
+                nextRefreshTime = now + REFRESH_TIME_MS;
                 localStorage.setItem('nextRefreshTime', nextRefreshTime);
-                
-                // Đồng thời cập nhật lastSpinRefreshTime để biết khi nào lượt quay đã được làm mới
                 lastSpinRefreshTime = now;
                 localStorage.setItem('lastSpinRefreshTime', lastSpinRefreshTime);
-                
-                // Đảm bảo người chơi có đủ lượt quay
-                ensureFullSpins();
+            }
+            
+            // Cập nhật timer ngay lập tức
+            updateRefreshTimer();
+            
+            // Thiết lập timer mới
+            refreshTimer = setInterval(updateRefreshTimer, 1000);
+        }
+        
+        // Update refresh timer display
+        function updateRefreshTimer() {
+            const now = new Date().getTime();
+            
+            // Đảm bảo nextRefreshTime đã được thiết lập
+            if (!nextRefreshTime) {
+                nextRefreshTime = lastSpinRefreshTime + REFRESH_TIME_MS;
+                localStorage.setItem('nextRefreshTime', nextRefreshTime);
             }
             
             // Tính thời gian còn lại
-            let timeLeft = parseInt(nextRefreshTime) - now;
+            let timeLeft = nextRefreshTime - now;
             
-            // Hàm cập nhật bộ đếm ngược
-            function updateTimer() {
-                const currentTime = new Date().getTime();
-                timeLeft = parseInt(nextRefreshTime) - currentTime;
-                
-                // Hiển thị thời gian còn lại
-                if (timeLeft > 0) {
-                    const minutes = Math.floor((timeLeft / 1000) / 60);
-                    const seconds = Math.floor((timeLeft / 1000) % 60);
-                    timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                } else {
-                    // Thời gian đã hết, cần làm mới lượt quay
-                    refreshSpins();
-                }
+            // Nếu thời gian đã hết
+            if (timeLeft <= 0) {
+                // Thực hiện làm mới lượt quay
+                refreshSpins();
+                return;
             }
             
-            // Cập nhật ngay lập tức và sau đó mỗi giây
-            updateTimer();
-            clearInterval(refreshTimer);
-            refreshTimer = setInterval(updateTimer, 1000);
+            // Hiển thị thời gian còn lại
+            const minutes = Math.floor((timeLeft / 1000) / 60);
+            const seconds = Math.floor((timeLeft / 1000) % 60);
+            timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            // Highlight khi gần hết thời gian (dưới 2 phút)
+            if (minutes < 2) {
+                timerValue.classList.add('glow');
+            } else {
+                timerValue.classList.remove('glow');
+            }
         }
         
-        // Giải pháp 6: Tách biệt logic làm mới lượt quay
+        // Force check spin reset
+        async function forceCheckSpinReset() {
+            SOUNDS.click.play();
+            
+            // Hiển thị trạng thái đang kiểm tra
+            updateSyncStatus('syncing', 'Đang kiểm tra lượt quay...');
+            
+            try {
+                if (isOnline) {
+                    // Kiểm tra với server
+                    const wasReset = await checkSpinResetWithServer();
+                    
+                    if (!wasReset) {
+                        const now = new Date().getTime();
+                        
+                        // Kiểm tra thời gian còn lại
+                        if (nextRefreshTime && now < nextRefreshTime) {
+                            const minutes = Math.floor(((nextRefreshTime - now) / 1000) / 60);
+                            const seconds = Math.floor(((nextRefreshTime - now) / 1000) % 60);
+                            showNotification(`Chưa đến thời gian làm mới. Còn ${minutes}:${seconds < 10 ? '0' + seconds : seconds}.`);
+                        } else {
+                            // Làm mới lượt quay cưỡng bức
+                            refreshSpins();
+                        }
+                    }
+                } else {
+                    // Nếu offline, kiểm tra local
+                    const now = new Date().getTime();
+                    
+                    if (nextRefreshTime && now >= nextRefreshTime) {
+                        refreshSpins();
+                    } else if (nextRefreshTime) {
+                        const minutes = Math.floor(((nextRefreshTime - now) / 1000) / 60);
+                        const seconds = Math.floor(((nextRefreshTime - now) / 1000) % 60);
+                        showNotification(`Chưa đến thời gian làm mới. Còn ${minutes}:${seconds < 10 ? '0' + seconds : seconds}.`);
+                    } else {
+                        // Nếu không có thông tin thời gian làm mới, làm mới ngay lập tức
+                        refreshSpins();
+                    }
+                }
+            } catch (error) {
+                console.error("Error checking spin reset:", error);
+                showNotification("Lỗi khi kiểm tra làm mới lượt quay.");
+            }
+        }
+        
+        // Refresh spins
         function refreshSpins() {
             const now = new Date().getTime();
             
             // Làm mới lượt quay về mức tối đa
             spinsLeft = MAX_SPINS;
             
-            // Cập nhật giao diện
+            // Cập nhật thời gian làm mới
+            lastSpinRefreshTime = now;
+            nextRefreshTime = now + REFRESH_TIME_MS;
+            
+            // Lưu vào localStorage
+            localStorage.setItem('lastSpinRefreshTime', lastSpinRefreshTime);
+            localStorage.setItem('nextRefreshTime', nextRefreshTime);
+            
+            // Cập nhật UI
             updateStats();
             
             // Lưu trạng thái
-            lastSpinRefreshTime = now;
-            localStorage.setItem('lastSpinRefreshTime', lastSpinRefreshTime);
             saveGameState();
-            
-            // Tính thời gian làm mới tiếp theo (30 phút từ hiện tại)
-            const nextRefresh = now + REFRESH_TIME_MS;
-            localStorage.setItem('nextRefreshTime', nextRefresh);
             
             // Hiệu ứng thông báo
             showNotification("Lượt quay đã được làm mới! +50 lượt quay", 5000);
@@ -2322,90 +2689,8 @@
                 spinsElement.classList.remove('glow');
             }, 5000);
             
-            // Cập nhật bộ đếm thời gian
-            const minutes = Math.floor(REFRESH_TIME_MS / 60000);
-            timerValue.textContent = `${String(minutes).padStart(2, '0')}:00`;
-            
             // Khởi động lại bộ đếm
-            startRefreshTimer();
-        }
-        
-        // Giải pháp 7: Đảm bảo người chơi có đủ lượt quay khi cần
-        function ensureFullSpins() {
-            if (spinsLeft < MAX_SPINS) {
-                spinsLeft = MAX_SPINS;
-                updateStats();
-                saveGameState();
-                showNotification("Lượt quay đã được cập nhật đủ 50 lượt!", 3000);
-            }
-        }
-        
-        // Giải pháp 8: Thêm hàm kiểm tra chéo để xác minh thời gian làm mới
-        async function checkSpinReset() {
-            try {
-                const now = new Date().getTime();
-                const lastRefreshTime = parseInt(localStorage.getItem('lastSpinRefreshTime') || '0');
-                const nextRefreshTime = parseInt(localStorage.getItem('nextRefreshTime') || '0');
-                
-                // Kiểm tra xem đã đến thời gian làm mới chưa
-                if (nextRefreshTime && nextRefreshTime <= now) {
-                    console.log("Đã đến thời gian làm mới lượt quay!");
-                    refreshSpins();
-                    return true;
-                }
-                
-                // Kiểm tra xem đã quá 30 phút kể từ lần làm mới cuối cùng chưa
-                if (lastRefreshTime && (now - lastRefreshTime) >= REFRESH_TIME_MS) {
-                    console.log("Đã quá 30 phút kể từ lần làm mới lượt quay cuối cùng!");
-                    refreshSpins();
-                    return true;
-                }
-                
-                // Kiểm tra xem có lượt quay nào chưa
-                if (spinsLeft <= 0) {
-                    // Nếu người chơi không có lượt quay nào và đã quá 15 phút kể từ lần làm mới
-                    if (lastRefreshTime && (now - lastRefreshTime) >= REFRESH_TIME_MS / 2) {
-                        console.log("Người chơi không có lượt quay nào và đã quá 15 phút!");
-                        refreshSpins();
-                        return true;
-                    }
-                }
-                
-                return false;
-            } catch (error) {
-                console.error("Lỗi khi kiểm tra làm mới lượt quay:", error);
-                // Trong trường hợp lỗi, vẫn đảm bảo người chơi có lượt quay
-                if (spinsLeft <= 0) {
-                    spinsLeft = MAX_SPINS;
-                    updateStats();
-                    saveGameState();
-                    showNotification("Đã khôi phục lượt quay do lỗi hệ thống");
-                    return true;
-                }
-                return false;
-            }
-        }
-        
-        // Giải pháp 9: Thêm hàm để người dùng có thể tự kiểm tra làm mới lượt quay
-        async function forceCheckSpinReset() {
-            SOUNDS.click.play();
-            const wasReset = await checkSpinReset();
-            
-            if (!wasReset) {
-                // Kiểm tra thời gian còn lại
-                const nextRefreshTime = parseInt(localStorage.getItem('nextRefreshTime') || '0');
-                const now = new Date().getTime();
-                const timeLeft = nextRefreshTime - now;
-                
-                if (timeLeft > 0) {
-                    const minutes = Math.floor((timeLeft / 1000) / 60);
-                    const seconds = Math.floor((timeLeft / 1000) % 60);
-                    showNotification(`Chưa đến thời gian làm mới. Còn ${minutes}:${seconds < 10 ? '0' + seconds : seconds}.`);
-                } else {
-                    // Làm mới bằng tay nếu người dùng nhấn nút và đã đến thời gian
-                    refreshSpins();
-                }
-            }
+            restartRefreshTimer();
         }
         
         // Start event countdown timer
@@ -2577,6 +2862,11 @@
             ctx.font = 'bold 36px Arial';
             ctx.fillText('HIẾU GÀ OFFICIAL', canvas.width / 2, canvas.height - 60);
             
+            // Draw user ID in small text
+            ctx.fillStyle = '#999';
+            ctx.font = '12px Arial';
+            ctx.fillText(`ID: ${userId}`, canvas.width / 2, canvas.height - 20);
+            
             // Get image URL
             const imageUrl = canvas.toDataURL('image/png');
             
@@ -2660,6 +2950,7 @@
                             action: 'reward_claimed',
                             amount: rewardValue.textContent,
                             user: playerName,
+                            userId: userId,
                             date: rewardDate.textContent
                         }));
                         // Đóng overlay
@@ -2694,135 +2985,90 @@
             }, 50);
         }
 
-        // Giải pháp 10: Cải tiến saveGameState để lưu thông tin làm mới lượt quay
-        async function saveGameState() {
+        // Save game state
+        async function saveGameState(isExiting = false) {
+            // Create game state object
             const gameState = {
                 points: points,
                 spinsLeft: spinsLeft,
                 nextSpinDouble: nextSpinDouble,
                 lastUpdate: Date.now(),
                 wheelRotation: lastWheelRotation,
-                lastSpinRefreshTime: lastSpinRefreshTime // Thêm thời gian làm mới lượt quay gần nhất
+                lastSpinRefreshTime: lastSpinRefreshTime,
+                isExiting: isExiting
             };
             
             // Save to localStorage
             localStorage.setItem('wheelGameState', JSON.stringify(gameState));
+            localStorage.setItem('lastUpdate', gameState.lastUpdate);
             
-            // Save to API
-            try {
-                const response = await fetch(`${API_BASE_URL}/saveScore`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        userId: userId,
-                        name: playerName,
-                        score: points,
-                        spinsLeft: spinsLeft, // Thêm số lượt quay để đồng bộ
-                        lastSpinRefreshTime: lastSpinRefreshTime // Thêm thời gian làm mới
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to save score to server');
-                }
-            } catch (err) {
-                console.error("Error saving to API:", err);
-                // Use localStorage as fallback
-                updateLocalLeaderboard();
-            }
-        }
-
-        // Giải pháp 11: Cải tiến loadGameState để kiểm tra thời gian làm mới
-        async function loadGameState() {
-            // First load from localStorage
-            const savedState = localStorage.getItem('wheelGameState');
-            if (savedState) {
-                const gameState = JSON.parse(savedState);
-                
-                // Lưu thông tin cơ bản
-                points = gameState.points || 0;
-                nextSpinDouble = gameState.nextSpinDouble || false;
-                lastWheelRotation = gameState.wheelRotation || 0;
-                lastSpinRefreshTime = gameState.lastSpinRefreshTime || 0;
-                
-                // Kiểm tra xem đã đến thời gian làm mới lượt quay chưa
-                const now = new Date().getTime();
-                const timeSinceLastRefresh = now - lastSpinRefreshTime;
-                
-                if (timeSinceLastRefresh >= REFRESH_TIME_MS) {
-                    // Đã quá thời gian làm mới, làm mới lượt quay
-                    console.log("Đã quá thời gian làm mới khi tải trạng thái, làm mới lượt quay");
-                    spinsLeft = MAX_SPINS;
-                    
-                    // Cập nhật thời gian làm mới
-                    lastSpinRefreshTime = now;
-                    
-                    // Tính thời gian làm mới tiếp theo
-                    const nextRefresh = now + REFRESH_TIME_MS;
-                    localStorage.setItem('nextRefreshTime', nextRefresh);
-                    
-                    // Hiển thị thông báo
-                    setTimeout(() => {
-                        showNotification("Lượt quay đã được làm mới! +50 lượt quay");
-                    }, 1000);
-                } else {
-                    // Chưa đến thời gian làm mới, lấy số lượt quay hiện tại
-                    spinsLeft = Math.min(MAX_SPINS, gameState.spinsLeft !== undefined ? gameState.spinsLeft : MAX_SPINS);
-                    
-                    // Tính thời gian làm mới tiếp theo
-                    const nextRefresh = lastSpinRefreshTime + REFRESH_TIME_MS;
-                    localStorage.setItem('nextRefreshTime', nextRefresh);
-                }
-            } else {
-                // Khởi tạo trạng thái mới
-                points = 0;
-                spinsLeft = MAX_SPINS;
-                nextSpinDouble = false;
-                lastWheelRotation = 0;
-                lastSpinRefreshTime = new Date().getTime();
-                
-                // Tính thời gian làm mới tiếp theo
-                const nextRefresh = lastSpinRefreshTime + REFRESH_TIME_MS;
-                localStorage.setItem('nextRefreshTime', nextRefresh);
-            }
-            
-            // Cập nhật giao diện
-            updateStats();
-            
-            // Try to fetch from API
-            try {
-                const response = await fetch(`${API_BASE_URL}/getScore?userId=${userId}`);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data) {
-                        // Nếu có điểm cao hơn từ server, sử dụng giá trị từ server
-                        if (data.score > points) {
-                            points = data.score;
-                            updateStats();
-                        }
-                        
-                        // Nếu thời gian làm mới từ server mới hơn, sử dụng thời gian đó
-                        if (data.lastSpinRefreshTime && data.lastSpinRefreshTime > lastSpinRefreshTime) {
-                            lastSpinRefreshTime = data.lastSpinRefreshTime;
-                            
-                            // Kiểm tra nếu đã quá thời gian làm mới
-                            const now = new Date().getTime();
-                            if (now - lastSpinRefreshTime >= REFRESH_TIME_MS) {
-                                spinsLeft = MAX_SPINS;
-                                lastSpinRefreshTime = now;
-                            } else if (data.spinsLeft !== undefined) {
-                                spinsLeft = Math.min(MAX_SPINS, data.spinsLeft);
-                            }
-                            
-                            updateStats();
-                        }
+            // Save to API if online
+            if (isOnline && !isSyncingWithServer) {
+                try {
+                    // Kiểm tra xem người chơi đã nhập tên chưa
+                    if (!playerName || playerName.trim() === '') {
+                        console.log("Chưa có tên người chơi, chưa lưu lên server");
+                        return;
                     }
+                    
+                    updateSyncStatus('syncing', 'Đang lưu trạng thái...');
+                    isSyncingWithServer = true;
+                    
+                    const response = await fetch(`${API_BASE_URL}/saveScore`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userId: userId,
+                            name: playerName,
+                            score: points,
+                            spinsLeft: spinsLeft,
+                            lastSpinRefreshTime: lastSpinRefreshTime,
+                            nextSpinDouble: nextSpinDouble,
+                            lastUpdate: gameState.lastUpdate
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to save score to server');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    // Kiểm tra nếu server đã làm mới lượt quay
+                    if (result.refreshed) {
+                        console.log("Server đã làm mới lượt quay trong quá trình lưu");
+                        
+                        // Cập nhật dữ liệu từ server
+                        spinsLeft = result.player.spinsLeft;
+                        lastSpinRefreshTime = result.player.lastSpinRefreshTime;
+                        nextRefreshTime = result.player.nextRefreshTime;
+                        
+                        // Lưu vào localStorage
+                        localStorage.setItem('lastSpinRefreshTime', lastSpinRefreshTime);
+                        localStorage.setItem('nextRefreshTime', nextRefreshTime);
+                        
+                        // Cập nhật UI
+                        updateStats();
+                        restartRefreshTimer();
+                        
+                        // Thông báo
+                        showNotification("Lượt quay đã được làm mới! Bạn có " + spinsLeft + " lượt quay.");
+                    }
+                    
+                    updateSyncStatus('online', 'Đã lưu thành công');
+                } catch (err) {
+                    console.error("Error saving to API:", err);
+                    updateSyncStatus('offline', 'Lưu offline');
+                } finally {
+                    isSyncingWithServer = false;
+                    
+                    // Ẩn trạng thái sau 3 giây
+                    setTimeout(() => {
+                        syncStatus.style.display = 'none';
+                    }, 3000);
                 }
-            } catch (err) {
-                console.error("Error loading from API:", err);
             }
         }
 
@@ -2839,14 +3085,17 @@
                 try {
                     await saveGameState();
                     await loadLeaderboard();
+                    
+                    // Show confirmation
+                    showResult('✅', `Tên "${playerName}" đã được lưu thành công!`);
+                    showNotification(`Tên đã cập nhật thành "${playerName}"!`);
                 } catch (err) {
                     console.error("Error saving name to API:", err);
                     updateLocalLeaderboard();
+                    
+                    // Vẫn hiển thị thông báo
+                    showNotification(`Tên đã cập nhật thành "${playerName}"! (chế độ offline)`);
                 }
-                
-                // Show confirmation
-                showResult('✅', `Tên "${playerName}" đã được lưu thành công!`);
-                showNotification(`Tên đã cập nhật thành "${playerName}"!`);
             }
         }
 
@@ -2876,6 +3125,19 @@
             leaderboardStatus.textContent = 'Đang tải dữ liệu...';
             
             try {
+                // Nếu đang offline, sử dụng dữ liệu cục bộ
+                if (!isOnline) {
+                    const localData = localStorage.getItem('localLeaderboard');
+                    if (localData) {
+                        const leaderboard = JSON.parse(localData);
+                        updateLeaderboardDisplay(leaderboard);
+                        leaderboardStatus.textContent = 'Đang hiển thị dữ liệu cục bộ (offline)';
+                    } else {
+                        updateLocalLeaderboard();
+                    }
+                    return;
+                }
+                
                 const response = await fetch(`${API_BASE_URL}/getLeaderboard`);
                 
                 if (!response.ok) {
@@ -2888,28 +3150,27 @@
                     throw new Error('No leaderboard data');
                 }
                 
+                // Lưu vào localStorage để dùng khi offline
+                localStorage.setItem('serverLeaderboard', JSON.stringify(leaderboard));
+                
                 updateLeaderboardDisplay(leaderboard);
                 const now = new Date();
                 const options = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
                 leaderboardStatus.textContent = `Cập nhật: ${now.toLocaleTimeString('vi-VN', options)}`;
             } catch (err) {
                 console.error("Error loading leaderboard:", err);
-                leaderboardStatus.textContent = 'Đang cập nhật bảng xếp hạng...';
                 
-                // Chỉ hiển thị dữ liệu của người dùng hiện tại
-                let localLeaderboard = [];
-                
-                // Nếu có điểm, thêm người dùng hiện tại vào bảng xếp hạng
-                if (points > 0 && playerName) {
-                    localLeaderboard = [{
-                        userId: userId,
-                        name: playerName,
-                        score: points
-                    }];
+                // Thử dùng dữ liệu từ server đã cache
+                const cachedData = localStorage.getItem('serverLeaderboard');
+                if (cachedData) {
+                    const leaderboard = JSON.parse(cachedData);
+                    updateLeaderboardDisplay(leaderboard);
+                    leaderboardStatus.textContent = 'Dữ liệu từ lần đồng bộ cuối';
+                } else {
+                    // Nếu không có dữ liệu cache, hiển thị chỉ người dùng hiện tại
+                    updateLocalLeaderboard();
+                    leaderboardStatus.textContent = 'Chỉ hiển thị dữ liệu cục bộ';
                 }
-                
-                // Cập nhật hiển thị
-                updateLeaderboardDisplay(localLeaderboard);
             }
         }
 
@@ -2977,14 +3238,24 @@
             
             // Then try to update via API
             try {
-                await saveGameState();
-                // Only reload leaderboard sometimes to reduce API calls
-                if (Math.random() < 0.3) {
-                    await loadLeaderboard();
+                if (isOnline) {
+                    // Wait for saveGameState to complete
+                    await saveGameState();
+                    
+                    // Only reload leaderboard sometimes to reduce API calls
+                    if (Math.random() < 0.3) {
+                        await loadLeaderboard();
+                    }
                 }
             } catch (err) {
                 console.error("Error updating leaderboard:", err);
             }
+        }
+
+        // Adjust wheel size
+        function adjustWheelSize() {
+            // Function placeholder to adjust wheel size on various devices
+            // Add implementation if needed
         }
 
         // Event listeners
@@ -2992,17 +3263,8 @@
         saveRewardBtn.addEventListener('click', saveRewardPoster);
         saveNameBtn.addEventListener('click', savePlayerName);
 
-        // Hàm điều chỉnh kích thước bánh xe
-        function adjustWheelSize() {
-            // Điều chỉnh kích thước bánh xe tùy theo kích thước màn hình
-            // (Code này đã được giả định là tồn tại từ trước)
-        }
-
         // Initialize the game when the page loads
         window.addEventListener('load', initGame);
-        
-        // Periodically refresh leaderboard
-        setInterval(loadLeaderboard, 60000); // Every minute
     </script>
 </body>
 </html>
